@@ -6,6 +6,7 @@ import propertyRouter from '../app/property/property.route';
 import agentAlertRouter from '../app/agent/alert/alert.route';
 import agentBranchRouter from '../app/agent/branch/branch.route';
 import agentUserRouter from '../app/agent/user/user.route';
+import appointmentRouter from '../app/appointment/appointment.route'
 
 export default function (app) {
   app.use('/', indexRouter);
@@ -16,4 +17,5 @@ export default function (app) {
   app.use('/agent/alert', agentAlertRouter);
   app.use('/agent/branch', agentBranchRouter);
   app.use('/agent/user', agentUserRouter);
+  app.use('/appointment', appointmentRouter);
 }

@@ -9,6 +9,7 @@ export default function (sequelize) {
       Product.hasMany(models.productImage, { foreignKey: 'productId'})
       Product.hasMany(models.productMetaTag, { foreignKey: 'productId'})
       Product.hasMany(models.productAllocation, { foreignKey: 'productId'})
+      Product.belongsToMany(models.appointment, { through: 'appointment_products', updatedAt: false, unique: false });
     }
   }
 
