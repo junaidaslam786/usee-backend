@@ -26,7 +26,6 @@ export default function (sequelize) {
     modelName: 'agentAvailability',
     tableName: 'agent_availability',
     sequelize,
-    paranoid: false
   });
 
   AgentAvailability.addHook('beforeSave', async (instance) => {

@@ -4,7 +4,7 @@ export default function (sequelize) {
   class CustomerWishlist extends Model {
     static associate(models) {
         CustomerWishlist.belongsTo(models.user, { foreignKey: 'customerId' })
-        CustomerWishlist.hasMany(models.product, { foreignKey: 'productId' })
+        CustomerWishlist.belongsTo(models.product, { foreignKey: 'productId' })
     }
   }
 

@@ -17,11 +17,32 @@ export default function (sequelize) {
       allowNull: false,
       autoIncrement: true,
     },
+    userId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
+    productId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'products',
+        key: 'id',
+      }
+    },
+    removeReasonId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'product_remove_reasons',
+        key: 'id',
+      }
+    },
     reason: {
         type: DataTypes.TEXT,
     },
     status: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.BOOLEAN, // 0. pending, 1. approved 2. rejected
     },
     createdBy: {
         type: DataTypes.UUID,
@@ -31,6 +52,7 @@ export default function (sequelize) {
     modelName: 'productRemoveRequest',
     tableName: 'product_remove_request',
     sequelize,
+    updatedAt: false
   });
 
   ProductRemoveRequest.addHook('beforeSave', async (instance) => {

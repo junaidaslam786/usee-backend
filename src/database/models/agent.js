@@ -75,6 +75,7 @@ export default function (sequelize) {
     modelName: 'agent',
     tableName: 'agents',
     sequelize,
+    paranoid: true,
   });
 
   Agent.addHook('beforeSave', async (instance) => {

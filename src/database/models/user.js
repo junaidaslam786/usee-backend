@@ -37,6 +37,8 @@ export default function (sequelize) {
       User.hasMany(models.customerWishlist, { foreignKey: 'userId' })
       User.hasMany(models.customerLog, { foreignKey: 'userId' })
       User.hasMany(models.userAlert, { foreignKey: 'customerId' })
+      User.hasMany(models.productAllocation, { foreignKey: 'userId' })
+      User.hasMany(models.productAllocation, { foreignKey: 'allocatedUserId' })
     }
   }
 
@@ -95,6 +97,7 @@ export default function (sequelize) {
     modelName: 'user',
     tableName: 'users',
     sequelize,
+    paranoid: true
   });
 
   User.addHook('beforeSave', async (instance) => {

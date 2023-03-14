@@ -24,7 +24,6 @@ export default function (sequelize) {
     modelName: 'city',
     tableName: 'cities',
     sequelize,
-    paranoid: false
   });
 
   City.addHook('beforeSave', async (instance) => {

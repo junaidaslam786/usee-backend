@@ -19,7 +19,7 @@ export const listRoles = async (dbInstance) => {
 
 export const getRole = async (roleId, dbInstance) => {
     try {
-        const role = await getRoleById(roleId, dbInstance);
+        const role = await getRoleDetailById(roleId, dbInstance);
         if (!role) {
             return { error: true, message: 'Invalid role id or Role do not exist.'}
         }
@@ -50,7 +50,7 @@ export const createRole = async (reqBody, dbInstance) => {
             return role;
         });
 
-        return await getRoleById(result.id, dbInstance);
+        return await getRoleDetailById(result.id, dbInstance);
     } catch(err) {
         console.log('createRoleServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
@@ -89,7 +89,7 @@ export const updateRole = async (reqBody, dbInstance) => {
 
 export const deleteRole = async (roleId, dbInstance) => {
     try {
-        const role = await getRoleById(roleId, dbInstance);
+        const role = await getRoleDetailById(roleId, dbInstance);
         if (!role) {
             return { error: true, message: 'Invalid role id or Role do not exist.'}
         }
@@ -107,7 +107,7 @@ export const deleteRole = async (roleId, dbInstance) => {
     }
 }
 
-const getRoleById = async (roleId, dbInstance) => {
+const getRoleDetailById = async (roleId, dbInstance) => {
     const role = await dbInstance.role.findOne({
         where: { id: roleId },
         include: [

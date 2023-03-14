@@ -27,7 +27,6 @@ export default function (sequelize) {
     modelName: 'permission',
     tableName: 'permissions',
     sequelize,
-    paranoid: false
   });
 
   Permission.addHook('beforeSave', async (instance) => {

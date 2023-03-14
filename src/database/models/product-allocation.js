@@ -3,9 +3,9 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class ProductAllocation extends Model {
     static associate(models) {
-        ProductAllocation.belongsTo(models.user, { foreignKey: 'userId', sourceKey: 'userId'})
+        ProductAllocation.belongsTo(models.user, { foreignKey: 'userId'})
         ProductAllocation.belongsTo(models.product, { foreignKey: 'productId' })
-        ProductAllocation.belongsTo(models.user, { foreignKey: 'userId', sourceKey: 'allocatedUserId'})
+        ProductAllocation.belongsTo(models.user, { foreignKey: 'allocatedUserId' })
     }
   }
 
@@ -16,6 +16,27 @@ export default function (sequelize) {
         primaryKey: true,
         unique: true,
         defaultValue: DataTypes.UUIDV4
+    },
+    userId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
+    productId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'products',
+        key: 'id',
+      }
+    },
+    allocatedUserId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
     },
     createdBy: {
         type: DataTypes.UUID,
@@ -29,6 +50,7 @@ export default function (sequelize) {
     modelName: 'productAllocation',
     tableName: 'product_allocations',
     sequelize,
+    updatedAt: false
   });
 
   ProductAllocation.addHook('beforeSave', async (instance) => {

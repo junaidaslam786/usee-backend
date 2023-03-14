@@ -42,7 +42,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     field: 'featured_image'
   },
   virtualTourType: {
-    field: 'virtualTourType',
+    field: 'virtual_tour_type',
     type: Sequelize.ENUM,
     defaultValue: "video",
     values: ["video", "url", "slideshow"]
@@ -79,7 +79,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     field: 'status',
     type: Sequelize.ENUM,
     defaultValue: "active",
-    values: ["active", "archive", "disabled", "removed"]
+    values: ["active", "archived", "disabled", "removed"]
   },
   apiCode: {
     type: Sequelize.STRING,

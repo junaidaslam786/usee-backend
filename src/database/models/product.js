@@ -20,11 +20,6 @@ export default function (sequelize) {
       unique: true,
       defaultValue: DataTypes.UUIDV4
     },
-    agentType: {
-        type: DataTypes.STRING,
-        field: "type",
-        enum: ["agent", "manager", "staff"]
-    },
     title: {
       type: DataTypes.STRING,
     },
@@ -64,7 +59,7 @@ export default function (sequelize) {
     },
     status: {
       type: DataTypes.STRING,
-      enum: ["active", "archive", "disabled", "removed"]
+      enum: ["active", "archived", "disabled", "removed"]
     },
     apiCode: {
       type: DataTypes.STRING,
@@ -81,6 +76,7 @@ export default function (sequelize) {
     modelName: 'product',
     tableName: 'products',
     sequelize,
+    paranoid: true
   });
 
   Product.addHook('beforeSave', async (instance) => {

@@ -25,7 +25,6 @@ export default function (sequelize) {
     modelName: 'agentTimeSlot',
     tableName: 'agent_time_slots',
     sequelize,
-    paranoid: false
   });
 
   AgentTimeSlot.addHook('beforeSave', async (instance) => {
