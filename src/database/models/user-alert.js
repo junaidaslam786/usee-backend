@@ -16,6 +16,20 @@ export default function (sequelize) {
       allowNull: false,
       autoIncrement: true,
     },
+    customerId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
+    productId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'products',
+        key: 'id',
+      }
+    },
     alertMode: {
       type: DataTypes.STRING,
       field: "type",

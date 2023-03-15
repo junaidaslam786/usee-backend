@@ -20,6 +20,20 @@ export default function (sequelize) {
       unique: true,
       defaultValue: DataTypes.UUIDV4
     },
+    userId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
+    categoryId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'categories',
+        key: 'id',
+      }
+    },
     title: {
       type: DataTypes.STRING,
     },

@@ -50,7 +50,7 @@ export const createRole = async (reqBody, dbInstance) => {
             return role;
         });
 
-        return await getRoleDetailById(result.id, dbInstance);
+        return (result.id) ? await getRoleDetailById(result.id, dbInstance) : result;
     } catch(err) {
         console.log('createRoleServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}

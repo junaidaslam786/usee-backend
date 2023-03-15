@@ -24,24 +24,10 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
       key: 'id'
     }
   },
-  allocatedUserId: {
-    field: 'allocated_user_id',
-    type: Sequelize.UUID,
-    onDelete: 'CASCADE',
-    references: {
-      model: 'users',
-      key: 'id'
-    }
-  },
   createdBy: {
     allowNull: true,
     type:Sequelize.UUID,
     field: 'created_by'
-  },
-  updatedBy: {
-    allowNull: true,
-    type:Sequelize.UUID,
-    field: 'updated_by'
   },
   createdAt: {
     type: Sequelize.DATE,

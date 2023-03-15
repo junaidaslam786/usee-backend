@@ -15,6 +15,13 @@ export default function (sequelize) {
       allowNull: false,
       autoIncrement: true,
     },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'categories',
+        key: 'id',
+      }
+    },
     label: {
       type: DataTypes.STRING,
     },

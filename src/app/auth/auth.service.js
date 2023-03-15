@@ -2,6 +2,7 @@ import { utilsHelper } from '@/helpers';
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
 import db from '@/database';
+import { USER_TYPE, AGENT_TYPE } from '../../config/constants';
 
 const {
     ADMIN_PANEL_URL,
@@ -80,7 +81,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
                 password,
                 phoneNumber,
                 status: 1, 
-                userType: "agent",
+                userType: USER_TYPE.AGENT,
             }
             const user = await userTable.create(userData, { transaction });
 
@@ -89,8 +90,8 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
                 userId: user.id,
                 companyName, 
                 companyPosition,
-                agentType: "agent", 
-                apiCode: utilsHelper.generateRandomString(10, true)
+                agentType: AGENT_TYPE.AGENT, 
+                apiCode: utilsHelper.generateRandomString(10, true),
             }, { transaction });
 
             const timeslots = await agentTimeSlot.findAll();
@@ -141,7 +142,7 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
             email, 
             password,
             status: 1, 
-            userType: "customer"
+            userType: USER_TYPE.CUSTOMER,
         }
         const user = await userTable.create(userData);
 

@@ -29,11 +29,6 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     type:Sequelize.UUID,
     field: 'created_by'
   },
-  updatedBy: {
-    allowNull: true,
-    type:Sequelize.UUID,
-    field: 'updated_by'
-  },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',

@@ -1,5 +1,24 @@
 import createError from 'http-errors';
 import * as propertyService from './property.service';
+import { utilsHelper } from '@/helpers';
+
+/**
+ * POST /property/create
+ * Create property
+ */
+export const createProperty = async (req, res, next) => {
+    try {
+        const result = await propertyService.createProperty(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        res.status(201).json(result);
+    } catch (err) {
+        console.log('createPropertyError', err);
+        next(err);
+    }
+};
 
 /**
  * GET /property/list
@@ -36,7 +55,6 @@ export const getProperty = async (req, res, next) => {
         next(err);
     }
 };
-
 
 /**
  * POST /property/removal-request

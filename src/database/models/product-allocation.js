@@ -5,7 +5,6 @@ export default function (sequelize) {
     static associate(models) {
         ProductAllocation.belongsTo(models.user, { foreignKey: 'userId'})
         ProductAllocation.belongsTo(models.product, { foreignKey: 'productId' })
-        ProductAllocation.belongsTo(models.user, { foreignKey: 'allocatedUserId' })
     }
   }
 
@@ -31,20 +30,9 @@ export default function (sequelize) {
         key: 'id',
       }
     },
-    allocatedUserId: {
-      type: DataTypes.UUID,
-      references: {
-        model: 'users',
-        key: 'id',
-      }
-    },
     createdBy: {
         type: DataTypes.UUID,
         field: "created_by",
-    },
-    updatedBy: {
-        type: DataTypes.UUID,
-        field: "updated_by",
     },
   }, {
     modelName: 'productAllocation',

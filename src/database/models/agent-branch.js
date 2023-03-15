@@ -15,6 +15,13 @@ export default function (sequelize) {
         unique: true,
         defaultValue: DataTypes.UUIDV4
     },
+    userId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,

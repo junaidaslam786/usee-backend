@@ -8,3 +8,27 @@ export const PRODUCT_STATUS = {
     DISABLED: "disabled",
     REMOVED: "removed"
 };
+
+export const USER_TYPE = {
+    ADMIN: "admin",
+    AGENT: "agent",
+    CUSTOMER: "customer",
+};
+
+
+export const AGENT_TYPE = {
+    AGENT: "agent",
+    MANAGER: "manager",
+    STAFF: "staff",
+};
+
+export const PROPERTY_ROOT_PATHS = {
+    FEATURE_IMAGE: "uploads/properties/images",
+    VIDEO_TOUR: "uploads/properties/vrvideos"
+}
+
+export const VIRTUAL_TOUR_TYPE = {
+    VIDEO: "video",
+    URL: "url",
+    SLIDESHOW: "slideshow"
+}

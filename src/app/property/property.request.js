@@ -1,6 +1,5 @@
 import { body } from 'express-validator';
 import db from '@/database';
-import { Sequelize } from 'sequelize';
 
 export const removalRequestRules = [
   body('propertyId').exists(), 
@@ -11,4 +10,12 @@ export const removalRequestRules = [
       }
     });
   }), 
+];
+
+export const createPropertyRules = [
+  body('title').exists(), 
+  body('address').exists(), 
+  body('city').exists(), 
+  body('postalCode').exists(), 
+  body('region').exists(), 
 ];

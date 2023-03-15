@@ -16,6 +16,13 @@ export default function (sequelize) {
       allowNull: false,
       autoIncrement: true,
     },
+    stateId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'states',
+        key: 'id',
+      }
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,

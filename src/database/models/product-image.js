@@ -15,6 +15,13 @@ export default function (sequelize) {
         unique: true,
         defaultValue: DataTypes.UUIDV4
     },
+    productId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'products',
+        key: 'id',
+      }
+    },
     image: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -25,10 +32,6 @@ export default function (sequelize) {
     createdBy: {
         type: DataTypes.UUID,
         field: "created_by",
-    },
-    updatedBy: {
-        type: DataTypes.UUID,
-        field: "updated_by",
     },
   }, {
     modelName: 'productImage',

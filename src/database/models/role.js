@@ -26,7 +26,6 @@ export default function (sequelize) {
     modelName: 'role',
     tableName: 'roles',
     sequelize,
-    paranoid: true
   });
 
   Role.addHook('beforeSave', async (instance) => {

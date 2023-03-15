@@ -29,12 +29,6 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cou
     field: 'updated_at',
     defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
   },
-  deletedAt: {
-    allowNull: true,
-    type: Sequelize.DATE,
-    field: 'deleted_at',
-    defaultValue: null
-  }
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('countries');

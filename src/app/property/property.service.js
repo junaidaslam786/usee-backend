@@ -1,7 +1,120 @@
-import { PRODUCT_CATEGORIES } from '../../config/constants';
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
-import { PRODUCT_STATUS } from '../../config/constants';
+import { PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE } from '../../config/constants';
+import { utilsHelper } from '@/helpers';
+import db from '@/database';
+
+export const createProperty = async (reqBody, req) => {
+    try {
+        const { title, description, price, address, city, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
+        const { user, dbInstance } = req;
+
+        const result = await db.transaction(async (transaction) => {
+            // create product data
+            const productData = {
+                userId: user.id,
+                categoryId: PRODUCT_CATEGORIES.PROPERTY,
+                title, 
+                description, 
+                price, 
+                virtualTourType,
+                address, 
+                city, 
+                postalCode, 
+                region, 
+                latitude, 
+                longitude, 
+                status: PRODUCT_STATUS.ACTIVE,
+                createdBy: user.id,
+                apiCode: utilsHelper.generateRandomString(10, true)
+            };
+            const product = await dbInstance.product.create(productData, { transaction });
+
+            // create product meta tags
+            const metaTags = [];
+            const categoryFieldIds = [];
+            for (const [key, value] of Object.entries(reqBody)) {
+                if (key.startsWith('metaTags[')) {
+                    const index = key.match(/\[(\d+)\]/)[1];
+                    metaTags.push({
+                        productId: product.id,
+                        key: index,
+                        value
+                    });
+                    categoryFieldIds.push(index);
+                }
+            }
+
+            const metaTagsExist = await dbInstance.categoryField.findAndCountAll({ where: { id: categoryFieldIds } });
+            if (metaTagsExist && metaTagsExist.count != categoryFieldIds.length) {
+                return { error: true, message: 'Invalid meta tags added'}
+            }
+            await dbInstance.productMetaTag.bulkCreate(metaTags, { transaction });
+
+            // create allocated users
+            const allocatedUsers = [];
+            const allocatedUserIds = [];
+            for (const [key, value] of Object.entries(reqBody)) {
+                if (key.startsWith('allocatedUser[')) {
+                    allocatedUsers.push({
+                        productId: product.id,
+                        userId: value,
+                    });
+                    allocatedUserIds.push(value);
+                }
+            }
+
+            const allocatedUserExist = await dbInstance.user.findAndCountAll({ where: { id: allocatedUserIds } });
+            if (allocatedUserExist && allocatedUserExist.count != allocatedUserIds.length) {
+                return { error: true, message: 'Invalid users added to allocate'}
+            }
+            await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
+
+            // feature image upload
+            if (req.files && req.files.featuredImage) {
+                const featuredImageFile = req.files.featuredImage;
+                const newFileName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(featuredImageFile, PROPERTY_ROOT_PATHS.FEATURE_IMAGE, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+
+                product.featuredImage = result;
+            }
+
+            // virtual tour
+            if (virtualTourType == VIRTUAL_TOUR_TYPE.URL) {
+                let virtualTourUrl = reqBody.virtualTourUrl;
+                if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
+                    const videoUrlDetail = videoUrl.split("?v=");
+                    if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
+                        virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
+                    }
+                }
+
+                product.virtualTourUrl = virtualTourUrl;
+            } else if (virtualTourType == VIRTUAL_TOUR_TYPE.VIDEO && req.files && req.files.virtualTourVideo) {
+                const virtualTourVideoFile = req.files.virtualTourVideo;
+                const newFileName = `${Date.now()}_${virtualTourVideoFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(virtualTourVideoFile, PROPERTY_ROOT_PATHS.VIDEO_TOUR, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+
+                product.virtualTourUrl = result;
+            }
+
+            await product.save({ transaction });
+
+            return product;
+        });
+        
+        return (result.id) ? await getPropertyDetailById(result.id, dbInstance) : result;
+    } catch(err) {
+        console.log('createPropertyServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
 
 export const listProperties = async (userId, reqBody, dbInstance) => {
     try {
@@ -14,7 +127,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
                 status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
                 [OP.or]: [
                     { userId },
-                    { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where allocated_user_id = '${userId}')`) }}
+                    { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${userId}')`) }}
                 ]
             },
             order: [["id", "DESC"]],
@@ -91,7 +204,13 @@ const getPropertyDetailById = async (propertyId, dbInstance) => {
           },
           {
             model: dbInstance.productMetaTag, 
-            attributes: ["id", "key", "value"],
+            attributes: ["value"],
+            include: [
+                {
+                  model: dbInstance.categoryField, 
+                  attributes: ["id", "label", "type", "options", "required"],
+                },
+            ]
           },
         ],
     });

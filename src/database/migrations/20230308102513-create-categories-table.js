@@ -16,16 +16,6 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cat
     type: Sequelize.TEXT,
     field: 'description'
   },
-  createdBy: {
-    allowNull: true,
-    type:Sequelize.UUID,
-    field: 'created_by'
-  },
-  updatedBy: {
-    allowNull: true,
-    type:Sequelize.UUID,
-    field: 'updated_by'
-  },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
@@ -36,12 +26,6 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cat
     field: 'updated_at',
     defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
   },
-  deletedAt: {
-    allowNull: true,
-    type: Sequelize.DATE,
-    field: 'deleted_at',
-    defaultValue: null
-  }
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('categories');

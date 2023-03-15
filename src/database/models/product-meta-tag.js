@@ -4,6 +4,7 @@ export default function (sequelize) {
   class ProductMetaTag extends Model {
     static associate(models) {
       ProductMetaTag.belongsTo(models.product, { foreignKey: 'productId' })
+      ProductMetaTag.belongsTo(models.categoryField, { foreignKey: 'key' })
     }
   }
 
@@ -14,6 +15,13 @@ export default function (sequelize) {
       primaryKey: true,
       unique: true,
       defaultValue: DataTypes.UUIDV4
+    },
+    productId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'products',
+        key: 'id',
+      }
     },
     key: {
       allowNull: true,
@@ -33,6 +41,7 @@ export default function (sequelize) {
     modelName: 'productMetaTag',
     tableName: 'product_meta_tags',
     sequelize,
+    updatedAt: false
   });
 
   ProductMetaTag.addHook('beforeSave', async (instance) => {

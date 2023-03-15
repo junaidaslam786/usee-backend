@@ -3,6 +3,8 @@ import 'dotenv/config';
 import cors from 'cors';
 import logger from 'morgan';
 import express from 'express';
+const fileUpload = require("express-fileupload");
+const bodyParser = require("body-parser");
 import compression from 'compression';
 import createError from 'http-errors';
 import cookieParser from 'cookie-parser';
@@ -32,6 +34,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors(configs.corsConfig));
 app.use(compression(configs.compressionConfig));
 app.use(cookieParser());
+app.use(fileUpload());
+app.use(bodyParser.json({ limit: "20mb" }));
+app.use(bodyParser.urlencoded({ extended: false }));
 
 // Custom middleware list
 app.use(authenticationMiddleware);

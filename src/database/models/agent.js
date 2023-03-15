@@ -15,10 +15,18 @@ export default function (sequelize) {
         unique: true,
         defaultValue: DataTypes.UUIDV4
     },
+    userId: {
+      allowNull: true,
+      type: DataTypes.UUID,
+      references: {
+        model: "users",
+        key: "id"
+      },
+      onUpdate: "CASCADE",
+    },
     agentId: {
         allowNull: true,
         type: DataTypes.UUID,
-        field: "agent_id",
         references: {
           model: "users",
           key: "id"
@@ -28,7 +36,6 @@ export default function (sequelize) {
     managerId: {
         allowNull: true,
         type: DataTypes.UUID,
-        field: "manager_id",
         references: {
           model: "users",
           key: "id"

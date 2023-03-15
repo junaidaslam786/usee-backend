@@ -32,7 +32,7 @@ export default function (sequelize) {
       }
     },
     removeReasonId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       references: {
         model: 'product_remove_reasons',
         key: 'id',
@@ -43,10 +43,6 @@ export default function (sequelize) {
     },
     status: {
         type: DataTypes.BOOLEAN, // 0. pending, 1. approved 2. rejected
-    },
-    createdBy: {
-        type: DataTypes.UUID,
-        field: 'created_by'
     },
   }, {
     modelName: 'productRemoveRequest',

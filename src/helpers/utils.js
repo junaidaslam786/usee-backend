@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 export const generateRandomString = (length, isApiCode = false) => {
     try {
         let result = "";
@@ -12,3 +15,25 @@ export const generateRandomString = (length, isApiCode = false) => {
         console.log('err', err);
     }
 };
+
+export const fileUpload = async (file, destPath, fileName) => {
+    try {
+        if (!fs.existsSync(destPath)) {
+            fs.mkdirSync(destPath, { recursive: true });
+        }
+
+        const filePath = path.join(destPath, fileName);
+        return new Promise((resolve, reject) => {
+            file.mv(filePath, (err) => {
+                if (err) {
+                    reject({ error: err });
+                }
+
+                resolve(filePath);
+            });
+        });
+    } catch(err) {
+        console.log('fileUploaderr', err);
+        return { error: err };
+    }
+}

@@ -42,11 +42,6 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     type: Sequelize.BOOLEAN,
     field: 'status'
   },
-  createdBy: {
-    allowNull: true,
-    type:Sequelize.UUID,
-    field: 'created_by'
-  },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',

@@ -8,7 +8,7 @@ const router = Router();
 
 router.get('/list', isAuthenticated, propertyController.listProperties);
 router.get('/:id', isAuthenticated, propertyController.getProperty);
-// router.post('/create', isAuthenticated, validate(propertyValidations.createRoleRules), propertyController.createRole);
+router.post('/create', isAuthenticated, validate(propertyValidations.createPropertyRules), propertyController.createProperty);
 // router.put('/update', isAuthenticated, validate(propertyValidations.updateRoleRules), propertyController.updateRole);
 router.post('/removal-request', isAuthenticated, validate(propertyValidations.removalRequestRules), propertyController.removePropertyRequest);
 

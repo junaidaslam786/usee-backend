@@ -15,6 +15,13 @@ export default function (sequelize) {
       allowNull: false,
       autoIncrement: true,
     },
+    userId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
     subject: {
       type: DataTypes.TEXT,
     },

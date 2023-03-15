@@ -16,6 +16,20 @@ export default function (sequelize) {
       allowNull: false,
       autoIncrement: true,
     },
+    userId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
+    timeSlotId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'agent_time_slots',
+        key: 'id',
+      }
+    },
     dayId: {
         type: DataTypes.INTEGER,
     },
