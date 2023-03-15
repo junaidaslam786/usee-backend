@@ -21,6 +21,24 @@ export const createProperty = async (req, res, next) => {
 };
 
 /**
+ * POST /property/update
+ * Update property
+ */
+export const updateProperty = async (req, res, next) => {
+    try {
+        const result = await propertyService.updateProperty(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Property updated successfully" });
+    } catch (err) {
+        console.log('createPropertyError', err);
+        next(err);
+    }
+};
+
+/**
  * POST /property/documents
  * Upload property documents
  */
@@ -52,6 +70,42 @@ export const uploadPropertyImages = async (req, res, next) => {
         return res.json({ success: true, message: "Product images uploaded successfully" });
     } catch (err) {
         console.log('uploadPropertyImagesError', err);
+        next(err);
+    }
+};
+
+/**
+ * DELETE /property/documents
+ * Delete property document
+ */
+export const deletePropertyDocument = async (req, res, next) => {
+    try {
+        const result = await propertyService.deletePropertyDocument(req.body, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Product document deleted successfully" });
+    } catch (err) {
+        console.log('deletePropertyDocumentError', err);
+        next(err);
+    }
+};
+
+/**
+ * DELETE /property/images
+ * Delete property image
+ */
+export const deletePropertyImage = async (req, res, next) => {
+    try {
+        const result = await propertyService.deletePropertyImage(req.body, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Product image deleted successfully" });
+    } catch (err) {
+        console.log('deletePropertyImageError', err);
         next(err);
     }
 };

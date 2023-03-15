@@ -116,6 +116,127 @@ export const createProperty = async (reqBody, req) => {
     }
 }
 
+export const updateProperty = async (reqBody, req) => {
+    try {
+        const { productId, title, description, price, address, city, region, latitude, longitude, virtualTourType } = reqBody;
+        const { user, dbInstance } = req;
+
+        const result = await db.transaction(async (transaction) => {
+            const product = await getPropertyById(productId, dbInstance);
+            
+            // update product data
+            product.title = title;
+            product.description = description;
+            product.price = price;
+            product.virtualTourType = virtualTourType;
+            product.address = address;
+            product.city = city;
+            product.region = region;
+            product.latitude = latitude;
+            product.longitude = longitude;
+            product.updatedBy = user.id;
+            await product.save({ transaction });
+
+            // remove previous meta tags
+            await dbInstance.productMetaTag.destroy({
+                where: {
+                    productId: product.id
+                }
+            });
+
+            // create product meta tags
+            const metaTags = [];
+            const categoryFieldIds = [];
+            for (const [key, value] of Object.entries(reqBody)) {
+                if (key.startsWith('metaTags[')) {
+                    const index = key.match(/\[(\d+)\]/)[1];
+                    metaTags.push({
+                        productId: product.id,
+                        key: index,
+                        value
+                    });
+                    categoryFieldIds.push(index);
+                }
+            }
+
+            const metaTagsExist = await dbInstance.categoryField.findAndCountAll({ where: { id: categoryFieldIds } });
+            if (metaTagsExist && metaTagsExist.count != categoryFieldIds.length) {
+                return { error: true, message: 'Invalid meta tags added'}
+            }
+            await dbInstance.productMetaTag.bulkCreate(metaTags, { transaction });
+
+            // remove previous allocations
+            await dbInstance.productAllocation.destroy({
+                where: {
+                    productId: product.id
+                }
+            });
+
+            // create allocated users
+            const allocatedUsers = [];
+            const allocatedUserIds = [];
+            for (const [key, value] of Object.entries(reqBody)) {
+                if (key.startsWith('allocatedUser[')) {
+                    allocatedUsers.push({
+                        productId: product.id,
+                        userId: value,
+                    });
+                    allocatedUserIds.push(value);
+                }
+            }
+
+            const allocatedUserExist = await dbInstance.user.findAndCountAll({ where: { id: allocatedUserIds } });
+            if (allocatedUserExist && allocatedUserExist.count != allocatedUserIds.length) {
+                return { error: true, message: 'Invalid users added to allocate'}
+            }
+            await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
+
+            // feature image upload
+            if (req.files && req.files.featuredImage) {
+                const featuredImageFile = req.files.featuredImage;
+                const newFileName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(featuredImageFile, PROPERTY_ROOT_PATHS.FEATURE_IMAGE, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+
+                product.featuredImage = result;
+            }
+
+            // virtual tour
+            if (virtualTourType == VIRTUAL_TOUR_TYPE.URL) {
+                let virtualTourUrl = reqBody.virtualTourUrl;
+                if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
+                    const videoUrlDetail = videoUrl.split("?v=");
+                    if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
+                        virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
+                    }
+                }
+
+                product.virtualTourUrl = virtualTourUrl;
+            } else if (virtualTourType == VIRTUAL_TOUR_TYPE.VIDEO && req.files && req.files.virtualTourVideo) {
+                const virtualTourVideoFile = req.files.virtualTourVideo;
+                const newFileName = `${Date.now()}_${virtualTourVideoFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(virtualTourVideoFile, PROPERTY_ROOT_PATHS.VIDEO_TOUR, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+
+                product.virtualTourUrl = result;
+            }
+
+            await product.save({ transaction });
+
+            return product;
+        });
+        
+        return true;
+    } catch(err) {
+        console.log('updatePropertyServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
 export const uploadPropertyDocuments = async (req) => {
     try {
         const files = req.files.files;
@@ -182,6 +303,43 @@ export const uploadPropertyImages = async (req) => {
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
+
+export const deletePropertyDocument = async (reqBody, dbInstance) => {
+    try {
+        const { productId, documentId } = reqBody;
+
+        await dbInstance.productDocument.destroy({
+            where: {
+                productId,
+                id: documentId
+            }
+        });
+
+        return true;
+    } catch(err) {
+        console.log('deletePropertyDocumentServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const deletePropertyImage = async (reqBody, dbInstance) => {
+    try {
+        const { productId, imageId } = reqBody;
+
+        await dbInstance.productImage.destroy({
+            where: {
+                productId,
+                id: imageId
+            }
+        });
+
+        return true;
+    } catch(err) {
+        console.log('deletePropertyImageServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
 
 export const listProperties = async (userId, reqBody, dbInstance) => {
     try {
