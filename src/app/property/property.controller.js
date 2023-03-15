@@ -21,6 +21,42 @@ export const createProperty = async (req, res, next) => {
 };
 
 /**
+ * POST /property/documents
+ * Upload property documents
+ */
+export const uploadPropertyDocuments = async (req, res, next) => {
+    try {
+        const result = await propertyService.uploadPropertyDocuments(req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Product documents uploaded successfully" });
+    } catch (err) {
+        console.log('uploadPropertyDocumentsError', err);
+        next(err);
+    }
+};
+
+/**
+ * POST /property/images
+ * Upload property images
+ */
+export const uploadPropertyImages = async (req, res, next) => {
+    try {
+        const result = await propertyService.uploadPropertyImages(req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Product images uploaded successfully" });
+    } catch (err) {
+        console.log('uploadPropertyImagesError', err);
+        next(err);
+    }
+};
+
+/**
  * GET /property/list
  * List all properties
  */

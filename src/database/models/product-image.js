@@ -37,6 +37,7 @@ export default function (sequelize) {
     modelName: 'productImage',
     tableName: 'product_images',
     sequelize,
+    updatedAt: false
   });
 
   ProductImage.addHook('beforeSave', async (instance) => {

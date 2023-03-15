@@ -38,6 +38,7 @@ export default function (sequelize) {
     modelName: 'productDocument',
     tableName: 'product_documents',
     sequelize,
+    updatedAt: false
   });
 
   ProductDocument.addHook('beforeSave', async (instance) => {

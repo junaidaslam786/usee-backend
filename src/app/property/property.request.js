@@ -19,3 +19,24 @@ export const createPropertyRules = [
   body('postalCode').exists(), 
   body('region').exists(), 
 ];
+
+export const uploadPropertyDocumentRules = [
+  body('productId').exists().custom(async (value) => {
+    return await db.models.product.findOne({ where: { id: value } }).then(reasonData => {
+      if (!reasonData) {
+        return Promise.reject('Invalid product id or product do not exist.');
+      }
+    });
+  }), 
+  body('titles').exists(), 
+];
+
+export const uploadPropertyImageRules = [
+  body('productId').exists().custom(async (value) => {
+    return await db.models.product.findOne({ where: { id: value } }).then(reasonData => {
+      if (!reasonData) {
+        return Promise.reject('Invalid product id or product do not exist.');
+      }
+    });
+  }), 
+];

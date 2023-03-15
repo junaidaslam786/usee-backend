@@ -24,7 +24,8 @@ export const AGENT_TYPE = {
 
 export const PROPERTY_ROOT_PATHS = {
     FEATURE_IMAGE: "uploads/properties/images",
-    VIDEO_TOUR: "uploads/properties/vrvideos"
+    VIDEO_TOUR: "uploads/properties/vrvideos",
+    DOCUMENT: "uploads/properties/documents",
 }
 
 export const VIRTUAL_TOUR_TYPE = {

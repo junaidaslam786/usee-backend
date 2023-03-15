@@ -116,6 +116,73 @@ export const createProperty = async (reqBody, req) => {
     }
 }
 
+export const uploadPropertyDocuments = async (req) => {
+    try {
+        const files = req.files.files;
+        const { titles, productId } = req.body;
+        let totalFiles = files.length;
+        const productDocuments = [];
+
+        for (let i = 0; i < totalFiles; i++) {
+            const singleFile = files[i];
+            const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
+            const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.DOCUMENT, newFileName);
+            if (result?.error) {
+                return { error: true, message: result?.error }
+            } 
+
+            productDocuments.push({
+                productId,
+                title: titles[i],
+                file: result,
+                createdBy: req.user.id
+            });
+        }
+
+        if (productDocuments.length > 0) {
+            await req.dbInstance.productDocument.bulkCreate(productDocuments);
+        }
+
+        return true;
+    } catch(err) {
+        console.log('uploadPropertyDocumentsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const uploadPropertyImages = async (req) => {
+    try {
+        const files = req.files.files;
+        let totalFiles = files.length;
+        const productImages = [];
+
+        for (let i = 0; i < totalFiles; i++) {
+            const singleFile = files[i];
+            const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
+            const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.FEATURE_IMAGE, newFileName);
+            if (result?.error) {
+                return { error: true, message: result?.error }
+            } 
+
+            productImages.push({
+                productId: req.body.productId,
+                image: result,
+                sortOrder: i + 1,
+                createdBy: req.user.id
+            });
+        }
+
+        if (productImages.length > 0) {
+            await req.dbInstance.productImage.bulkCreate(productImages);
+        }
+
+        return true;
+    } catch(err) {
+        console.log('uploadPropertyImagesServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
 export const listProperties = async (userId, reqBody, dbInstance) => {
     try {
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
