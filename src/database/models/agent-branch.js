@@ -3,7 +3,8 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class AgentBranch extends Model {
     static associate(models) {
-        AgentBranch.belongsTo(models.user, { foreignKey: 'userId' })
+      AgentBranch.belongsTo(models.user, { foreignKey: 'userId' })
+      AgentBranch.hasMany(models.agent, { foreignKey: 'branchId' })
     }
   }
 
