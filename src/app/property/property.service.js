@@ -340,14 +340,13 @@ export const deletePropertyImage = async (reqBody, dbInstance) => {
     }
 }
 
-
 export const listProperties = async (userId, reqBody, dbInstance) => {
     try {
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
-        const selectedItems = (reqBody && reqBody.page) ? reqBody.page : 1;
+        const page = (reqBody && reqBody.page) ? reqBody.page : 1;
         const status = (reqBody && reqBody.status == PRODUCT_STATUS.ARCHIVED) ? reqBody.status : PRODUCT_STATUS.ACTIVE;
     
-        return await dbInstance.product.findAll({
+        const { count, rows } = await dbInstance.product.findAndCountAll({
             where: { 
                 status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
                 [OP.or]: [
@@ -356,9 +355,17 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
                 ]
             },
             order: [["id", "DESC"]],
-            offset: (itemPerPage * (selectedItems - 1)),
+            offset: (itemPerPage * (page - 1)),
             limit: itemPerPage
         });
+
+        return {
+            data: rows,
+            page,
+            size: itemPerPage,
+            totalPage: Math.ceil(count / itemPerPage),
+            totalItems: count
+        };
     } catch(err) {
         console.log('listActivePropertiesServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}

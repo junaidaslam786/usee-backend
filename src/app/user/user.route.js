@@ -11,9 +11,6 @@ router.route('/profile')
   .put(isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser)
   .delete(isAuthenticated, userController.deleteCurrentUser);
 
-router.put('/update-password',
-  isAuthenticated,
-  validate(userValidations.changePasswordRules),
-  userController.updatePassword);
+router.put('/update-password', isAuthenticated, validate(userValidations.changePasswordRules), userController.updatePassword);
 
 export default router;

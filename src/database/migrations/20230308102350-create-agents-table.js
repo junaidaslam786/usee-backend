@@ -81,6 +81,10 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
     type:Sequelize.STRING,
     field: 'api_code'
   },
+  sortOrder: {
+    type:Sequelize.INTEGER,
+    field: 'sort_order'
+  },
   createdBy: {
     allowNull: true,
     type:Sequelize.UUID,

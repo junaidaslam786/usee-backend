@@ -184,7 +184,7 @@ export const forgotPassword = async (reqBody, dbInstance) => {
         user.rememberTokenExpire = new Date();
         await user.save();
 
-        const resetPasswordLink = (user.userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL) + `/${user.rememberToken}`;
+        const resetPasswordLink = (user.userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL) + `reset-password/${user.rememberToken}`;
         const payload = {
             to: "hassan.mehmood@invozone.com",
             subject: "Your password change request has received",

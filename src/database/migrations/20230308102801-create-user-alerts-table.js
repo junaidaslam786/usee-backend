@@ -35,9 +35,9 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     field: 'alert_type',
     type: Sequelize.INTEGER,
   },
-  status: {
+  removed: {
     type: Sequelize.BOOLEAN,
-    field: 'status'
+    field: 'removed'
   },
   viewed: {
     type: Sequelize.BOOLEAN,

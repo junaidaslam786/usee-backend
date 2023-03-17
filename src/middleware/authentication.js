@@ -45,6 +45,9 @@ export default async function authenticate(req, res, next) {
           attributes: ["id", "name", "key"],
           through: { attributes: [] }
         }]
+      },
+      {
+        model: req.dbInstance.agent,
       }
     ],
   });

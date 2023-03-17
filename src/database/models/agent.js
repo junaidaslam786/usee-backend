@@ -4,6 +4,7 @@ export default function (sequelize) {
   class Agent extends Model {
     static associate(models) {
       Agent.belongsTo(models.user, { foreignKey: 'userId' })
+      Agent.belongsTo(models.agentBranch, { foreignKey: 'branchId' })
     }
   }
 
@@ -67,8 +68,20 @@ export default function (sequelize) {
     mortgageAdvisorEmail: {
         type: DataTypes.STRING,
     },
+    branchId: {
+      allowNull: true,
+      type: DataTypes.UUID,
+      references: {
+        model: "agent_branches",
+        key: "id"
+      },
+      onUpdate: "CASCADE",
+    },
     apiCode: {
         type: DataTypes.STRING,
+    },
+    sortOrder: {
+      type: DataTypes.INTEGER,
     },
     createdBy: {
         type: DataTypes.UUID,

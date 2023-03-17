@@ -1,6 +1,5 @@
 import createError from 'http-errors';
 import * as propertyService from './property.service';
-import { utilsHelper } from '@/helpers';
 
 /**
  * POST /property/create
@@ -21,7 +20,7 @@ export const createProperty = async (req, res, next) => {
 };
 
 /**
- * POST /property/update
+ * PUT /property/update
  * Update property
  */
 export const updateProperty = async (req, res, next) => {
@@ -39,7 +38,7 @@ export const updateProperty = async (req, res, next) => {
 };
 
 /**
- * POST /property/documents
+ * POST /property/document
  * Upload property documents
  */
 export const uploadPropertyDocuments = async (req, res, next) => {
@@ -57,7 +56,7 @@ export const uploadPropertyDocuments = async (req, res, next) => {
 };
 
 /**
- * POST /property/images
+ * POST /property/image
  * Upload property images
  */
 export const uploadPropertyImages = async (req, res, next) => {
@@ -75,7 +74,7 @@ export const uploadPropertyImages = async (req, res, next) => {
 };
 
 /**
- * DELETE /property/documents
+ * DELETE /property/document
  * Delete property document
  */
 export const deletePropertyDocument = async (req, res, next) => {
@@ -93,7 +92,7 @@ export const deletePropertyDocument = async (req, res, next) => {
 };
 
 /**
- * DELETE /property/images
+ * DELETE /property/image
  * Delete property image
  */
 export const deletePropertyImage = async (req, res, next) => {

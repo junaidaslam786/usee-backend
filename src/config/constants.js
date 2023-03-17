@@ -33,3 +33,9 @@ export const VIRTUAL_TOUR_TYPE = {
     URL: "url",
     SLIDESHOW: "slideshow"
 }
+
+export const USER_ALERT_MODE = {
+    WISHLIST: "wishlist",
+    INTEREST: "interest",
+    OFFER: "offer"
+}

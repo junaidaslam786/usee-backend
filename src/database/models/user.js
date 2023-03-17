@@ -30,7 +30,7 @@ export default function (sequelize) {
     static associate(models) {
       User.belongsTo(models.city, { foreignKey: 'cityId' })
       User.belongsTo(models.role, { foreignKey: 'roleId' })
-      User.hasMany(models.agent, { foreignKey: 'userId' })
+      User.hasOne(models.agent, { foreignKey: 'userId' })
       User.hasMany(models.agentBranch, { foreignKey: 'userId' })
       User.hasMany(models.agentAvailability, { foreignKey: 'userId' })
       User.hasMany(models.product, { foreignKey: 'userId' })
@@ -62,7 +62,6 @@ export default function (sequelize) {
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     password: {
       type: DataTypes.STRING,

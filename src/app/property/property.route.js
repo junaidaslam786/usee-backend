@@ -9,11 +9,11 @@ const router = Router();
 router.get('/list', isAuthenticated, propertyController.listProperties);
 router.get('/:id', isAuthenticated, propertyController.getProperty);
 router.post('/create', isAuthenticated, validate(propertyValidations.createPropertyRules), propertyController.createProperty);
-router.post('/update', isAuthenticated, validate(propertyValidations.updatePropertyRules), propertyController.updateProperty);
-router.post('/documents', isAuthenticated, validate(propertyValidations.uploadPropertyDocumentRules), propertyController.uploadPropertyDocuments);
-router.delete('/documents', isAuthenticated, validate(propertyValidations.deletePropertyDocumentRules), propertyController.deletePropertyDocument);
-router.post('/images', isAuthenticated, validate(propertyValidations.uploadPropertyImageRules), propertyController.uploadPropertyImages);
-router.delete('/images', isAuthenticated, validate(propertyValidations.deletePropertyImageRules), propertyController.deletePropertyImage);
+router.put('/update', isAuthenticated, validate(propertyValidations.updatePropertyRules), propertyController.updateProperty);
+router.post('/document', isAuthenticated, validate(propertyValidations.uploadPropertyDocumentRules), propertyController.uploadPropertyDocuments);
+router.delete('/document', isAuthenticated, validate(propertyValidations.deletePropertyDocumentRules), propertyController.deletePropertyDocument);
+router.post('/image', isAuthenticated, validate(propertyValidations.uploadPropertyImageRules), propertyController.uploadPropertyImages);
+router.delete('/image', isAuthenticated, validate(propertyValidations.deletePropertyImageRules), propertyController.deletePropertyImage);
 router.post('/removal-request', isAuthenticated, validate(propertyValidations.removalRequestRules), propertyController.removePropertyRequest);
 
 

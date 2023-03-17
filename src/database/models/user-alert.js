@@ -32,13 +32,12 @@ export default function (sequelize) {
     },
     alertMode: {
       type: DataTypes.STRING,
-      field: "type",
       enum: ["wishlist", "interest", "offer"]
     },
     alertType: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER, // (wishlist 1-Removed,2-Added ##### Interest 1-Interested,2-Not interested)
     },
-    status: {
+    removed: {
       type: DataTypes.BOOLEAN,
     },
     viewed: {
@@ -55,6 +54,7 @@ export default function (sequelize) {
     modelName: 'userAlert',
     tableName: 'user_alerts',
     sequelize,
+    updatedAt: false
   });
 
   UserAlert.addHook('beforeSave', async (instance) => {
