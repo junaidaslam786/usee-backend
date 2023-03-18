@@ -104,4 +104,7 @@ dist
 .tern-port
 
 uploads/
+
 package-lock.json
+
+yarn.lock
