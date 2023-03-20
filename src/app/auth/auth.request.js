@@ -7,11 +7,11 @@ export const loginRules = [
 ];
 
 export const registerAgentRules = [
-  body('firstName').exists(),
-  body('lastName').exists(),
-  body('companyName').exists(),
-  body('companyPosition').exists(),
-  body('phoneNumber').exists(),
+  body('firstName').exists().notEmpty(),
+  body('lastName').exists().notEmpty(),
+  body('companyName').exists().notEmpty(),
+  body('companyPosition').exists().notEmpty(),
+  body('phoneNumber').exists().notEmpty(),
   body('email').isEmail().exists().custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value } }).then(userData => {
       if (userData) {
@@ -19,7 +19,7 @@ export const registerAgentRules = [
       }
     });
   }),
-  body('password').isLength({ min: 8 }).exists(),
+  body('password').isLength({ min: 8 }).exists().notEmpty(),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password and Confirm password should match');
@@ -31,8 +31,8 @@ export const registerAgentRules = [
 ];
 
 export const registerCustomerRules = [
-  body('firstName').exists(),
-  body('lastName').exists(),
+  body('firstName').exists().notEmpty(),
+  body('lastName').exists().notEmpty(),
   body('email').isEmail().exists().custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value } }).then(userData => {
       if (userData) {
@@ -52,12 +52,12 @@ export const registerCustomerRules = [
 ]
 
 export const forgotPasswordRules = [
-  check('email').isEmail().exists()
+  check('email').isEmail().exists().notEmpty(),
 ];
 
 export const resetPasswordRules = [
-  body('token').exists(),
-  body('email').isEmail().exists(),
+  body('token').exists().notEmpty(),
+  body('email').isEmail().exists().notEmpty(),
   body('password').isLength({ min: 6 }).exists(),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {

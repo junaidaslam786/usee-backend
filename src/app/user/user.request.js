@@ -1,5 +1,5 @@
 
-import { body, check } from 'express-validator';
+import { body } from 'express-validator';
 
 export const updateProfileRules = [
     body('firstName').optional(),
@@ -8,6 +8,6 @@ export const updateProfileRules = [
 ];
 
 export const changePasswordRules = [
-    body('current').exists(),
+    body('current').exists().notEmpty(),
     body('password').isLength({ min: 6 }).exists(),
 ];

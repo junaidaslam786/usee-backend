@@ -1,5 +1,3 @@
-import db from '@/database';
-
 export const listAgentBranches = async (agentInfo, dbInstance) => {
     try {
         return await dbInstance.agentBranch.findAll({

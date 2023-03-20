@@ -11,11 +11,11 @@ export const createRoleRules = [
           }
         });
     }), 
-    body('permissions').exists(), 
+    body('permissions').exists().notEmpty(), 
 ];
 
 export const updateRoleRules = [
-    body('id').exists(), 
+    body('id').exists().notEmpty(),
     body('name').exists().custom(async (value, { req }) => {
         return await db.models.role.findOne({ where: { name: value, id: { [OP.ne]: req.body.id } } }).then(roleData => {
           if (roleData) {
@@ -23,5 +23,5 @@ export const updateRoleRules = [
           }
         });
     }), 
-    body('permissions').exists(), 
+    body('permissions').exists().notEmpty(),
 ];

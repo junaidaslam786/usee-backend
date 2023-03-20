@@ -2,7 +2,7 @@ import { body } from 'express-validator';
 import db from '@/database';
 
 export const removalRequestRules = [
-  body('propertyId').exists(), 
+  body('propertyId').exists().notEmpty(),
   body('reasonId').exists().custom(async (value) => {
     return await db.models.productRemoveReason.findOne({ where: { id: value } }).then(reasonData => {
       if (!reasonData) {
@@ -13,11 +13,11 @@ export const removalRequestRules = [
 ];
 
 export const createPropertyRules = [
-  body('title').exists(), 
-  body('address').exists(), 
-  body('city').exists(), 
-  body('postalCode').exists(), 
-  body('region').exists(), 
+  body('title').exists().notEmpty(),
+  body('address').exists().notEmpty(),
+  body('city').exists().notEmpty(),
+  body('postalCode').exists().notEmpty(), 
+  body('region').exists().notEmpty(), 
 ];
 
 export const updatePropertyRules = [
@@ -28,10 +28,10 @@ export const updatePropertyRules = [
       }
     });
   }), 
-  body('title').exists(), 
-  body('address').exists(), 
-  body('city').exists(), 
-  body('region').exists(), 
+  body('title').exists().notEmpty(),
+  body('address').exists().notEmpty(),
+  body('city').exists().notEmpty(),
+  body('region').exists().notEmpty(), 
 ];
 
 export const uploadPropertyDocumentRules = [
@@ -42,7 +42,7 @@ export const uploadPropertyDocumentRules = [
       }
     });
   }), 
-  body('titles').exists(), 
+  body('titles').exists().notEmpty(),
 ];
 
 export const uploadPropertyImageRules = [

@@ -2,10 +2,10 @@ import { body } from 'express-validator';
 import db from '@/database';
 
 export const createAgentUserRules = [
-  body('firstName').exists(),
-  body('lastName').exists(),
-  body('phoneNumber').exists(),
-  body('role').exists(),
+  body('firstName').exists().notEmpty(),
+  body('lastName').exists().notEmpty(),
+  body('phoneNumber').exists().notEmpty(),
+  body('role').exists().notEmpty(),
   body('email').isEmail().exists().custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value } }).then(emailData => {
       if (emailData) {
@@ -47,5 +47,5 @@ export const updateAgentUserSortingRules = [
       }
     });
   }),
-  body('sort').exists(),
+  body('sort').exists().notEmpty(),
 ];

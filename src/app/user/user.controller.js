@@ -20,9 +20,12 @@ export const getCurrentUser = async (req, res, next) => {
  */
 export const updateCurrentUser = async (req, res, next) => {
   try {
-    await userService.updateCurrentUser(req.body, req.dbInstance);
+    const result = await userService.updateCurrentUser(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
 
-    res.status(200).json({ success: true });
+    return res.json({ success: true, message: "Profile updated successfully" });
   } catch (err) {
     next(err);
   }
