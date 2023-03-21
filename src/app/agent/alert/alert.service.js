@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
-import { USER_ALERT_MODE } from '../../../config/constants';
+import { USER_ALERT_MODE, USER_ALERT_TYPE } from '../../../config/constants';
 
 export const getAgentAlerts = async (userId, dbInstance) => {
     try {
@@ -45,6 +45,34 @@ export const getAgentAlerts = async (userId, dbInstance) => {
     }
 }
 
+export const createAgentAlert = async (reqBody, req) => {
+    try {
+        const { user: customerInfo, dbInstance } = req;
+        const {
+            productId,
+            alertMode,
+            alertType
+        } = reqBody;
+
+        // create agent alert
+        const agentAlert = await dbInstance.userAlert.create({
+            customerId: customerInfo.id,
+            productId,
+            alertMode,
+            alertType,
+            removed: false,
+            viewed: false,
+            emailed: false,
+            createdBy: customerInfo.id
+        });
+
+        return await getAgentAlertDetailById(agentAlert.id, dbInstance);
+    } catch(err) {
+        console.log('createAgentAlertServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
 export const removeAgentAlert = async (alertId, dbInstance) => {
     try {
         const userAlert = await dbInstance.userAlert.findOne({ where: { id: alertId } });
@@ -65,6 +93,26 @@ export const removeAgentAlert = async (alertId, dbInstance) => {
     }
 }
 
+export const getAgentAlertDetailById = async (id, dbInstance) => {
+    const agentAlert = await dbInstance.userAlert.findOne({
+        where: { id },
+        include: [{
+            model: dbInstance.user, 
+            attributes: ["id", "firstName", "lastName"],
+        },
+        {
+            model: dbInstance.product, 
+            attributes: ["id", "title"],
+        }],
+    });
+
+    if (!agentAlert) {
+        return false;
+    }
+
+    return agentAlert;
+}
+
 const formatAlertText = (alert) => {
     let text = "";
     const customerName = `<b>${alert.user.firstName} ${alert.user.firstName}</b>`;
@@ -73,14 +121,14 @@ const formatAlertText = (alert) => {
     switch(alert.alertMode) {
         case USER_ALERT_MODE.WISHLIST: 
             text = `${customerName} removed the property ${productTitle} from wishlist`;
-            if (alert.alertType == 2) {
+            if (alert.alertType == USER_ALERT_TYPE.WISHLIST_ADDED) {
                 text = `${customerName} added the property ${productTitle} to wishlist`;
             }
             
             break;
         case USER_ALERT_MODE.INTEREST: 
             text = `${customerName} is interested in property ${productTitle}`;
-            if (alert.alertType == 2) {
+            if (alert.alertType == USER_ALERT_TYPE.NOT_INTERESTED) {
                 text = `${customerName} is not interested in property ${productTitle}`;
             }
 

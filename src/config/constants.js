@@ -40,3 +40,23 @@ export const USER_ALERT_MODE = {
     INTEREST: "interest",
     OFFER: "offer"
 }
+
+export const USER_ALERT_TYPE = {
+    WISHLIST_ADDED: 1,
+    WISHLIST_REMOVED: 2,
+    INTERESTED: 1,
+    NOT_INTERESTED: 2,
+    OFFER: 1,
+}
+
+export const OFFER_STATUS = {
+    PENDING: "pending",
+    ACCEPTED: "accepted",
+    REJECTED: "rejected",
+}
+
+export const APPOINTMENT_TYPES = {
+    UPCOMING: "upcoming",
+    COMPLETED: "completed",
+    CANCELLED: "cancelled"
+}

@@ -34,6 +34,7 @@ export default function (sequelize) {
     modelName: 'customerWishlist',
     tableName: 'customer_wishlists',
     sequelize,
+    updatedAt: false
   });
 
   CustomerWishlist.addHook('beforeSave', async (instance) => {

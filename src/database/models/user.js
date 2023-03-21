@@ -34,7 +34,7 @@ export default function (sequelize) {
       User.hasMany(models.agentBranch, { foreignKey: 'userId' })
       User.hasMany(models.agentAvailability, { foreignKey: 'userId' })
       User.hasMany(models.product, { foreignKey: 'userId' })
-      User.hasMany(models.customerWishlist, { foreignKey: 'userId' })
+      User.hasMany(models.customerWishlist, { foreignKey: 'customerId' })
       User.hasMany(models.customerLog, { foreignKey: 'userId' })
       User.hasMany(models.userAlert, { foreignKey: 'customerId' })
       User.hasMany(models.productAllocation, { foreignKey: 'userId' })

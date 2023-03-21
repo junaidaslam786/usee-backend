@@ -1,3 +1,4 @@
+import { OFFER_STATUS } from '@/config/constants';
 import createError from 'http-errors';
 import * as propertyService from './property.service';
 
@@ -159,6 +160,42 @@ export const removePropertyRequest = async (req, res, next) => {
         return res.json({ success: true, message: "Property removal request sent successfully" });
     } catch (err) {
         console.log('removePropertyRequestError', err);
+        next(err);
+    }
+};
+
+/**
+ * POST /property/customer/make-offer
+ * Add offer to the property by customer
+ */
+export const addCustomerOffer = async (req, res, next) => {
+    try {
+        const result = await propertyService.addCustomerOffer(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Offer has been made successfully" });
+    } catch (err) {
+        console.log('addCustomerOfferRequestError', err);
+        next(err);
+    }
+};
+
+/**
+ * GET /property/agent/update-offer
+ * Update the status of the offer by agent
+ */
+export const updateOfferStatus = async (req, res, next) => {
+    try {
+        const result = await propertyService.updateOfferStatus(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Offer is updated successfully" });
+    } catch (err) {
+        console.log('updateOfferStatusError', err);
         next(err);
     }
 };

@@ -20,6 +20,24 @@ export const getAgentAlerts = async (req, res, next) => {
 };
 
 /**
+ * POST /agent/alert/create
+ * Create alert for agent
+ */
+export const createAgentAlert = async (req, res, next) => {
+  try {
+    const result = await alertService.createAgentAlert(req.body, req);
+    if (result?.error && result?.message) {
+        return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true, message: "Alert created successfully" });
+  } catch (err) {
+    console.log('createAgentAlertError', err);
+    next(err);
+  }
+};
+
+/**
  * DELETE /agent/alert/:id
  * Remove alert from agent feed
  */

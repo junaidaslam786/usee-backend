@@ -105,7 +105,7 @@ export const createAgentUsers = async (reqBody, req) => {
 
             const loginLink = HOME_PANEL_URL + 'auth/login';
             const payload = {
-                to: "hassan.mehmood@invozone.com",
+                to: email,
                 subject: `You have been added as ${agentUserData.companyPosition}`,
                 html: `<p>Hello,</p> <p>Thank you for registering with us</p> <p>Click on the link below to login with temporary password</p> <p>Your Temporary Password: ${tempPassword}</p> <p><a href="${loginLink}" target="_blank">Login</a></p>`
             }

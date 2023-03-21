@@ -186,7 +186,7 @@ export const forgotPassword = async (reqBody, dbInstance) => {
 
         const resetPasswordLink = (user.userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL) + `reset-password/${user.rememberToken}`;
         const payload = {
-            to: "hassan.mehmood@invozone.com",
+            to: email,
             subject: "Your password change request has received",
             html: `<p>Hello,</p> <p>Click on the link below to reset your password</p><p><a href="${resetPasswordLink}" target="_blank">Reset Password</a></p>`
         }
@@ -227,7 +227,7 @@ export const resetPassword = async (reqBody, dbInstance) => {
         await user.save();
   
         const payload = {
-            to: "hassan.mehmood@invozone.com",
+            to: email,
             subject: "Your password on Usee360 has been changed",
             html: `<p>Hello,</p> <p>This is a confirmation that the password for your account ${user.email} has just been changed.</p>`
         }

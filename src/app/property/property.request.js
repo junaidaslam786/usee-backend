@@ -88,3 +88,20 @@ export const deletePropertyImageRules = [
     });
   }), 
 ];
+
+export const customerOfferRequestRules = [
+  body('productId').exists().custom(async (value) => {
+    return await db.models.product.findOne({ where: { id: value } }).then(productData => {
+      if (!productData) {
+        return Promise.reject('Invalid product id or product do not exist.');
+      }
+    });
+  }), 
+  body('amount').exists().notEmpty(),
+  body('notes').exists().notEmpty(),
+];
+
+export const updateOfferStatusRequestRules = [
+  body('offerId').exists().notEmpty(),
+  body('status').exists().notEmpty(),
+];

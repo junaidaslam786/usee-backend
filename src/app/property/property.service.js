@@ -1,8 +1,9 @@
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
-import { PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE } from '../../config/constants';
+import { PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS } from '../../config/constants';
 import { utilsHelper } from '@/helpers';
 import db from '@/database';
+import * as userService from '../user/user.service'
 
 export const createProperty = async (reqBody, req) => {
     try {
@@ -413,8 +414,98 @@ export const removePropertyRequest = async (reqUser, reqBody, dbInstance) => {
     }
 }
 
-const getPropertyById = async (propertyId, dbInstance) => {
-    const property = await dbInstance.product.findOne({ where: { id: propertyId }});
+export const addCustomerOffer = async (reqBody, req) => {
+    try {
+        const { productId, amount, notes } = reqBody;
+        const { user: customerInfo, dbInstance } = req;
+        console.log('dbInstance', dbInstance);
+
+        await db.transaction(async (transaction) => {
+            const product = await getPropertyById(productId, dbInstance);
+
+            // add offer to the product
+            await dbInstance.productOffer.create({
+                customerId: customerInfo.id,
+                productId,
+                amount,
+                notes,
+                status: OFFER_STATUS.PENDING
+            }, { transaction });
+
+            // create agent alert
+            await dbInstance.userAlert.create({
+                customerId: customerInfo.id,
+                productId,
+                alertMode: USER_ALERT_MODE.OFFER,
+                alertType: USER_ALERT_TYPE.OFFER,
+                removed: false,
+                viewed: false,
+                emailed: false,
+                createdBy: customerInfo.id
+            }, { transaction });
+
+            const payload = {
+                to: customerInfo.email,
+                subject: `Customer has made an offer to the property`,
+                html: `<p>Hello,</p> <p>${customerInfo.firstName} ${customerInfo.lastName} has made an offer to the property</p> <p>Property Title: ${product.title}</p> <p><img src="${product.featuredImage}"></p></p>`
+            }
+            customerInfo.sendMail(payload);
+        });
+
+        return true;
+    } catch(err) {
+        console.log('addCustomerOfferServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const updateOfferStatus = async (reqBody, req) => {
+    try {
+        const { offerId, status } = reqBody;
+        const { dbInstance } = req;
+
+        const offer = await dbInstance.productOffer.findOne({ where: { id: offerId } });
+        if (!offer) {
+            return { error: true, message: 'Invalid offer id or offer do not exist.'}
+        }
+
+        if (offer.status != OFFER_STATUS.PENDING) {
+            return { error: true, message: 'Offer already updated.'}
+        }
+
+        await db.transaction(async (transaction) => {
+            const product = await getPropertyById(offer.productId, dbInstance);
+            const customer = await userService.getUserById(offer.customerId);
+
+            // update offer status
+            offer.status = status == "accepted" ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.REJECTED;
+            await offer.save({ transaction });
+
+            const payload = {
+                to: customer.email,
+                subject: `Agent has made an update on your offer`,
+                html: `<p>Hello,</p> <p>Agent has made ${status} your offer to the property. You can send another offer.</p> <p>Property Title: ${product.title}</p> <p><img src="${product.featuredImage}"></p></p>`
+            }
+            customer.sendMail(payload);
+        });
+
+        return true;
+    } catch(err) {
+        console.log('updateOfferStatusServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const getPropertyById = async (propertyId, dbInstance) => {
+    const property = await dbInstance.product.findOne({ 
+        where: { id: propertyId },
+        include: [
+            {
+              model: dbInstance.user, 
+              attributes: ["id", "firstName", "lastName", "email"],
+            },
+        ]
+    });
     if (!property) {
         return false;
     }
@@ -422,7 +513,7 @@ const getPropertyById = async (propertyId, dbInstance) => {
     return property;
 }
 
-const getPropertyDetailById = async (propertyId, dbInstance) => {
+export const getPropertyDetailById = async (propertyId, dbInstance) => {
     const property = await dbInstance.product.findOne({
         where: { id: propertyId },
         include: [
@@ -441,6 +532,16 @@ const getPropertyDetailById = async (propertyId, dbInstance) => {
                 {
                   model: dbInstance.categoryField, 
                   attributes: ["id", "label", "type", "options", "required"],
+                },
+            ]
+          },
+          {
+            model: dbInstance.productOffer, 
+            attributes: ["id", "amount", "notes", "status"],
+            include: [
+                {
+                  model: dbInstance.user, 
+                  attributes: ["id", "firstName", "lastName", "email"],
                 },
             ]
           },
