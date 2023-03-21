@@ -2,7 +2,8 @@ import { utilsHelper } from '@/helpers';
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
 import db from '@/database';
-import { USER_TYPE, AGENT_TYPE } from '../../config/constants';
+import { USER_TYPE, AGENT_TYPE } from '@/config/constants';
+import * as userService from '../user/user.service';
 
 const {
     ADMIN_PANEL_URL,
@@ -69,12 +70,12 @@ export const login = async (reqBody, dbInstance) => {
 
 export const registerAsAgent = async (reqBody, dbInstance) => {
     try {
-        const { user: userTable, agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
+        const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
         const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber } = reqBody;
         
         const result = await db.transaction(async (transaction) => {
             // Create user
-            const userData = {
+            const user = await userService.createUserWithPassword({
                 firstName, 
                 lastName, 
                 email, 
@@ -82,8 +83,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
                 phoneNumber,
                 status: 1, 
                 userType: USER_TYPE.AGENT,
-            }
-            const user = await userTable.create(userData, { transaction });
+            }, transaction);
 
             // create agent profile
             const agent = await agentTable.create({

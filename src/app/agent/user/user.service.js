@@ -4,6 +4,7 @@ import db from '@/database';
 const {
     HOME_PANEL_URL
 } = process.env;
+import * as userService from '../../user/user.service';
 
 export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     try {
@@ -41,7 +42,7 @@ export const createAgentUsers = async (reqBody, req) => {
     try {
         const { firstName, lastName, email, phoneNumber, role, branch } = reqBody;
         const { user: agentInfo, dbInstance } = req;
-        const { user, agent, agentTimeSlot, agentAvailability } = dbInstance;
+        const { agent, agentTimeSlot, agentAvailability } = dbInstance;
 
         const result = await db.transaction(async (transaction) => {
             const tempPassword = utilsHelper.generateRandomString(10);
@@ -59,7 +60,7 @@ export const createAgentUsers = async (reqBody, req) => {
             const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
 
             // create user data
-            const newUser = await user.create({
+            const newUser = await userService.createUserWithPassword({
                 firstName,
                 lastName,
                 email,
@@ -68,7 +69,7 @@ export const createAgentUsers = async (reqBody, req) => {
                 userType: USER_TYPE.AGENT,
                 password: tempPassword,
                 createdBy: agentInfo.id,
-            }, { transaction });
+            }, transaction);
 
             // create agent user data
             let agentUserData = {

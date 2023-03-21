@@ -7,7 +7,7 @@ import * as appointmentService from './appointment.service';
  */
 export const listAppointments = async (req, res, next) => {
   try {
-    const result = await appointmentService.listAppointments(req.dbInstance);
+    const result = await appointmentService.listAppointments(req.user, req.query, req.dbInstance);
     if (result?.error && result?.message) {
         return next(createError(400, result.message));
     }
@@ -50,7 +50,7 @@ export const createAppointment = async (req, res, next) => {
 
         res.status(201).json(result);
     } catch (err) {
-        console.log('getAppointmentError', err);
+        console.log('createAppointmentError', err);
         next(err);
     }
 };
@@ -68,7 +68,7 @@ export const updateAppointment = async (req, res, next) => {
 
         return res.json({ success: true, message: "Appointment updated successfully" });
     } catch (err) {
-        console.log('getAppointmentError', err);
+        console.log('updateAppointmentError', err);
         next(err);
     }
 };

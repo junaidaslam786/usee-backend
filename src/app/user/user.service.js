@@ -1,5 +1,6 @@
 import { utilsHelper } from "@/helpers";
 import { PROPERTY_ROOT_PATHS } from '../../config/constants';
+import db from '@/database';
 
 export const updateCurrentUser = async (reqBody, req) => {
     try {
@@ -107,4 +108,21 @@ export const updatePassword = async (user, reqBody) => {
         console.log('updatePasswordServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
+}
+
+export const createUserWithPassword = async (userData, transaction) => {
+    try {
+        return transaction ? await db.models.user.create(userData, { transaction }) : await db.models.user.create(userData);
+    } catch(err) {
+        console.log('createUserWithPasswordServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const getUserById = async (id) => {
+    return await db.models.user.findOne({ where: { id }});
+}
+
+export const getUserByEmail = async (email) => {
+   return await db.models.user.findOne({ where: { email }});
 }

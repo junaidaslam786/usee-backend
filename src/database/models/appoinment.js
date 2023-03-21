@@ -4,6 +4,7 @@ export default function (sequelize) {
   class Appointment extends Model {
     static associate(models) {
       Appointment.belongsToMany(models.product, { through: 'appointment_products', updatedAt: false, unique: false });
+      Appointment.belongsTo(models.user, { foreignKey: 'agentId' })
     }
   }
 
@@ -52,10 +53,6 @@ export default function (sequelize) {
       allowNull: false,
       type: DataTypes.TIME
     },
-    customerPhoneNumber: {
-      type: DataTypes.STRING,
-      field: 'customer_phonenumber'
-    },
     sessionId: {
       type: DataTypes.STRING,
       field: 'session_id'
@@ -80,6 +77,7 @@ export default function (sequelize) {
     modelName: 'appointment',
     tableName: 'appointments',
     sequelize,
+    paranoid: true,
   });
 
   Appointment.addHook('beforeSave', async (instance) => {

@@ -6,7 +6,7 @@ import propertyRouter from '../app/property/property.route';
 import agentAlertRouter from '../app/agent/alert/alert.route';
 import agentBranchRouter from '../app/agent/branch/branch.route';
 import agentUserRouter from '../app/agent/user/user.route';
-import appointmentRouter from '../app/appointment/appointment.route'
+import appointmentRouter from '../app/agent/appointment/appointment.route'
 import agentAvailabilityRouter from '../app/agent/availability/availability.route';
 
 export default function (app) {
@@ -18,6 +18,6 @@ export default function (app) {
   app.use('/agent/alert', agentAlertRouter);
   app.use('/agent/branch', agentBranchRouter);
   app.use('/agent/user', agentUserRouter);
-  app.use('/appointment', appointmentRouter);
+  app.use('/agent/appointment', appointmentRouter);
   app.use('/agent/availability', agentAvailabilityRouter);
 }
