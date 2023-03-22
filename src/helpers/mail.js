@@ -1,63 +1,72 @@
-import { createTransport, createTestAccount, getTestMessageUrl } from 'nodemailer';
+import { createTransport } from 'nodemailer';
 
 const {
-  NODE_ENV, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, DEFAULT_MAIL_SENDER,
+  SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, DEFAULT_MAIL_SENDER, APP_NAME
 } = process.env;
 
 async function getTransporter() {
-  let transporter;
-  if (NODE_ENV !== 'production') {
-    const testAccount = await createTestAccount();
-    transporter = createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-  } else {
-    transporter = createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: Number(SMTP_PORT) === 465,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASSWORD,
-      },
-    });
-  }
+  console.log('settings', {
+    host: SMTP_HOST,
+    port: Number(SMTP_PORT),
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASSWORD
+    },
+    debug: true
+  });
+
+  const transporter = createTransport({
+    host: SMTP_HOST,
+    secureConnection: false,
+    port: SMTP_PORT,
+    tls: {
+      rejectUnauthorized: false
+    },
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASSWORD
+    },
+    debug: true
+  });
+  
   return transporter;
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export async function sendMail(mail) {
-  try {
-    // If there is no sender in payload, set default sender
-    const payload = mail;
-    if (!payload.from) {
-      payload.from = DEFAULT_MAIL_SENDER;
+export async function sendMail(body) {
+  return new Promise(async function (resolve, reject) {
+    try {
+      // Create transporter
+      const transport = await getTransporter();
+      const message = {
+          from: `${DEFAULT_MAIL_SENDER}`,
+          to: body?.to || DEFAULT_MAIL_SENDER,
+          subject: body?.subject || "",
+          headers: {
+            "X-Laziness-level": 1000,
+            charset: "UTF-8"
+          },
+          attachments: [],
+          html: body?.html || "Please contact administrator"
+      };
+
+      if (body?.attachments?.length) {
+          message.attachments = message.attachments.concat(attachments);
+      }
+
+      transport.sendMail(message, function (error, response) {
+          if (error) {
+            console.log('mailErrorInfo', error);
+            reject(error);
+          }
+
+          if (response) {
+            resolve(response);
+          }
+
+      });
+    } catch(error) {
+      console.log('sendMailError', error);
+      return false;
     }
-
-    // Create transporter
-    const transporter = await getTransporter();
-
-    // Send mail
-    const mailInfo = await transporter.sendMail(payload);
-    console.log('mailInfo', mailInfo);
-
-    // If in development mode, console.log the preview url.
-    if (NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.log(`Mail Preview URL is ${getTestMessageUrl(mailInfo)}`);
-    }
-
-    // Return mail response
-    return mailInfo;
-  } catch(error) {
-    console.log('sendMailError', error);
-    return false;
-  }
-  
+  });
 }

@@ -1,7 +1,7 @@
 import { compare, hash } from 'bcrypt';
 import { DataTypes, Model } from 'sequelize';
 
-import { tokenHelper, mailHelper } from '@/helpers';
+import { tokenHelper } from '@/helpers';
 
 export default function (sequelize) {
   class User extends Model {
@@ -20,11 +20,6 @@ export default function (sequelize) {
 
     validatePassword(plainPassword) {
       return compare(plainPassword, this.password);
-    }
-
-    sendMail(mail) {
-      const payload = { ...mail, to: `${this.fullName} <${this.email}>` };
-      return mailHelper.sendMail(payload);
     }
 
     static associate(models) {

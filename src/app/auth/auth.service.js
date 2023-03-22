@@ -4,6 +4,9 @@ const OP = Sequelize.Op;
 import db from '@/database';
 import { USER_TYPE, AGENT_TYPE } from '@/config/constants';
 import * as userService from '../user/user.service';
+import { mailHelper } from '@/helpers';
+const path = require("path")
+const ejs = require("ejs");
 
 const {
     ADMIN_PANEL_URL,
@@ -184,13 +187,16 @@ export const forgotPassword = async (reqBody, dbInstance) => {
         user.rememberTokenExpire = new Date();
         await user.save();
 
-        const resetPasswordLink = (user.userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL) + `reset-password/${user.rememberToken}`;
+        const emailData = [];
+        emailData.name = user.fullName;
+        emailData.resetPasswordLink = (user.userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL) + `reset-password/${user.rememberToken}`;
+        const htmlData = await ejs.renderFile(path.join(__dirname, '../../email-template/forgot-password.ejs'), emailData);
         const payload = {
-            to: email,
-            subject: "Your password change request has received",
-            html: `<p>Hello,</p> <p>Click on the link below to reset your password</p><p><a href="${resetPasswordLink}" target="_blank">Reset Password</a></p>`
+            to: "hassan.mehmood@invozone.com",
+            subject: 'Your password change request has received',
+            html: htmlData,
         }
-        user.sendMail(payload);
+        mailHelper.sendMail(payload);
 
         return true;
     } catch(err) {
