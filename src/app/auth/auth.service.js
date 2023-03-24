@@ -1,17 +1,11 @@
-import { utilsHelper } from '@/helpers';
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
 import db from '@/database';
-import { USER_TYPE, AGENT_TYPE } from '@/config/constants';
+import { USER_TYPE, AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH } from '@/config/constants';
 import * as userService from '../user/user.service';
-import { mailHelper } from '@/helpers';
+import { mailHelper, utilsHelper } from '@/helpers';
 const path = require("path")
 const ejs = require("ejs");
-
-const {
-    ADMIN_PANEL_URL,
-    HOME_PANEL_URL
-} = process.env;
 
 export const login = async (reqBody, dbInstance) => {
     try {
@@ -124,6 +118,18 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
                 email: user.email,
                 type: user.userTypeDisplay,
             };
+
+            const emailData = [];
+            emailData.name = user.fullName;
+            emailData.login = utilsHelper.generateUrl('login', user.userType);
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_AGENT), emailData);
+            const payload = {
+                to: user.email,
+                subject: EMAIL_SUBJECT.REGISTER_AGENT,
+                html: htmlData,
+            }
+            mailHelper.sendMail(payload);
+
             return { user: returnedUserData, token, refreshToken };
         });
        return result;
@@ -160,6 +166,18 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
             email: user.email,
             type: user.userTypeDisplay,
         };
+
+        const emailData = [];
+        emailData.name = user.fullName;
+        emailData.login = utilsHelper.generateUrl('login', user.userType);
+        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_CUSTOMER), emailData);
+        const payload = {
+            to: user.email,
+            subject: EMAIL_SUBJECT.REGISTER_CUSTOMER,
+            html: htmlData,
+        }
+        mailHelper.sendMail(payload);
+
         return { user: returnedUserData, token, refreshToken };
     } catch(err) {
         console.log('registerAsCustomerError', err)
@@ -189,11 +207,11 @@ export const forgotPassword = async (reqBody, dbInstance) => {
 
         const emailData = [];
         emailData.name = user.fullName;
-        emailData.resetPasswordLink = (user.userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL) + `reset-password/${user.rememberToken}`;
-        const htmlData = await ejs.renderFile(path.join(__dirname, '../../email-template/forgot-password.ejs'), emailData);
+        emailData.resetPasswordLink = `${utilsHelper.generateUrl('reset-password', user.userType)}/${user.rememberToken}`;
+        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.FORGOT_PASSWORD), emailData);
         const payload = {
-            to: "hassan.mehmood@invozone.com",
-            subject: 'Your password change request has received',
+            to: email,
+            subject: EMAIL_SUBJECT.FORGOT_PASSWORD,
             html: htmlData,
         }
         mailHelper.sendMail(payload);
@@ -232,12 +250,17 @@ export const resetPassword = async (reqBody, dbInstance) => {
         user.password = password;
         await user.save();
   
+        const emailData = [];
+        emailData.name = user.fullName;
+        emailData.email = user.email;
+        emailData.login = utilsHelper.generateUrl('login', user.userType);
+        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.RESET_PASSWORD), emailData);
         const payload = {
             to: email,
-            subject: "Your password on Usee360 has been changed",
-            html: `<p>Hello,</p> <p>This is a confirmation that the password for your account ${user.email} has just been changed.</p>`
+            subject: EMAIL_SUBJECT.RESET_PASSWORD,
+            html: htmlData,
         }
-        user.sendMail(payload);
+        mailHelper.sendMail(payload);
 
         return true;
     } catch(err) {

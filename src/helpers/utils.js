@@ -1,5 +1,9 @@
 const fs = require("fs");
 const path = require("path");
+const {
+    ADMIN_PANEL_URL,
+    HOME_PANEL_URL
+} = process.env;
 
 export const generateRandomString = (length, isApiCode = false) => {
     try {
@@ -36,4 +40,23 @@ export const fileUpload = async (file, destPath, fileName) => {
         console.log('fileUploaderr', err);
         return { error: err };
     }
+}
+
+export const generateUrl = (type, userType) => {
+    let url = (userType && userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL);
+    switch (type) {
+        case 'login':
+            url = `${url}/auth/login`;
+            break;
+        case 'reset-password':
+            url = `${url}/reset-password`;
+            break;
+        case 'property-url':
+            url = `${url}/property`;
+            break;
+        default:
+            break;
+    }
+
+    return url;
 }

@@ -1,6 +1,9 @@
-import { USER_ALERT_MODE, USER_ALERT_TYPE } from "@/config/constants";
+import { EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_ALERT_MODE, USER_ALERT_TYPE } from "@/config/constants";
 import db from '@/database';
 import * as productService from '../../property/property.service'
+const path = require("path")
+const ejs = require("ejs");
+import { mailHelper, utilsHelper } from "@/helpers";
 
 export const listWishlist = async (customerInfo, dbInstance) => {
     try {
@@ -48,12 +51,18 @@ export const addProductToWishlist = async (productId, req) => {
                 createdBy: customerInfo.id
             }, { transaction });
 
+            const emailData = [];
+            emailData.name = product.user.fullName;
+            emailData.customerName = customerInfo.fullName;
+            emailData.productTitle = product.title;
+            emailData.productUrl = `${utilsHelper.generateUrl('property-url')}/${productId}`;
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.WISHLIST_ADD), emailData);
             const payload = {
                 to: product.user.email,
-                subject: `Customer has added your property to wishlist`,
-                html: `<p>Hello,</p> <p>${customerInfo.firstName} ${customerInfo.lastName} has added your property to wishlist</p> <p>Property Title: ${product.title}</p> <p><img src="${product.featuredImage}"></p></p>`
+                subject: EMAIL_SUBJECT.WISHLIST_ADD,
+                html: htmlData,
             }
-            customerInfo.sendMail(payload);
+            mailHelper.sendMail(payload);
 
             return wishlist;
         });
@@ -71,7 +80,7 @@ export const removeProductFromWishlist = async (productId, req) => {
 
         const wishlist = await getWishlistByUserAndProductId(customerInfo.id, productId, dbInstance);
         if (!wishlist) {
-            return { error: true, message: 'Invalid wishlist id or wishlist do not exist.'}
+            return { error: true, message: 'Invalid product id or wishlist do not exist.'}
         }
 
         await db.transaction(async (transaction) => {
@@ -95,12 +104,18 @@ export const removeProductFromWishlist = async (productId, req) => {
                 createdBy: customerInfo.id
             }, { transaction });
 
+            const emailData = [];
+            emailData.name = product.user.fullName;
+            emailData.customerName = customerInfo.fullName;
+            emailData.productTitle = product.title;
+            emailData.productUrl = `${utilsHelper.generateUrl('property-url')}/${productId}`;
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.WISHLIST_REMOVE), emailData);
             const payload = {
                 to: product.user.email,
-                subject: `Customer has removed your property from wishlist`,
-                html: `<p>Hello,</p> <p>${customerInfo.firstName} ${customerInfo.lastName} has removed your property from wishlist</p> <p>Property Title: ${product.title}</p> <p><img src="${product.featuredImage}"></p></p>`
+                subject: EMAIL_SUBJECT.WISHLIST_REMOVE,
+                html: htmlData,
             }
-            customerInfo.sendMail(payload);
+            mailHelper.sendMail(payload);
 
             return wishlist;
         });

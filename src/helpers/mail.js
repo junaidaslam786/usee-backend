@@ -5,23 +5,9 @@ const {
 } = process.env;
 
 async function getTransporter() {
-  console.log('settings', {
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASSWORD
-    },
-    debug: true
-  });
-
   const transporter = createTransport({
     host: SMTP_HOST,
-    secureConnection: false,
     port: SMTP_PORT,
-    tls: {
-      rejectUnauthorized: false
-    },
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASSWORD

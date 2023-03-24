@@ -1,16 +1,17 @@
-<%- include('layout/header.ejs', { subject: "Forgot Password" }) %>
+<%- include('layout/header.ejs', { subject: "Register as an agent" }) %>
 
 <table bgcolor="#FFFFFF" border="0" cellspacing="0" cellpadding="25" width="100%">
     <tr>
         <td width="100%" bgcolor="#ffffff" style="text-align:left;">
             <p>Hello <%=name%>,</p>
-            <p>Reset your password by clicking the link below.</p>
+            <p>You have successfully registered as an agent into Usee360.</p>
+            <p>Log into your account using below link.</p>
             <table border="0" cellspacing="0" cellpadding="0" class="responsive-table" style=" text-align: center; width: 100%">
                 <tbody>
                     <tr>
                         <td align="center">
-                            <a href="<%= resetPasswordLink %>" target="_blank" style="font-weight:bold; color: #ffffff; text-decoration: none; background-color: #00cd00; border-top:10px solid #00cd00; border-bottom:10px solid #00cd00; border-left: 50px solid #00cd00; border-right: 50px solid #00cd00; border-radius: 3px; -webkit-border-radius: 3px; -moz-border-radius: 3px; display: inline-block;" class="mobile-button">
-                                Reset Password
+                            <a href="<%= login %>" target="_blank" style="font-weight:bold; color: #ffffff; text-decoration: none; background-color: #00cd00; border-top:10px solid #00cd00; border-bottom:10px solid #00cd00; border-left: 50px solid #00cd00; border-right: 50px solid #00cd00; border-radius: 3px; -webkit-border-radius: 3px; -moz-border-radius: 3px; display: inline-block;" class="mobile-button">
+                               Login
                             </a>
                         </td>
                     </tr>

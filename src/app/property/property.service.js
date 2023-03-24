@@ -1,9 +1,11 @@
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
-import { PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS } from '../../config/constants';
-import { utilsHelper } from '@/helpers';
+import { PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH } from '../../config/constants';
+import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
 import * as userService from '../user/user.service'
+const path = require("path")
+const ejs = require("ejs");
 
 export const createProperty = async (reqBody, req) => {
     try {
@@ -418,7 +420,6 @@ export const addCustomerOffer = async (reqBody, req) => {
     try {
         const { productId, amount, notes } = reqBody;
         const { user: customerInfo, dbInstance } = req;
-        console.log('dbInstance', dbInstance);
 
         await db.transaction(async (transaction) => {
             const product = await getPropertyById(productId, dbInstance);
@@ -444,12 +445,18 @@ export const addCustomerOffer = async (reqBody, req) => {
                 createdBy: customerInfo.id
             }, { transaction });
 
+            const emailData = [];
+            emailData.name = product.user.fullName;
+            emailData.customerName = customerInfo.fullName;
+            emailData.productTitle = product.title;
+            emailData.productUrl = `${utilsHelper.generateUrl('property-url')}/${productId}`;
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER), emailData);
             const payload = {
-                to: customerInfo.email,
-                subject: `Customer has made an offer to the property`,
-                html: `<p>Hello,</p> <p>${customerInfo.firstName} ${customerInfo.lastName} has made an offer to the property</p> <p>Property Title: ${product.title}</p> <p><img src="${product.featuredImage}"></p></p>`
+                to: product.user.email,
+                subject: EMAIL_SUBJECT.OFFER,
+                html: htmlData,
             }
-            customerInfo.sendMail(payload);
+            mailHelper.sendMail(payload);
         });
 
         return true;
@@ -481,12 +488,18 @@ export const updateOfferStatus = async (reqBody, req) => {
             offer.status = status == "accepted" ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.REJECTED;
             await offer.save({ transaction });
 
+            const emailData = [];
+            emailData.name = customer.fullName;
+            emailData.status = status;
+            emailData.productTitle = product.title;
+            emailData.productUrl = `${utilsHelper.generateUrl('property-url')}/${product.id}`;
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER_UPDATE), emailData);
             const payload = {
                 to: customer.email,
-                subject: `Agent has made an update on your offer`,
-                html: `<p>Hello,</p> <p>Agent has made ${status} your offer to the property. You can send another offer.</p> <p>Property Title: ${product.title}</p> <p><img src="${product.featuredImage}"></p></p>`
+                subject: EMAIL_SUBJECT.OFFER_UPDATE,
+                html: htmlData,
             }
-            customer.sendMail(payload);
+            mailHelper.sendMail(payload);
         });
 
         return true;

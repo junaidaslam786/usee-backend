@@ -1,7 +1,7 @@
 import db from '@/database';
 import { opentokHelper, utilsHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { USER_TYPE } from '@/config/constants'
+import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE } from '@/config/constants'
 const {
   HOME_PANEL_URL
 } = process.env;
@@ -247,13 +247,17 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
         createdBy: agentId,
       }, transaction);
 
-      const loginLink = HOME_PANEL_URL + 'auth/login';
+      const emailData = [];
+      emailData.name = user.fullName;
+      emailData.tempPassword = tempPassword;
+      emailData.login = utilsHelper.generateUrl('login', user.userType);
+      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailData);
       const payload = {
-        to: reqBody.customerEmail,
-        subject: `Agent has added you as a customer to Usee360`,
-        html: `<p>Hello,</p> <p>Thank you for registering with us</p> <p>Click on the link below to login with temporary password</p> <p>Your Temporary Password: ${tempPassword}</p> <p><a href="${loginLink}" target="_blank">Login</a></p>`
+        to: user.email,
+        subject: EMAIL_SUBJECT.AGENT_ADDED_CUSTOMER,
+        html: htmlData,
       }
-      customerDetails.sendMail(payload);
+      mailHelper.sendMail(payload);
 
       return customerDetails;
     }

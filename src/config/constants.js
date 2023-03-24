@@ -60,3 +60,28 @@ export const APPOINTMENT_TYPES = {
     COMPLETED: "completed",
     CANCELLED: "cancelled"
 }
+
+export const EMAIL_SUBJECT = {
+    REGISTER_AGENT: "You have registered as agent at Usee360",
+    REGISTER_CUSTOMER: "You have registered as customer at Usee360",
+    FORGOT_PASSWORD: "Your password change request has been received",
+    RESET_PASSWORD: "Your password on Usee360 has been changed",
+    AGENT_ADDED_CUSTOMER: "Agent has added you as a customer at Usee360",
+    AGENT_ADDED_AS: "Agent has added you as ",
+    WISHLIST_ADD: "Customer has added your property to wishlist",
+    WISHLIST_REMOVE: "Customer has removed your property to wishlist",
+    OFFER: "Customer has made an offer to the property",
+    OFFER_UPDATE: "Agent has made an update on your offer"
+}
+
+export const EMAIL_TEMPLATE_PATH = {
+    REGISTER_AGENT: "email-template/register-agent.ejs",
+    REGISTER_CUSTOMER: "email-template/register-customer.ejs",
+    FORGOT_PASSWORD: "email-template/forgot-password.ejs",
+    RESET_PASSWORD: "email-template/reset-password.ejs",
+    REGISTER_TEMP_PASSWORD: "email-template/reguster-temp-password.ejs",
+    WISHLIST_ADD: "email-template/wishlist-add.ejs",
+    WISHLIST_REMOVE: "email-template/wishlist-remove.ejs",
+    OFFER: "email-template/property-offer.ejs",
+    OFFER_UPDATE: "email-template/property-offer-update.ejs",
+}

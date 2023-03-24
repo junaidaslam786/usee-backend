@@ -1,0 +1,15 @@
+<%- include('layout/header.ejs', { subject: "Wishlist remove" }) %>
+
+<table bgcolor="#FFFFFF" border="0" cellspacing="0" cellpadding="25" width="100%">
+    <tr>
+        <td width="100%" bgcolor="#ffffff" style="text-align:left;">
+            <p>Hello <%= name %>,</p>
+            <p><%= customerName %> has removed your property to wishlist</p> 
+            <p>Property Title: <%= productTitle %> </p>
+            <p>Property Url: <a href="<%= productUrl %>" target="_blank"><%= productUrl %></a></p>
+            <%- include('layout/regard.ejs') %>
+        </td>
+    </tr>
+</table>
+
+<%- include('layout/footer.ejs') %>

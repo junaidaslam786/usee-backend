@@ -1,10 +1,9 @@
-import { AGENT_TYPE, USER_TYPE } from '@/config/constants';
+import { AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE } from '@/config/constants';
 import { utilsHelper } from '@/helpers';
 import db from '@/database';
-const {
-    HOME_PANEL_URL
-} = process.env;
 import * as userService from '../../user/user.service';
+const path = require("path")
+const ejs = require("ejs");
 
 export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     try {
@@ -103,14 +102,17 @@ export const createAgentUsers = async (reqBody, req) => {
                 await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
             }
 
-            const loginLink = HOME_PANEL_URL + 'auth/login';
+            const emailData = [];
+            emailData.name = newUser.fullName;
+            emailData.tempPassword = tempPassword;
+            emailData.login = utilsHelper.generateUrl('login', newUser.userType);
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailData);
             const payload = {
-                to: email,
-                subject: `You have been added as ${agentUserData.companyPosition}`,
-                html: `<p>Hello,</p> <p>Thank you for registering with us</p> <p>Click on the link below to login with temporary password</p> <p>Your Temporary Password: ${tempPassword}</p> <p><a href="${loginLink}" target="_blank">Login</a></p>`
+                to: newUser.email,
+                subject: `${EMAIL_SUBJECT.AGENT_ADDED_AS} ${agentUserData.companyPosition}`,
+                html: htmlData,
             }
-            console.log('payload', payload);
-            newUser.sendMail(payload);
+            mailHelper.sendMail(payload);
 
             return newUser;
         });
