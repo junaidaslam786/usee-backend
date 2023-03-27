@@ -1,15 +1,21 @@
 <%- include('layout/header.ejs', { subject: "Offer" }) %>
 
-<table bgcolor="#FFFFFF" border="0" cellspacing="0" cellpadding="25" width="100%">
-    <tr>
-        <td width="100%" bgcolor="#ffffff" style="text-align:left;">
-            <p>Hello <%= name %>,</p>
-            <p>Agent has <%= status %> your offer to the property. You can send another offer.</p>
-            <p>Property Title: <%= productTitle %> </p>
-            <p>Property Url: <a href="<%= productUrl %>" target="_blank"><%= productUrl %></a></p>
-            <%- include('layout/regard.ejs') %>
-        </td>
-    </tr>
-</table>
+<tr>
+    <td valign="top" style="color:#92778a;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px;">
+        <p>Hello <%= name %>,</p>
+        <span>
+            Agent has <%= status %> your offer to the property. You can send another offer.
+            <br> <br> 
+            <b style="color:#3e2837;font-weight:700;"> <%= propertyTitle %></b> 
+        </span>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding:50px 0 20px 0;">
+        <span style="box-shadow:0 0 21px #999;border:1px solid #00CB04;display:inline-block;width:180px;height:180px;border-radius:0%;overflow:hidden;">
+            <img style="max-width:100%;" src="<%= propertyImage %>" alt="Property photo">
+        </span>
+    </td>
+</tr>
 
 <%- include('layout/footer.ejs') %>

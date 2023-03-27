@@ -1,25 +1,27 @@
 <%- include('layout/header.ejs', { subject: "Register as an agent" }) %>
 
-<table bgcolor="#FFFFFF" border="0" cellspacing="0" cellpadding="25" width="100%">
-    <tr>
-        <td width="100%" bgcolor="#ffffff" style="text-align:left;">
-            <p>Hello <%=name%>,</p>
-            <p>You have successfully registered as an agent into Usee360.</p>
-            <p>Log into your account using below link.</p>
-            <table border="0" cellspacing="0" cellpadding="0" class="responsive-table" style=" text-align: center; width: 100%">
-                <tbody>
-                    <tr>
-                        <td align="center">
-                            <a href="<%= login %>" target="_blank" style="font-weight:bold; color: #ffffff; text-decoration: none; background-color: #00cd00; border-top:10px solid #00cd00; border-bottom:10px solid #00cd00; border-left: 50px solid #00cd00; border-right: 50px solid #00cd00; border-radius: 3px; -webkit-border-radius: 3px; -moz-border-radius: 3px; display: inline-block;" class="mobile-button">
-                               Login
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <%- include('layout/regard.ejs') %>
-        </td>
-    </tr>
-</table>
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 20px;">
+        <span style="color:#3e2837;font-size: 22px;font-family:'Manrope', sans-serif;font-weight:700;">
+            <b> Agent Registration </b>
+        </span>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="color:#92778a;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 30px;">
+        <p>Hello <%=name%>,</p>
+        <p>Thank you for registering with us</p>
+        <p>Log into your account using below link.</p>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="padding-top:30px;text-align:center;background-color:#fff;">
+        <span>
+            <a target="_blank" href="<%= login %>" style="border-radius:50px;text-decoration:none;font-size:14px;font-family:'Manrope', sans-serif;background-color:#00CB04;padding:12px 50px;display:inline-block;color:#fff;">
+                <b>Login</b>
+            </a>
+        </span>
+    </td>
+</tr>
 
 <%- include('layout/footer.ejs') %>

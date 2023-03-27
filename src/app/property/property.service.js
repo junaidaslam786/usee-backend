@@ -448,8 +448,10 @@ export const addCustomerOffer = async (reqBody, req) => {
             const emailData = [];
             emailData.name = product.user.fullName;
             emailData.customerName = customerInfo.fullName;
-            emailData.productTitle = product.title;
-            emailData.productUrl = `${utilsHelper.generateUrl('property-url')}/${productId}`;
+            emailData.propertyTitle = product.title;
+            emailData.propertyImage = product.featuredImage;
+            emailData.offerAmount = amount;
+            emailData.notes = notes;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER), emailData);
             const payload = {
                 to: product.user.email,
@@ -492,7 +494,7 @@ export const updateOfferStatus = async (reqBody, req) => {
             emailData.name = customer.fullName;
             emailData.status = status;
             emailData.productTitle = product.title;
-            emailData.productUrl = `${utilsHelper.generateUrl('property-url')}/${product.id}`;
+            emailData.propertyImage = product.featuredImage;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER_UPDATE), emailData);
             const payload = {
                 to: customer.email,

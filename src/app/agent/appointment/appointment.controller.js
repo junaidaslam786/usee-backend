@@ -2,7 +2,7 @@ import createError from 'http-errors';
 import * as appointmentService from './appointment.service';
 
 /**
- * GET /appointment/list
+ * GET /agent/appointment/list
  * List all appointments
  */
 export const listAppointments = async (req, res, next) => {
@@ -20,7 +20,7 @@ export const listAppointments = async (req, res, next) => {
 };
 
 /**
- * GET /appointment/:id
+ * GET /agent/appointment/:id
  * Get appointment detail by id
  */
 export const getAppointment = async (req, res, next) => {
@@ -38,7 +38,7 @@ export const getAppointment = async (req, res, next) => {
 };
 
 /**
- * POST /appointment/create
+ * POST /agent/appointment/create
  * Create new appointment
  */
 export const createAppointment = async (req, res, next) => {
@@ -56,7 +56,7 @@ export const createAppointment = async (req, res, next) => {
 };
 
 /**
- * PUT /appointment/update
+ * PUT /agent/appointment/update
  * update appointment details and permissions
  */
 export const updateAppointment = async (req, res, next) => {
@@ -92,7 +92,7 @@ export const deleteAppointment = async (req, res, next) => {
 };
 
 /**
- * GET /appointment/getSessionToken/:id
+ * GET /agent/appointment/getSessionToken/:id
  * Get opentok token for the meeting session
  */
 export const getSessionToken = async (req, res, next) => {

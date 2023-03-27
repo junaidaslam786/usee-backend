@@ -105,7 +105,7 @@ export const createAgentUsers = async (reqBody, req) => {
             const emailData = [];
             emailData.name = newUser.fullName;
             emailData.tempPassword = tempPassword;
-            emailData.login = utilsHelper.generateUrl('login', newUser.userType);
+            emailData.login = utilsHelper.generateUrl('agent-login', newUser.userType);
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailData);
             const payload = {
                 to: newUser.email,

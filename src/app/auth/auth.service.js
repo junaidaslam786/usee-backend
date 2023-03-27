@@ -121,7 +121,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
 
             const emailData = [];
             emailData.name = user.fullName;
-            emailData.login = utilsHelper.generateUrl('login', user.userType);
+            emailData.login = utilsHelper.generateUrl('agent-login', user.userType);
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_AGENT), emailData);
             const payload = {
                 to: user.email,
@@ -169,7 +169,7 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
 
         const emailData = [];
         emailData.name = user.fullName;
-        emailData.login = utilsHelper.generateUrl('login', user.userType);
+        emailData.login = utilsHelper.generateUrl('customer-login', user.userType);
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_CUSTOMER), emailData);
         const payload = {
             to: user.email,
@@ -187,7 +187,7 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
 
 export const forgotPassword = async (reqBody, dbInstance) => {
     try {
-        const { email } = reqBody;
+        const { email, type } = reqBody;
         const userModel = dbInstance.user;
 
         // Find user by email address
@@ -207,7 +207,7 @@ export const forgotPassword = async (reqBody, dbInstance) => {
 
         const emailData = [];
         emailData.name = user.fullName;
-        emailData.resetPasswordLink = `${utilsHelper.generateUrl('reset-password', user.userType)}/${user.rememberToken}`;
+        emailData.resetPasswordLink = `${utilsHelper.generateUrl((type == 'agent' ? 'agent-reset-password' : 'customer-reset-password'), user.userType)}/${user.rememberToken}`;
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.FORGOT_PASSWORD), emailData);
         const payload = {
             to: email,
@@ -225,7 +225,7 @@ export const forgotPassword = async (reqBody, dbInstance) => {
 
 export const resetPassword = async (reqBody, dbInstance) => {
     try {
-        const { token, email, password } = reqBody;
+        const { token, email, password, type } = reqBody;
         const userModel = dbInstance.user;
 
         // Find user by email address
@@ -253,7 +253,7 @@ export const resetPassword = async (reqBody, dbInstance) => {
         const emailData = [];
         emailData.name = user.fullName;
         emailData.email = user.email;
-        emailData.login = utilsHelper.generateUrl('login', user.userType);
+        emailData.login = utilsHelper.generateUrl((type == 'agent' ? 'agent-login' : 'customer-login'), user.userType);
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.RESET_PASSWORD), emailData);
         const payload = {
             to: email,
