@@ -43,7 +43,7 @@ export const login = async (reqBody, dbInstance) => {
 
         // Generate and return token
         const token = user.generateToken();
-        const refreshToken = user.generateToken('2h');
+        const refreshToken = user.generateToken('4h');
 
         const userData = {
             firstName: user.firstName,
@@ -107,7 +107,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
 
             // Generate and return tokens
             const token = user.generateToken();
-            const refreshToken = user.generateToken('2h');
+            const refreshToken = user.generateToken('4h');
 
             const returnedUserData = {
                 firstName: user.firstName,
@@ -157,7 +157,7 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
 
         // Generate and return tokens
         const token = user.generateToken();
-        const refreshToken = user.generateToken('2h');
+        const refreshToken = user.generateToken('4h');
 
         const returnedUserData = {
             firstName: user.firstName,

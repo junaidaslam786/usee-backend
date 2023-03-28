@@ -1,10 +1,7 @@
 import db from '@/database';
 import { opentokHelper, utilsHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE } from '@/config/constants'
-const {
-  HOME_PANEL_URL
-} = process.env;
+import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE } from '@/config/constants';
 
 export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
   try {

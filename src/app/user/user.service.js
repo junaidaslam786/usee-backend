@@ -1,6 +1,8 @@
 import { utilsHelper } from "@/helpers";
-import { PROPERTY_ROOT_PATHS } from '../../config/constants';
+import { PROPERTY_ROOT_PATHS, USER_TYPE } from '../../config/constants';
 import db from '@/database';
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
 
 export const updateCurrentUser = async (reqBody, req) => {
     try {
@@ -125,4 +127,27 @@ export const getUserById = async (id) => {
 
 export const getUserByEmail = async (email) => {
    return await db.models.user.findOne({ where: { email }});
+}
+
+export const listCustomerUsers = async (userInfo, query, dbInstance) => {
+    try {
+        const searchStr = query?.q ? query.q  : "";
+        return await dbInstance.user.findAll({
+            where: {
+                userType: USER_TYPE.CUSTOMER,
+                status: true,
+                id: { [OP.ne]: userInfo.id },
+                [OP.or]: [
+                    { firstName: { [OP.iLike]: `%${searchStr}%` } },
+                    { lastName: { [OP.iLike]: `%${searchStr}%` } },
+                ]
+            },
+            attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
+            order: [["id", "DESC"]],
+        });
+        
+    } catch(err) {
+        console.log('listAgentUsersToAllocateServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
 }

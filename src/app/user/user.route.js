@@ -12,5 +12,6 @@ router.route('/profile')
   .delete(isAuthenticated, userController.deleteCurrentUser);
 
 router.put('/update-password', isAuthenticated, validate(userValidations.changePasswordRules), userController.updatePassword);
+router.get('/list-customer', isAuthenticated, userController.listCustomerUsers);
 
 export default router;

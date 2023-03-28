@@ -20,6 +20,24 @@ export const listAgentUsers = async (req, res, next) => {
 };
 
 /**
+ * GET /agent/user/to-allocate
+ * List all users created by agent to allocate to properties
+ */
+export const listAgentUsersToAllocate = async (req, res, next) => {
+    try {
+      const result = await userService.listAgentUsersToAllocate(req.user, req.dbInstance);
+      if (result?.error && result?.message) {
+          return next(createError(400, result.message));
+      }
+  
+      return res.status(200).json(result);
+    } catch (err) {
+      console.log('listAgentUsersToAllocateError', err);
+      return next(err);
+    }
+};
+
+/**
  * POST /agent/user/create
  * Create user by agent
  */

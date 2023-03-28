@@ -37,6 +37,25 @@ export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     }
 }
 
+export const listAgentUsersToAllocate = async (agentInfo, dbInstance) => {
+    try {
+        const whereClause = agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { managerId: agentInfo.id };
+        return await dbInstance.agent.findAll({
+            where: whereClause,
+            attributes: ["userId"],
+            include: [{ 
+                model: dbInstance.user,
+                attributes: ["firstName", "lastName"]
+            }],
+            order: [["id", "DESC"]],
+        });
+        
+    } catch(err) {
+        console.log('listAgentUsersToAllocateServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
 export const createAgentUsers = async (reqBody, req) => {
     try {
         const { firstName, lastName, email, phoneNumber, role, branch } = reqBody;

@@ -199,3 +199,21 @@ export const updateOfferStatus = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /property/list-removal-reasons
+ * List all removal reasons
+ */
+export const listRemovalReasons = async (req, res, next) => {
+    try {
+      const result = await propertyService.listRemovalReasons(req.dbInstance);
+      if (result?.error && result?.message) {
+          return next(createError(400, result.message));
+      }
+  
+      return res.status(200).json(result);
+    } catch (err) {
+      console.log('listPropertyError', err);
+      return next(err);
+    }
+  };

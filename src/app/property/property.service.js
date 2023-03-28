@@ -569,3 +569,15 @@ export const getPropertyDetailById = async (propertyId, dbInstance) => {
 
     return property;
 }
+
+export const listRemovalReasons = async (dbInstance) => {
+    try {
+        return await dbInstance.productRemoveReason.findAll({
+            attributes: ["id", "reason"],
+            order: [["id", "DESC"]],
+        });
+    } catch(err) {
+        console.log('listRemovalReasonsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
