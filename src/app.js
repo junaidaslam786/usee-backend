@@ -31,7 +31,11 @@ if (NODE_ENV !== 'development') {
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin: '*'
+}));
+
+app.use(express.static('uploads'))
 app.use(compression(configs.compressionConfig));
 app.use(cookieParser());
 app.use(fileUpload());

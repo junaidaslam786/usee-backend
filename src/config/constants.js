@@ -15,7 +15,6 @@ export const USER_TYPE = {
     CUSTOMER: "customer",
 };
 
-
 export const AGENT_TYPE = {
     AGENT: "agent",
     MANAGER: "manager",
@@ -23,10 +22,10 @@ export const AGENT_TYPE = {
 };
 
 export const PROPERTY_ROOT_PATHS = {
-    FEATURE_IMAGE: "uploads/properties/images",
-    VIDEO_TOUR: "uploads/properties/vrvideos",
-    DOCUMENT: "uploads/properties/documents",
-    PROFILE_LOGO: "uploads/user/images",
+    FEATURE_IMAGE: "properties/images",
+    VIDEO_TOUR: "properties/vrvideos",
+    DOCUMENT: "properties/documents",
+    PROFILE_LOGO: "user/images",
 }
 
 export const VIRTUAL_TOUR_TYPE = {
