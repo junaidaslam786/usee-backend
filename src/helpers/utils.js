@@ -22,18 +22,18 @@ export const generateRandomString = (length, isApiCode = false) => {
 
 export const fileUpload = async (file, destPath, fileName) => {
     try {
-        if (!fs.existsSync(destPath)) {
-            fs.mkdirSync(destPath, { recursive: true });
+        if (!fs.existsSync(`uploads/${destPath}`)) {
+            fs.mkdirSync(`uploads/${destPath}`, { recursive: true });
         }
 
-        const filePath = path.join(destPath, fileName);
+        const filePath = path.join(`uploads/${destPath}`, fileName);
         return new Promise((resolve, reject) => {
             file.mv(filePath, (err) => {
                 if (err) {
                     reject({ error: err });
                 }
-
-                resolve(filePath);
+                const accessPath = path.join(destPath, fileName);
+                resolve(accessPath);
             });
         });
     } catch(err) {
