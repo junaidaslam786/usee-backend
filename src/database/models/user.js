@@ -111,6 +111,10 @@ export default function (sequelize) {
     if (instance.changed('password')) {
       instance.password = await hash(instance.password, 10);
     }
+
+    if (!instance.profileImage) {
+      instance.profileImage = '/dummy.png';
+    }
   });
 
   User.addHook('afterCreate', (instance) => {

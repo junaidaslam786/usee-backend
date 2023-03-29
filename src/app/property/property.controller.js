@@ -1,4 +1,3 @@
-import { OFFER_STATUS } from '@/config/constants';
 import createError from 'http-errors';
 import * as propertyService from './property.service';
 
@@ -217,3 +216,21 @@ export const listRemovalReasons = async (req, res, next) => {
       return next(err);
     }
   };
+
+  /**
+ * GET /property/to-allocate
+ * List all properties created by agent or allocated to this agent to allocate appointment
+ */
+export const listPropertiesToAllocate = async (req, res, next) => {
+    try {
+      const result = await propertyService.listPropertiesToAllocate(req.user.id, req.dbInstance);
+      if (result?.error && result?.message) {
+          return next(createError(400, result.message));
+      }
+  
+      return res.status(200).json(result);
+    } catch (err) {
+      console.log('listPropertiesToAllocateError', err);
+      return next(err);
+    }
+};

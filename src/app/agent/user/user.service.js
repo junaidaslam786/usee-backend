@@ -4,6 +4,8 @@ import db from '@/database';
 import * as userService from '../../user/user.service';
 const path = require("path")
 const ejs = require("ejs");
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
 
 export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     try {
@@ -182,6 +184,34 @@ export const updateAgentUserSorting = async (reqBody, req) => {
         return true;
     } catch(err) {
         console.log('updateAgentUserSortingServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const checkAvailability = async (reqBody, req) => {
+    try {
+        const { userId, date, time } = reqBody;
+        const dayId = new Date(date);
+
+        const result = await req.dbInstance.agentAvailability.findOne({
+            where: {
+                userId,
+                dayId: dayId.getDay() + 1,
+                status: true
+            },
+            include: [{
+                model: req.dbInstance.agentTimeSlot,
+                where: {
+                    [OP.and]: [
+                        { fromTime: { [OP.lte]: time }},
+                        { toTime: { [OP.gt]: time }},
+                    ]
+                }
+            }]
+        });
+        return result ? true : false;
+    } catch(err) {
+        console.log('checkAvailabilityServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }

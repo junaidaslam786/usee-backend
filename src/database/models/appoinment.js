@@ -4,7 +4,8 @@ export default function (sequelize) {
   class Appointment extends Model {
     static associate(models) {
       Appointment.belongsToMany(models.product, { through: 'appointment_products', updatedAt: false, unique: false });
-      Appointment.belongsTo(models.user, { foreignKey: 'agentId' })
+      Appointment.belongsTo(models.user, { foreignKey: 'agentId', as: 'agentUser' })
+      Appointment.belongsTo(models.user, { foreignKey: 'customerId', as: 'customerUser' })
     }
   }
 

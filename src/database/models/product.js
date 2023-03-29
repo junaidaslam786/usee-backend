@@ -96,7 +96,9 @@ export default function (sequelize) {
   });
 
   Product.addHook('beforeSave', async (instance) => {
-    //
+    if (!instance.featuredImage) {
+      instance.featuredImage = '/dummy_prop.jpg';
+    }
   });
 
   Product.addHook('afterCreate', (instance) => {

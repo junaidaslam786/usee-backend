@@ -10,11 +10,18 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
 
     const { count, rows } = await dbInstance.appointment.findAndCountAll({
       where: { agentId: agentInfo.id },
-      include: [{ 
-        model: dbInstance.product, 
-        attributes: ["id"],
-        through: { attributes: [] }
-      }],
+      include: [
+        { 
+          model: dbInstance.product, 
+          attributes: ["id"],
+          through: { attributes: [] }
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'customerUser',
+          attributes: ["firstName", "lastName"],
+        },
+      ],
       order: [["id", "DESC"]],
       offset: (itemPerPage * (page - 1)),
       limit: itemPerPage
@@ -50,10 +57,9 @@ export const getAppointment = async (appointmentId, dbInstance) => {
 export const createAppointment = async (req, dbInstance) => {
     try {
       const { 
-        products, 
+        properties, 
         appointmentDate, 
-        appointmentTime,
-        allotedAgent 
+        appointmentTime
       } = req.body;
 
       const sessionId = await opentokHelper.getSessionId();
@@ -73,13 +79,13 @@ export const createAppointment = async (req, dbInstance) => {
             appointmentTime,
             agentId: req.user.id,
             customerId: customerDetails.id,
-            allotedAgent: allotedAgent,
+            allotedAgent: req.user.id,
             sessionId,
           }, { transaction });
 
           // Add products to appointment
-          if (appointment && products) {
-            const findProducts = await dbInstance.product.findAll({ where: { id: products }});
+          if (appointment && properties) {
+            const findProducts = await dbInstance.product.findAll({ where: { id: properties }});
             const productRecords = [];
             findProducts.forEach((product) => {
               productRecords.push({
@@ -105,10 +111,9 @@ export const updateAppointment = async (req, dbInstance) => {
     try {
         const { 
           id,
-          products, 
+          properties, 
           appointmentDate, 
-          appointmentTime,
-          allotedAgent 
+          appointmentTime
         } = req.body;
 
         const appointment = await getAppointmentDetailById(id, dbInstance);
@@ -122,7 +127,6 @@ export const updateAppointment = async (req, dbInstance) => {
               return customerDetails;
             }
 
-            appointment.allotedAgent = allotedAgent;
             appointment.customerId = customerDetails.customerId;
             appointment.appointmentDate = appointmentDate;
             appointment.appointmentTime = appointmentTime;
@@ -132,8 +136,8 @@ export const updateAppointment = async (req, dbInstance) => {
             await appointment.setProducts([]);
 
             // Add properties to appointment
-            if (appointment && products) {
-              const findProducts = await dbInstance.product.findAll({ where: { id: products }});
+            if (appointment && properties) {
+              const findProducts = await dbInstance.product.findAll({ where: { id: properties }});
               const productRecords = [];
               findProducts.forEach((product) => {
                 productRecords.push({
@@ -179,8 +183,18 @@ const getAppointmentDetailById = async (appointmentId, dbInstance) => {
       include: [
         {
           model: dbInstance.product,
-          attributes: ["id", "title", "description", "price"],
+          attributes: ["id", "title", "description", "price", "featuredImage"],
           through: { attributes: [] }
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'customerUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'agentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
         },
       ],
   });
@@ -217,6 +231,7 @@ export const getSessionToken = async (appointmentId, dbInstance) => {
 }
 
 const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
+  let customerDetails;
   const customerId = reqBody.customerId;
   if (customerId) {
     customerDetails = await userService.getUserById(customerId);
@@ -228,7 +243,7 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
   }
 
   if (!customerId && reqBody.customerEmail) {
-    let customerDetails = await userService.getUserByEmail(reqBody.customerEmail);
+    customerDetails = await userService.getUserByEmail(reqBody.customerEmail);
     if (customerDetails && customerDetails.userType != USER_TYPE.CUSTOMER) {
       return { error: true, message: 'User is not registered as customer in our platform. Try another email.'}
     } else if (!customerDetails) {

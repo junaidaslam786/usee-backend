@@ -126,3 +126,21 @@ export const deleteAgentUser = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * POST /agent/user/check-availability
+ * Check if agent is available for appointment or not
+ */
+export const checkAvailability = async (req, res, next) => {
+    try {
+        const result = await userService.checkAvailability(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: result });
+    } catch (err) {
+        console.log('checkAvailabilityError', err);
+        next(err);
+    }
+};

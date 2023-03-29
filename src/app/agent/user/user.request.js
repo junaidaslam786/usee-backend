@@ -49,3 +49,15 @@ export const updateAgentUserSortingRules = [
   }),
   body('sort').exists().notEmpty(),
 ];
+
+export const checkAvailabilityRules = [
+  body('userId').exists().custom(async (value) => {
+    return await db.models.user.findOne({ where: { id: value } }).then(agentUserData => {
+      if (!agentUserData) {
+        return Promise.reject('Invalid user id or user do not exist.');
+      }
+    });
+  }),
+  body('date').exists().withMessage('date is not provided').notEmpty().withMessage('date should not be empty'),
+  body('time').exists().withMessage('time is not provided').notEmpty().withMessage('time should not be empty'),
+];

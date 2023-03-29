@@ -7,6 +7,7 @@ import { isAuthenticated, validate } from '@/middleware';
 const router = Router();
 
 router.get('/list', isAuthenticated, propertyController.listProperties);
+router.get('/to-allocate', isAuthenticated, propertyController.listPropertiesToAllocate);
 router.get('/list-removal-reasons', isAuthenticated, propertyController.listRemovalReasons);
 router.get('/:id', isAuthenticated, propertyController.getProperty);
 router.post('/create', isAuthenticated, validate(propertyValidations.createPropertyRules), propertyController.createProperty);

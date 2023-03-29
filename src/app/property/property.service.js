@@ -54,6 +54,7 @@ export const createProperty = async (reqBody, req) => {
             }
             await dbInstance.productMetaTag.bulkCreate(metaTags, { transaction });
 
+            /*
             // create allocated users
             const allocatedUsers = [];
             const allocatedUserIds = [];
@@ -72,6 +73,7 @@ export const createProperty = async (reqBody, req) => {
                 return { error: true, message: 'Invalid users added to allocate'}
             }
             await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
+            */
 
             // feature image upload
             if (req.files && req.files.featuredImage) {
@@ -175,6 +177,7 @@ export const updateProperty = async (reqBody, req) => {
                 }
             });
 
+            /*
             // create allocated users
             const allocatedUsers = [];
             const allocatedUserIds = [];
@@ -193,6 +196,7 @@ export const updateProperty = async (reqBody, req) => {
                 return { error: true, message: 'Invalid users added to allocate'}
             }
             await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
+            */
 
             // feature image upload
             if (req.files && req.files.featuredImage) {
@@ -357,6 +361,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
                     { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${userId}')`) }}
                 ]
             },
+            
             order: [["id", "DESC"]],
             offset: (itemPerPage * (page - 1)),
             limit: itemPerPage
@@ -371,6 +376,26 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
         };
     } catch(err) {
         console.log('listActivePropertiesServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const listPropertiesToAllocate = async (userId, dbInstance) => {
+    try {
+        return await dbInstance.product.findAll({
+            where: { 
+                status: PRODUCT_STATUS.ACTIVE, 
+                categoryId: PRODUCT_CATEGORIES.PROPERTY,
+                [OP.or]: [
+                    { userId },
+                    { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${userId}')`) }}
+                ]
+            },
+            attributes: ['id', "title"],
+            order: [["id", "DESC"]],
+        });
+    } catch(err) {
+        console.log('listPropertiesToAllocateServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
@@ -560,6 +585,14 @@ export const getPropertyDetailById = async (propertyId, dbInstance) => {
                 },
             ]
           },
+        //   {
+        //     model: dbInstance.productAllocation,
+        //     attributes: ['id'],
+        //     include: [{
+        //         model: dbInstance.user,
+        //         attributes: ['id', 'firstName', 'lastName']
+        //     }]
+        //   },
         ],
     });
 
