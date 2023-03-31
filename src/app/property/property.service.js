@@ -623,7 +623,7 @@ export const searchPolygon = async (dbInstance, req) => {
             coordinates.push(coordinates[0]);
         }
         const polygonPath = utilsHelper.createPolygonPath(coordinates);
-        const polygon = db.fn('ST_GeomFromText', polygonPath);
+        const polygon = db.fn('ST_GeomFromText', polygonPath, 4326);
         const whereClause = Sequelize.where(
             Sequelize.fn('ST_Within', Sequelize.col('geometry'), polygon),
             true

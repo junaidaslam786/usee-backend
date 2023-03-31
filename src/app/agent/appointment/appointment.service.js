@@ -260,7 +260,7 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
       }, transaction);
 
       const emailData = [];
-      emailData.name = user.fullName;
+      emailData.name = customerDetails.fullName;
       emailData.tempPassword = tempPassword;
       emailData.login = utilsHelper.generateUrl('customer-login', USER_TYPE.CUSTOMER);
       const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailData);
