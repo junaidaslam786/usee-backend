@@ -80,6 +80,10 @@ export default function (sequelize) {
     apiCode: {
       type: DataTypes.STRING,
     },
+    geometry: {
+      type: DataTypes.GEOMETRY('POINT'),
+      allowNull: true,
+    },
     createdBy: {
         type: DataTypes.UUID,
         field: "created_by",

@@ -66,3 +66,20 @@ export const generateUrl = (type, userType) => {
 
     return url;
 }
+
+export function createPolygonPath(coordinates) {
+    if (coordinates.length < 3) {
+      return null;
+    }
+    
+    let polygonPath = 'POLYGON((';
+    for (let i = 0; i < coordinates.length; i++) {
+      polygonPath += `${coordinates[i]}`;
+      if (i !== coordinates.length - 1) {
+        polygonPath += ',';
+      }
+    }
+    polygonPath += `))`;
+    
+    return polygonPath;
+}

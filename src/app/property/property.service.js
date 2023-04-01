@@ -11,7 +11,7 @@ export const createProperty = async (reqBody, req) => {
     try {
         const { title, description, price, address, city, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
         const { user, dbInstance } = req;
-
+        const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`);
         const result = await db.transaction(async (transaction) => {
             // create product data
             const productData = {
@@ -29,6 +29,7 @@ export const createProperty = async (reqBody, req) => {
                 longitude, 
                 status: PRODUCT_STATUS.ACTIVE,
                 createdBy: user.id,
+                geometry: point,
                 apiCode: utilsHelper.generateRandomString(10, true)
             };
             const product = await dbInstance.product.create(productData, { transaction });
@@ -609,6 +610,49 @@ export const listRemovalReasons = async (dbInstance) => {
             attributes: ["id", "reason"],
             order: [["id", "DESC"]],
         });
+    } catch(err) {
+        console.log('listRemovalReasonsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const searchPolygon = async (dbInstance, req) => {
+    try {
+        const { coordinates } = req.body;
+        if(coordinates) {
+            coordinates.push(coordinates[0]);
+        }
+        const polygonPath = utilsHelper.createPolygonPath(coordinates);
+        const polygon = db.fn('ST_GeomFromText', polygonPath);
+        const whereClause = Sequelize.where(
+            Sequelize.fn('ST_Within', Sequelize.col('geometry'), polygon),
+            true
+          );
+        const results = await dbInstance.product.findAll({
+            where: whereClause
+        });
+        return results;
+    } catch(err) {
+        console.log('listRemovalReasonsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const searchCircle = async (dbInstance, req) => {
+    try {
+        const { center, radius } = req.body;
+        const conversionFactor = Math.cos((center.lat * Math.PI) / 180.0); // conversion factor based on latitude
+        const radiusInDegrees = radius / (111.32 * 1000) / conversionFactor; // convert radius to degrees
+
+        const whereClause = Sequelize.literal(`ST_DWithin(
+            ST_GeographyFromText('SRID=4326;POINT(' || longitude || ' ' || latitude || ')'),
+            ST_GeographyFromText('SRID=4326;POINT(${center.lng} ${center.lat})'),
+            200
+          )`);
+        const results = await dbInstance.product.findAll({
+            where: whereClause
+        });
+        return results;
     } catch(err) {
         console.log('listRemovalReasonsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}

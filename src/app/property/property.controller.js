@@ -217,7 +217,7 @@ export const listRemovalReasons = async (req, res, next) => {
     }
   };
 
-  /**
+/**
  * GET /property/to-allocate
  * List all properties created by agent or allocated to this agent to allocate appointment
  */
@@ -232,5 +232,33 @@ export const listPropertiesToAllocate = async (req, res, next) => {
     } catch (err) {
       console.log('listPropertiesToAllocateError', err);
       return next(err);
+    }
+};
+
+export const searchPolygon = async (req, res, next) => {
+    try {
+        const result = await propertyService.searchPolygon(req.dbInstance, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json(result);
+    } catch (err) {
+        console.log('updateOfferStatusError', err);
+        next(err);
+    }
+};
+
+export const searchCircle = async (req, res, next) => {
+    try {
+        const result = await propertyService.searchCircle(req.dbInstance, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json(result);
+    } catch (err) {
+        console.log('updateOfferStatusError', err);
+        next(err);
     }
 };
