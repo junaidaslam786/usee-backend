@@ -66,7 +66,7 @@ export const uploadPropertyImages = async (req, res, next) => {
             return next(createError(400, result.message));
         }
 
-        return res.json({ success: true, message: "Product images uploaded successfully" });
+        res.status(200).json(result);
     } catch (err) {
         console.log('uploadPropertyImagesError', err);
         next(err);

@@ -9,5 +9,5 @@ export const updateProfileRules = [
 
 export const changePasswordRules = [
     body('current').exists().notEmpty(),
-    body('password').isLength({ min: 6 }).exists(),
+    body('password').isLength({ min: 8 }).exists(),
 ];

@@ -40,10 +40,10 @@ export const registerCustomerRules = [
       }
     });
   }),
-  body('password').isLength({ min: 8 }).exists(),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists().withMessage('Enter password to register'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
-      throw new Error('Password and Confirm password should match');
+      throw new Error('Password and confirm password should match');
     }
 
     // Indicates the success of this synchronous custom validator

@@ -2,6 +2,8 @@ import db from '@/database';
 import { opentokHelper, utilsHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
 import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE } from '@/config/constants';
+const path = require("path")
+const ejs = require("ejs");
 
 export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
   try {
@@ -265,7 +267,7 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
       emailData.login = utilsHelper.generateUrl('customer-login', USER_TYPE.CUSTOMER);
       const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailData);
       const payload = {
-        to: user.email,
+        to: customerDetails.email,
         subject: EMAIL_SUBJECT.AGENT_ADDED_CUSTOMER,
         html: htmlData,
       }

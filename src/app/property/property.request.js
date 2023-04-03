@@ -16,7 +16,6 @@ export const createPropertyRules = [
   body('title').exists().notEmpty().withMessage('Please provide title'),
   body('address').exists().notEmpty().withMessage('Please provide address'),
   body('city').exists().notEmpty().withMessage('Please provide city'),
-  body('postalCode').exists().notEmpty().withMessage('Please provide postalCode'),
   body('region').exists().notEmpty().withMessage('Please provide region'),
 ];
 

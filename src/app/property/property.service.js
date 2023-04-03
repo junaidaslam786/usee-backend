@@ -281,12 +281,27 @@ export const uploadPropertyDocuments = async (req) => {
 
 export const uploadPropertyImages = async (req) => {
     try {
-        const files = req.files.files;
-        let totalFiles = files.length;
         const productImages = [];
-
-        for (let i = 0; i < totalFiles; i++) {
-            const singleFile = files[i];
+        const files = req.files.files;
+        if (Array.isArray(files)) {
+            let totalFiles = files.length;
+            for (let i = 0; i < totalFiles; i++) {
+                const singleFile = files[i];
+                const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.FEATURE_IMAGE, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+    
+                productImages.push({
+                    productId: req.body.productId,
+                    image: result,
+                    sortOrder: i + 1,
+                    createdBy: req.user.id
+                });
+            }
+        } else if (files) {
+            const singleFile = files;
             const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
             const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.FEATURE_IMAGE, newFileName);
             if (result?.error) {
@@ -296,7 +311,7 @@ export const uploadPropertyImages = async (req) => {
             productImages.push({
                 productId: req.body.productId,
                 image: result,
-                sortOrder: i + 1,
+                sortOrder: 1,
                 createdBy: req.user.id
             });
         }
@@ -305,7 +320,11 @@ export const uploadPropertyImages = async (req) => {
             await req.dbInstance.productImage.bulkCreate(productImages);
         }
 
-        return true;
+        return await req.dbInstance.productImage.findAll({
+            where: { productId: req.body.productId},
+            attributes: ["id", "image"],
+            order: ["sortOrder"],
+        });
     } catch(err) {
         console.log('uploadPropertyImagesServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
