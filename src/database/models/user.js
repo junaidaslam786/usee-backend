@@ -23,7 +23,6 @@ export default function (sequelize) {
     }
 
     static associate(models) {
-      User.belongsTo(models.city, { foreignKey: 'cityId' })
       User.belongsTo(models.role, { foreignKey: 'roleId' })
       User.hasOne(models.agent, { foreignKey: 'userId' })
       User.hasMany(models.agentBranch, { foreignKey: 'userId' })
@@ -78,12 +77,8 @@ export default function (sequelize) {
     rememberTokenExpire: {
       type: DataTypes.DATE,
     },
-    cityId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'cities',
-        key: 'id',
-      }
+    cityName: {
+      type: DataTypes.STRING,
     },
     roleId: {
       type: DataTypes.INTEGER,

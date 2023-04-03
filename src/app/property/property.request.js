@@ -2,7 +2,7 @@ import { body } from 'express-validator';
 import db from '@/database';
 
 export const removalRequestRules = [
-  body('propertyId').exists().notEmpty(),
+  body('propertyId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
   body('reasonId').exists().custom(async (value) => {
     return await db.models.productRemoveReason.findOne({ where: { id: value } }).then(reasonData => {
       if (!reasonData) {
@@ -13,10 +13,10 @@ export const removalRequestRules = [
 ];
 
 export const createPropertyRules = [
-  body('title').exists().notEmpty().withMessage('Please provide title'),
-  body('address').exists().notEmpty().withMessage('Please provide address'),
-  body('city').exists().notEmpty().withMessage('Please provide city'),
-  body('region').exists().notEmpty().withMessage('Please provide region'),
+  body('title').exists().withMessage('Please provide title').notEmpty().withMessage('Please provide title'),
+  body('address').exists().withMessage('Please provide address').notEmpty().withMessage('Please provide address'),
+  body('city').exists().withMessage('Please provide city').notEmpty().withMessage('Please provide city'),
+  body('region').exists().withMessage('Please provide region').notEmpty().withMessage('Please provide region'),
 ];
 
 export const updatePropertyRules = [
@@ -27,10 +27,10 @@ export const updatePropertyRules = [
       }
     });
   }), 
-  body('title').exists().notEmpty(),
-  body('address').exists().notEmpty(),
-  body('city').exists().notEmpty(),
-  body('region').exists().notEmpty(), 
+  body('title').exists().withMessage('Please provide title').notEmpty().withMessage('Please provide title'),
+  body('address').exists().withMessage('Please provide address').notEmpty().withMessage('Please provide address'),
+  body('city').exists().withMessage('Please provide city').notEmpty().withMessage('Please provide city'),
+  body('region').exists().withMessage('Please provide region').notEmpty().withMessage('Please provide region'), 
 ];
 
 export const uploadPropertyDocumentRules = [
@@ -41,7 +41,7 @@ export const uploadPropertyDocumentRules = [
       }
     });
   }), 
-  body('titles').exists().notEmpty(),
+  body('titles').exists().withMessage('Please provide document title').notEmpty().withMessage('Please provide document title'),
 ];
 
 export const uploadPropertyImageRules = [
@@ -96,11 +96,10 @@ export const customerOfferRequestRules = [
       }
     });
   }), 
-  body('amount').exists().notEmpty(),
-  body('notes').exists().notEmpty(),
+  body('amount').exists().withMessage('Please provide amount').notEmpty().withMessage('Please provide amount'),
 ];
 
 export const updateOfferStatusRequestRules = [
-  body('offerId').exists().notEmpty(),
-  body('status').exists().notEmpty(),
+  body('offerId').exists().withMessage('Please provide offer id').notEmpty().withMessage('Please provide offer id'),
+  body('status').exists().withMessage('Please provide status').notEmpty().withMessage('Please provide status'),
 ];

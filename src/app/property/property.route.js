@@ -22,7 +22,4 @@ router.post('/removal-request', isAuthenticated, validate(propertyValidations.re
 router.post('/customer/make-offer', isAuthenticated, validate(propertyValidations.customerOfferRequestRules), propertyController.addCustomerOffer);
 router.post('/agent/update-offer', isAuthenticated, validate(propertyValidations.updateOfferStatusRequestRules), propertyController.updateOfferStatus);
 
-router.post('/search-polygon', isAuthenticated, propertyController.searchPolygon);
-router.post('/search-circle', isAuthenticated, propertyController.searchCircle);
-
 export default router;

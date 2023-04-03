@@ -1,7 +1,7 @@
 import db from '@/database';
-import { opentokHelper, utilsHelper } from '@/helpers';
+import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE } from '@/config/constants';
+import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, AGENT_TYPE } from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
 
@@ -10,8 +10,9 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
     const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
 
+    const whereClause = agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { allotedAgent: agentInfo.id };
     const { count, rows } = await dbInstance.appointment.findAndCountAll({
-      where: { agentId: agentInfo.id },
+      where: whereClause,
       include: [
         { 
           model: dbInstance.product, 
@@ -21,7 +22,7 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
         { 
           model: dbInstance.user, 
           as: 'customerUser',
-          attributes: ["firstName", "lastName"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
         },
       ],
       order: [["id", "DESC"]],
@@ -42,9 +43,10 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
   }
 }
 
-export const getAppointment = async (appointmentId, dbInstance) => {
+export const getAppointment = async (appointmentId, req) => {
   try {
-    const appoinment = await getAppointmentDetailById(appointmentId, dbInstance);
+    const { user, dbInstance } = req;
+    const appoinment = await getAppointmentDetailById(user, appointmentId, dbInstance);
     if (!appoinment) {
         return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
     }
@@ -102,7 +104,7 @@ export const createAppointment = async (req, dbInstance) => {
           return appointment;
       });
 
-      return (result.id) ? await getAppointmentDetailById(result.id, dbInstance) : result;
+      return (result.id) ? await getAppointmentDetailById(req.user, result.id, dbInstance) : result;
     } catch(err) {
       console.log('createAppointmentServiceError', err)
       return { error: true, message: 'Server not responding, please try again later.'}
@@ -118,7 +120,7 @@ export const updateAppointment = async (req, dbInstance) => {
           appointmentTime
         } = req.body;
 
-        const appointment = await getAppointmentDetailById(id, dbInstance);
+        const appointment = await getAppointmentDetailById(req.user, id, dbInstance);
         if (!appointment) {
           return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
         }
@@ -159,9 +161,10 @@ export const updateAppointment = async (req, dbInstance) => {
     }
 }
 
-export const deleteAppointment = async (appointmentId, dbInstance) => {
+export const deleteAppointment = async (appointmentId, req) => {
     try {
-        const appointment = await getAppointmentDetailById(appointmentId, dbInstance);
+        const { user, dbInstance } = req;
+        const appointment = await getAppointmentDetailById(user, appointmentId, dbInstance);
         if (!appointment) {
           return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
         }
@@ -179,9 +182,10 @@ export const deleteAppointment = async (appointmentId, dbInstance) => {
     }
 }
 
-const getAppointmentDetailById = async (appointmentId, dbInstance) => {
+const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
+  const whereClause = user.agentType == AGENT_TYPE.AGENT ? { id: appointmentId, agentId: user.id } : { id: appointmentId, allotedAgent: user.id };
   const appointment = await dbInstance.appointment.findOne({
-      where: { id: appointmentId },
+      where: whereClause,
       include: [
         {
           model: dbInstance.product,

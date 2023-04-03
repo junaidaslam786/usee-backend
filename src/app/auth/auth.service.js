@@ -9,12 +9,19 @@ const ejs = require("ejs");
 
 export const login = async (reqBody, dbInstance) => {
     try {
-        const { email, password } = reqBody;
+        const { email, password, type } = reqBody;
+        let userType = USER_TYPE.ADMIN;
+        if (type === USER_TYPE.AGENT) {
+            userType = USER_TYPE.AGENT;
+        }
+
+        if (type === USER_TYPE.CUSTOMER) {
+            userType = USER_TYPE.CUSTOMER;
+        }
 
         // Find user by email address
         const user = await dbInstance.user.findOne({ 
             include: [
-                { model: dbInstance.city }, 
                 {
                     attributes: ["id", "name"],
                     model: dbInstance.role, as: 'role',
@@ -25,7 +32,7 @@ export const login = async (reqBody, dbInstance) => {
                     }]
                 }
             ],
-            where: { email } 
+            where: { email, userType } 
         });
         if (!user) {
             return { error: true, message: 'There is no user with this email address!'}
@@ -225,19 +232,18 @@ export const forgotPassword = async (reqBody, dbInstance) => {
 
 export const resetPassword = async (reqBody, dbInstance) => {
     try {
-        const { token, email, password, type } = reqBody;
+        const { token, password, type } = reqBody;
         const userModel = dbInstance.user;
 
         // Find user by email address
         const user = await userModel.findOne({ 
             where: { 
-                email, 
                 rememberToken: token, 
                 rememberTokenExpire: {
                     [OP.lt]: new Date(),
                     [OP.gt]: new Date(new Date() - 1 * 60 * 60 * 1000) // 1 hour
                 }
-            } 
+            }
         });
 
         if (!user) {

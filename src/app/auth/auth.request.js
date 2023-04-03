@@ -2,16 +2,16 @@ import { body, check } from 'express-validator';
 import db from '@/database';
 
 export const loginRules = [
-  body('email').isEmail().exists(),
-  body('password').exists(),
+  body('email').isEmail().withMessage('Please provide valid email address').exists().withMessage('Please provide email address'),
+  body('password').exists().withMessage('Please provide password'),
 ];
 
 export const registerAgentRules = [
-  body('firstName').exists().notEmpty(),
-  body('lastName').exists().notEmpty(),
-  body('companyName').exists().notEmpty(),
-  body('companyPosition').exists().notEmpty(),
-  body('phoneNumber').exists().notEmpty(),
+  body('firstName').exists().withMessage('Please provide first name').notEmpty().withMessage('Please provide first name'),
+  body('lastName').exists().withMessage('Please provide last name').notEmpty().withMessage('Please provide last name'),
+  body('companyName').exists().withMessage('Please provide company name').notEmpty().withMessage('Please provide company name'),
+  body('companyPosition').exists().withMessage('Please provide company position').notEmpty().withMessage('Please provide company position'),
+  body('phoneNumber').exists().withMessage('Please provide phone number').notEmpty().withMessage('Please provide phone number'),
   body('email').isEmail().exists().custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value } }).then(userData => {
       if (userData) {
@@ -19,7 +19,7 @@ export const registerAgentRules = [
       }
     });
   }),
-  body('password').isLength({ min: 8 }).exists().notEmpty(),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists().withMessage('Please provide phone number').notEmpty().withMessage('Please provide phone number'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password and Confirm password should match');
@@ -31,8 +31,8 @@ export const registerAgentRules = [
 ];
 
 export const registerCustomerRules = [
-  body('firstName').exists().notEmpty(),
-  body('lastName').exists().notEmpty(),
+  body('firstName').exists().withMessage('Please provide first name').notEmpty().withMessage('Please provide first name'),
+  body('lastName').exists().withMessage('Please provide last name').notEmpty().withMessage('Please provide last name'),
   body('email').isEmail().exists().custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value } }).then(userData => {
       if (userData) {
@@ -52,13 +52,12 @@ export const registerCustomerRules = [
 ]
 
 export const forgotPasswordRules = [
-  check('email').isEmail().exists().notEmpty(),
+  check('email').exists().withMessage('Please provide email address').notEmpty().withMessage('Please provide email address').isEmail().withMessage('Please provide valid email address'),
 ];
 
 export const resetPasswordRules = [
-  body('token').exists().notEmpty(),
-  body('email').isEmail().exists().notEmpty(),
-  body('password').isLength({ min: 6 }).exists(),
+  body('token').exists().withMessage('Please provide token').notEmpty().withMessage('Please provide token'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists().withMessage('Please provide password'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password and Confirm password should match');

@@ -78,7 +78,7 @@ export const EMAIL_TEMPLATE_PATH = {
     REGISTER_CUSTOMER: "email-template/register-customer.ejs",
     FORGOT_PASSWORD: "email-template/forgot-password.ejs",
     RESET_PASSWORD: "email-template/reset-password.ejs",
-    REGISTER_TEMP_PASSWORD: "email-template/reguster-temp-password.ejs",
+    REGISTER_TEMP_PASSWORD: "email-template/register-temp-password.ejs",
     WISHLIST_ADD: "email-template/wishlist-add.ejs",
     WISHLIST_REMOVE: "email-template/wishlist-remove.ejs",
     OFFER: "email-template/property-offer.ejs",

@@ -4,7 +4,6 @@ export default function (sequelize) {
   class City extends Model {
     static associate(models) {
       City.belongsTo(models.state, { foreignKey: 'stateId' })
-      City.hasMany(models.user, { foreignKey: 'cityId' })
     }
   }
 

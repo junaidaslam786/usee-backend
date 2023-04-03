@@ -25,7 +25,7 @@ export const listAppointments = async (req, res, next) => {
  */
 export const getAppointment = async (req, res, next) => {
     try {
-        const result = await appointmentService.getAppointment((req.params?.id ? req.params?.id : 0), req.dbInstance);
+        const result = await appointmentService.getAppointment((req.params?.id ? req.params?.id : 0), req);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }
@@ -79,7 +79,7 @@ export const updateAppointment = async (req, res, next) => {
  */
 export const deleteAppointment = async (req, res, next) => {
     try {
-        const result = await appointmentService.deleteAppointment((req.params?.id ? req.params?.id : 0), req.dbInstance);
+        const result = await appointmentService.deleteAppointment((req.params?.id ? req.params?.id : 0), req);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }

@@ -7,7 +7,6 @@ const OP = Sequelize.Op;
 export const updateCurrentUser = async (reqBody, req) => {
     try {
         const { user: agentInfo } = req;
-        const { city: cityTable } = req.dbInstance;
 
         let user = agentInfo;
         
@@ -24,12 +23,7 @@ export const updateCurrentUser = async (reqBody, req) => {
         }
 
         if (reqBody?.city) {
-            // Check if city exists
-            const isValidCity = await cityTable.findOne({ where: { id: reqBody.city }});
-            if (!isValidCity) {
-                return { error: true, message: 'Invalid city id!'}
-            }
-            user.cityId = reqBody.city;
+            user.cityName = reqBody.city;
         }
 
         // profile image upload
@@ -44,44 +38,47 @@ export const updateCurrentUser = async (reqBody, req) => {
             user.profileImage = result;
         }
 
-        let agent = user.agent;
-        if (reqBody?.companyPosition) {
-            agent.companyPosition = reqBody.companyPosition;
+        if (reqBody?.companyPosition || reqBody?.mobileNumber || reqBody?.companyName || reqBody?.companyAddress || reqBody?.zipCode || reqBody?.mortgageAdvisorEmail || req?.files?.companyLogo) {
+            let agent = user.agent;
+            if (reqBody?.companyPosition) {
+                agent.companyPosition = reqBody.companyPosition;
+            }
+    
+            if (reqBody?.mobileNumber) {
+                agent.mobileNumber = reqBody.mobileNumber;
+            }
+    
+            if (reqBody?.companyName) {
+                agent.companyName = reqBody.companyName;
+            }
+    
+            if (reqBody?.companyAddress) {
+                agent.companyAddress = reqBody.companyAddress;
+            }
+    
+            if (reqBody?.zipCode) {
+                agent.zipCode = reqBody.zipCode;
+            }
+    
+            if (reqBody?.mortgageAdvisorEmail) {
+                agent.mortgageAdvisorEmail = reqBody.mortgageAdvisorEmail;
+            }
+    
+            // company logo upload
+            if (req.files && req.files.companyLogo) {
+                const companyLogoFile = req.files.companyLogo;
+                const newFileName = `${Date.now()}_${companyLogoFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(companyLogoFile, PROPERTY_ROOT_PATHS.PROFILE_LOGO, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+    
+                agent.companyLogo = result;
+            }
+    
+            await agent.save();
         }
-
-        if (reqBody?.mobileNumber) {
-            agent.mobileNumber = reqBody.mobileNumber;
-        }
-
-        if (reqBody?.companyName) {
-            agent.companyName = reqBody.companyName;
-        }
-
-        if (reqBody?.companyAddress) {
-            agent.companyAddress = reqBody.companyAddress;
-        }
-
-        if (reqBody?.zipCode) {
-            agent.zipCode = reqBody.zipCode;
-        }
-
-        if (reqBody?.mortgageAdvisorEmail) {
-            agent.mortgageAdvisorEmail = reqBody.mortgageAdvisorEmail;
-        }
-
-        // company logo upload
-        if (req.files && req.files.companyLogo) {
-            const companyLogoFile = req.files.companyLogo;
-            const newFileName = `${Date.now()}_${companyLogoFile.name.replace(/ +/g, "")}`;
-            const result = await utilsHelper.fileUpload(companyLogoFile, PROPERTY_ROOT_PATHS.PROFILE_LOGO, newFileName);
-            if (result?.error) {
-                return { error: true, message: result?.error }
-            } 
-
-            agent.companyLogo = result;
-        }
-
-        await agent.save();
+        
         await user.save();
 
         return true;
@@ -98,7 +95,7 @@ export const updatePassword = async (user, reqBody) => {
         // Check user password
         const isValidPassword = await user.validatePassword(current);
         if (!isValidPassword) {
-            return { error: true, message: 'Incorrect password!'}
+            return { error: true, message: 'Current password is incorrect!'}
         }
 
         // Update password

@@ -235,30 +235,4 @@ export const listPropertiesToAllocate = async (req, res, next) => {
     }
 };
 
-export const searchPolygon = async (req, res, next) => {
-    try {
-        const result = await propertyService.searchPolygon(req.dbInstance, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
 
-        return res.json(result);
-    } catch (err) {
-        console.log('updateOfferStatusError', err);
-        next(err);
-    }
-};
-
-export const searchCircle = async (req, res, next) => {
-    try {
-        const result = await propertyService.searchCircle(req.dbInstance, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.json(result);
-    } catch (err) {
-        console.log('updateOfferStatusError', err);
-        next(err);
-    }
-};

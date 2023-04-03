@@ -127,6 +127,7 @@ export const updateProperty = async (reqBody, req) => {
         const { productId, title, description, price, address, city, region, latitude, longitude, virtualTourType } = reqBody;
         const { user, dbInstance } = req;
 
+        const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`);
         const result = await db.transaction(async (transaction) => {
             const product = await getPropertyById(productId, dbInstance);
             
@@ -141,6 +142,7 @@ export const updateProperty = async (reqBody, req) => {
             product.latitude = latitude;
             product.longitude = longitude;
             product.updatedBy = user.id;
+            product.geometry = point,
             await product.save({ transaction });
 
             // remove previous meta tags
@@ -463,9 +465,10 @@ export const removePropertyRequest = async (reqUser, reqBody, dbInstance) => {
 
 export const addCustomerOffer = async (reqBody, req) => {
     try {
-        const { productId, amount, notes } = reqBody;
+        const { productId, amount } = reqBody;
         const { user: customerInfo, dbInstance } = req;
 
+        const notes = reqBody?.notes ? reqBody.notes : "";
         await db.transaction(async (transaction) => {
             const product = await getPropertyById(productId, dbInstance);
 
@@ -635,19 +638,22 @@ export const listRemovalReasons = async (dbInstance) => {
     }
 }
 
-export const searchPolygon = async (dbInstance, req) => {
+export const searchPolygon = async (req) => {
     try {
         const { coordinates } = req.body;
-        if(coordinates) {
+
+        // to put first coordinate in the end to complete geomtry shape
+        if (coordinates) {
             coordinates.push(coordinates[0]);
         }
+
         const polygonPath = utilsHelper.createPolygonPath(coordinates);
         const polygon = db.fn('ST_GeomFromText', polygonPath, 4326);
         const whereClause = Sequelize.where(
             Sequelize.fn('ST_Within', Sequelize.col('geometry'), polygon),
             true
-          );
-        const results = await dbInstance.product.findAll({
+        );
+        const results = await req.dbInstance.product.findAll({
             where: whereClause
         });
         return results;
@@ -657,7 +663,7 @@ export const searchPolygon = async (dbInstance, req) => {
     }
 }
 
-export const searchCircle = async (dbInstance, req) => {
+export const searchCircle = async (req) => {
     try {
         const { center, radius } = req.body;
         const conversionFactor = Math.cos((center.lat * Math.PI) / 180.0); // conversion factor based on latitude
@@ -668,12 +674,41 @@ export const searchCircle = async (dbInstance, req) => {
             ST_GeographyFromText('SRID=4326;POINT(${center.lng} ${center.lat})'),
             200
           )`);
-        const results = await dbInstance.product.findAll({
+        const results = await req.dbInstance.product.findAll({
             where: whereClause
         });
         return results;
     } catch(err) {
         console.log('listRemovalReasonsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const listHomePageProperties = async (reqBody, req) => {
+    try {
+        const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
+        const page = (reqBody && reqBody.page) ? reqBody.page : 1;
+    
+        const { count, rows } = await req.dbInstance.product.findAndCountAll({
+            where: { 
+                status: PRODUCT_STATUS.ACTIVE, 
+                categoryId: PRODUCT_CATEGORIES.PROPERTY
+            },
+            
+            order: [["id", "DESC"]],
+            offset: (itemPerPage * (page - 1)),
+            limit: itemPerPage
+        });
+
+        return {
+            data: rows,
+            page,
+            size: itemPerPage,
+            totalPage: Math.ceil(count / itemPerPage),
+            totalItems: count
+        };
+    } catch(err) {
+        console.log('listActivePropertiesServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
