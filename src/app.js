@@ -35,6 +35,7 @@ app.use(cors({
   origin: '*'
 }));
 
+app.use(express.static('assets'))
 app.use(express.static('uploads'))
 app.use(compression(configs.compressionConfig));
 app.use(cookieParser());
