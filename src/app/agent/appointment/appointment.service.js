@@ -88,8 +88,9 @@ export const createAppointment = async (req, dbInstance) => {
           }, { transaction });
 
           // Add products to appointment
+          let findProducts = []
           if (appointment && properties) {
-            const findProducts = await dbInstance.product.findAll({ where: { id: properties }});
+            findProducts = await dbInstance.product.findAll({ where: { id: properties }});
             const productRecords = [];
             findProducts.forEach((product) => {
               productRecords.push({
@@ -100,6 +101,25 @@ export const createAppointment = async (req, dbInstance) => {
             });
             await dbInstance.appointment_product.bulkCreate(productRecords, {transaction});
           }
+
+          const emailData = [];
+          emailData.date = appointmentDate;
+          emailData.time = appointmentTime;
+          emailData.products = findProducts;
+          emailData.allotedAgent = req.user.fullName;
+          emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
+          emailData.agentImage = req.user.profileImage;
+          emailData.agentPhoneNumber = req.user.phoneNumber;
+          emailData.agentEmail = req.user.email
+          emailData.meetingLink = `${utilsHelper.generateUrl('customer-join-meeting')}/${appointment.id}`;
+          emailData.appUrl = process.env.APP_URL;
+          const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.JOIN_APPOINTMENT), emailData);
+          const payload = {
+            to: customerDetails.email,
+            subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
+            html: htmlData,
+          }
+          mailHelper.sendMail(payload);
 
           return appointment;
       });

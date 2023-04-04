@@ -70,7 +70,8 @@ export const EMAIL_SUBJECT = {
     WISHLIST_ADD: "Customer has added your property to wishlist",
     WISHLIST_REMOVE: "Customer has removed your property to wishlist",
     OFFER: "Customer has made an offer to the property",
-    OFFER_UPDATE: "Agent has made an update on your offer"
+    OFFER_UPDATE: "Agent has made an update on your offer",
+    JOIN_APPOINTMENT: "Usee Homes Appointment"
 }
 
 export const EMAIL_TEMPLATE_PATH = {
@@ -83,4 +84,5 @@ export const EMAIL_TEMPLATE_PATH = {
     WISHLIST_REMOVE: "email-template/wishlist-remove.ejs",
     OFFER: "email-template/property-offer.ejs",
     OFFER_UPDATE: "email-template/property-offer-update.ejs",
+    JOIN_APPOINTMENT: "email-template/join-appointment.ejs",
 }

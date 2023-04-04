@@ -60,6 +60,9 @@ export const generateUrl = (type, userType) => {
         case 'property-url':
             url = `${url}/property`;
             break;
+        case 'customer-join-meeting':
+            url = `${url}/precall`;
+            break;
         default:
             break;
     }
