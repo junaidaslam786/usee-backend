@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = {
   async up (queryInterface, Sequelize) {
     // step 1: Create new column for city name

@@ -96,7 +96,11 @@ export const customerOfferRequestRules = [
       }
     });
   }), 
-  body('amount').exists().withMessage('Please provide amount').notEmpty().withMessage('Please provide amount'),
+  body('amount').exists().withMessage('Please provide amount')
+    .notEmpty().withMessage('Please provide amount')
+    .custom((value) => {
+      return isNaN(parseFloat(value)) ? Promise.reject('Amount must be digit.') : true;
+    })
 ];
 
 export const updateOfferStatusRequestRules = [

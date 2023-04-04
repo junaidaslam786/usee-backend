@@ -235,4 +235,57 @@ export const listPropertiesToAllocate = async (req, res, next) => {
     }
 };
 
+/**
+ * DELETE /property/customer/offer/:id
+ * Delete offer made by customer
+ */
+export const deleteCustomerOffer = async (req, res, next) => {
+    try {
+        const result = await propertyService.deleteCustomerOffer((req.params?.id ? req.params?.id : 0), req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Offer deleted successfully" });
+    } catch (err) {
+        console.log('deleteCustomerOfferError', err);
+        next(err);
+    }
+};
+
+/**
+ * POST /property/customer/snag-list
+ * Update customer feedback on snag list
+ */
+export const updateCustomerSnaglist = async (req, res, next) => {
+    try {
+        const result = await propertyService.updateCustomerSnaglist(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.status(200).json(result);
+    } catch (err) {
+        console.log('updateCustomerSnaglistError', err);
+        next(err);
+    }
+};
+
+/**
+ * POST /property/agent/snag-list
+ * Update agent feedback on snag list
+ */
+export const updateAgentSnaglist = async (req, res, next) => {
+    try {
+        const result = await propertyService.updateAgentSnaglist(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.status(200).json(result);
+    } catch (err) {
+        console.log('updateAgentSnaglistError', err);
+        next(err);
+    }
+};
 

@@ -5,6 +5,7 @@ export default function (sequelize) {
     static associate(models) {
       ProductOffer.belongsTo(models.product, { foreignKey: 'productId' })
       ProductOffer.belongsTo(models.user, { foreignKey: 'customerId' })
+      ProductOffer.hasOne(models.productSnagList, { foreignKey: 'offerId' })
     }
   }
 
@@ -36,11 +37,13 @@ export default function (sequelize) {
     },
     notes: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     status: {
       type: DataTypes.STRING,
       enum: ["pending", "accepted", "rejected"]
+    },
+    rejectReason: {
+      type: DataTypes.STRING,
     },
   }, {
     modelName: 'productOffer',

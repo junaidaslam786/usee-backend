@@ -20,6 +20,9 @@ router.post('/removal-request', isAuthenticated, validate(propertyValidations.re
 
 // offer
 router.post('/customer/make-offer', isAuthenticated, validate(propertyValidations.customerOfferRequestRules), propertyController.addCustomerOffer);
+router.delete('/customer/offer/:id', isAuthenticated, propertyController.deleteCustomerOffer);
 router.post('/agent/update-offer', isAuthenticated, validate(propertyValidations.updateOfferStatusRequestRules), propertyController.updateOfferStatus);
+router.post('/customer/snag-list', isAuthenticated, propertyController.updateCustomerSnaglist);
+router.post('/agent/snag-list', isAuthenticated, propertyController.updateAgentSnaglist);
 
 export default router;

@@ -27,8 +27,10 @@ import roleModel from './models/role';
 import userModel from './models/user';
 import userAlertModel from './models/user-alert';
 import userLogModel from './models/user-log';
-import appointmentProductModel from './models/appointment-products'
-import productOfferModel from './models/product-offer'
+import appointmentProductModel from './models/appointment-products';
+import productOfferModel from './models/product-offer';
+import productSnagList from './models/product-snag-list';
+import productSnagListItem from './models/product-snag-list-item';
 
 // Configuration
 const env = process.env.NODE_ENV;
@@ -64,7 +66,9 @@ const modelDefiners = [
   userLogModel,
   appoinmentModel,
   appointmentProductModel,
-  productOfferModel
+  productOfferModel,
+  productSnagList,
+  productSnagListItem
 ];
 
 // eslint-disable-next-line no-restricted-syntax

@@ -469,6 +469,12 @@ export const addCustomerOffer = async (reqBody, req) => {
         const { user: customerInfo, dbInstance } = req;
 
         const notes = reqBody?.notes ? reqBody.notes : "";
+
+        const offer = await dbInstance.productOffer.findOne({ where: { customerId: customerInfo.id, productId, status: { [OP.ne]: OFFER_STATUS.PENDING } } });
+        if (offer) {
+            return { error: true, message: 'Offer already exists.'}
+        }
+
         await db.transaction(async (transaction) => {
             const product = await getPropertyById(productId, dbInstance);
 
@@ -536,12 +542,13 @@ export const updateOfferStatus = async (reqBody, req) => {
 
             // update offer status
             offer.status = status == "accepted" ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.REJECTED;
+            offer.rejectReason = reqBody?.reason ? reqBody?.reason : "";
             await offer.save({ transaction });
 
             const emailData = [];
             emailData.name = customer.fullName;
             emailData.status = status;
-            emailData.productTitle = product.title;
+            emailData.propertyTitle = product.title;
             emailData.propertyImage = product.featuredImage;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER_UPDATE), emailData);
             const payload = {
@@ -600,13 +607,23 @@ export const getPropertyDetailById = async (propertyId, dbInstance) => {
           },
           {
             model: dbInstance.productOffer, 
-            attributes: ["id", "amount", "notes", "status"],
+            attributes: ["id", "amount", "notes", "status", "rejectReason"],
             include: [
                 {
                   model: dbInstance.user, 
                   attributes: ["id", "firstName", "lastName", "email"],
                 },
-            ]
+                {
+                    model: dbInstance.productSnagList, 
+                    attributes: ["id", "agentApproved", "customerApproved"],
+                    include: [
+                        {
+                          model: dbInstance.productSnagListItem, 
+                          attributes: ["snagKey", "snagValue", ['customer_comment', 'cc'], ['agent_comment', 'ac']],
+                        },
+                    ]
+                },
+            ],
           },
         //   {
         //     model: dbInstance.productAllocation,
@@ -712,4 +729,196 @@ export const listHomePageProperties = async (reqBody, req) => {
         console.log('listActivePropertiesServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
+}
+
+export const deleteCustomerOffer = async (offerId, req) => {
+    try {
+        const { user, dbInstance } = req;
+
+        const offer = await dbInstance.productOffer.findOne({ where: { id: offerId, customerId: user.id } });
+        if (!offer) {
+            return { error: true, message: 'Invalid offer id or offer do not exist.'}
+        }
+
+        if (offer.status != OFFER_STATUS.PENDING) {
+            return { error: true, message: 'You cannot delete this offer.'}
+        }
+
+        await offer.destroy();
+
+        return true;
+    } catch(err) {
+        console.log('deleteCustomerOfferError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const updateCustomerSnaglist = async (reqBody, req) => {
+    try {
+        const { user: customerInfo, dbInstance } = req;
+        if (!reqBody?.offerId) {
+            return { error: true, message: 'Invalid offer id or offer do not exist.'}
+        }
+
+        const offer = await dbInstance.productOffer.findOne({ where: { id: reqBody.offerId, customerId: customerInfo.id } });
+        if (!offer) {
+            return { error: true, message: 'Invalid offer id or offer do not exist.'}
+        }
+
+        const snagListItems = reqBody?.snagList ? reqBody.snagList : [];
+        const isApprovedByCustomer = reqBody?.isApprovedByCustomer ? reqBody.isApprovedByCustomer : false;
+        
+        if (snagListItems.length === 0 && !isApprovedByCustomer) {
+            return { error: true, message: 'Either approve snag list or update snag list.'}
+        }
+
+        const result = await db.transaction(async (transaction) => {
+            let snagList = await getOrCreateSnagList(offer.id, dbInstance, transaction);
+            snagList.customerApproved = isApprovedByCustomer;
+            await snagList.save({ transaction });
+            
+            if (snagList?.productSnagListItems && snagListItems) {
+                for (const snagListItem of snagList.productSnagListItems) {
+                    let snagListItemRequest = snagListItems.find((item) => item.value === snagListItem.snagKey);
+                    await await dbInstance.productSnagListItem.update({
+                        snagValue: snagListItemRequest.result,
+                        customerComment: snagListItemRequest.comment
+                    }, {
+                        where: { id: snagListItem.id },
+                        fields: ['snagValue', 'customerComment']
+                    });
+                }
+            } else if (snagListItems) {
+                const snagListItemToSave = [];
+                snagListItems.forEach( async (element) => {
+                    snagListItemToSave.push({
+                        snagListId: snagList.id,
+                        snagKey: element.value,
+                        snagValue: element.result,
+                        customerComment: element.comment
+                    });
+                });
+                await dbInstance.productSnagListItem.bulkCreate(snagListItemToSave, { transaction });
+            }
+
+            return snagList;
+        });
+
+        return (result.id) ? await getSnagListDetailById(result.id, dbInstance) : result;
+    } catch(err) {
+        console.log('updateCustomerSnaglistServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const updateAgentSnaglist = async (reqBody, req) => {
+    try {
+        const { user: agentInfo, dbInstance } = req;
+        if (!reqBody?.offerId) {
+            return { error: true, message: 'Invalid offer id or offer do not exist.'}
+        }
+
+        const offer = await dbInstance.productOffer.findOne({ 
+            where: { id: reqBody.offerId },
+            include: [{
+                model: dbInstance.product,
+                where: {
+                    userId: agentInfo.id
+                }
+            }]
+        });
+        if (!offer) {
+            return { error: true, message: 'Invalid offer id or offer do not exist.'}
+        }
+
+        const snagListItems = reqBody?.snagList ? reqBody.snagList : [];
+        const isApprovedByAgent = reqBody?.isApprovedByAgent ? reqBody.isApprovedByAgent : false;
+        
+        if (snagListItems.length === 0 && !isApprovedByAgent) {
+            return { error: true, message: 'Either approve snag list or update snag list.'}
+        }
+
+        const result = await db.transaction(async (transaction) => {
+            let snagList = await getOrCreateSnagList(offer.id, dbInstance, transaction);
+            snagList.agentApproved = isApprovedByAgent;
+            await snagList.save({ transaction });
+
+            if (snagList?.productSnagListItems && snagListItems) {
+                for (const snagListItem of snagList.productSnagListItems) {
+                    let snagListItemRequest = snagListItems.find((item) => item.value === snagListItem.snagKey);
+                    await await dbInstance.productSnagListItem.update({
+                        snagValue: snagListItemRequest.result,
+                        agentComment: snagListItemRequest.comment
+                    }, {
+                        where: { id: snagListItem.id },
+                        fields: ['snagValue', 'agentComment']
+                    });
+                }
+            } else if (snagListItems) {
+                const snagListItemToSave = [];
+                snagListItems.forEach( async (element) => {
+                    snagListItemToSave.push({
+                        snagListId: snagList.id,
+                        snagKey: element.value,
+                        snagValue: element.result,
+                        agentComment: element.comment
+                    });
+                });
+                await dbInstance.productSnagListItem.bulkCreate(snagListItemToSave, { transaction });
+            }
+
+            return snagList;
+        });
+
+        return (result.id) ? await getSnagListDetailById(result.id, dbInstance) : result;
+    } catch(err) {
+        console.log('updateAgentSnaglistServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+const getOrCreateSnagList = async (offerId, dbInstance, transaction) => {
+    let snagList = await dbInstance.productSnagList.findOne({
+        where: { offerId },
+        include: [{
+            model: dbInstance.productSnagListItem
+        }]
+    });
+
+    if (snagList) {
+        return snagList;
+    }
+
+    return await dbInstance.productSnagList.create({
+        offerId,
+        agentApproved: false,
+        customerApproved: false
+    }, { transaction });
+}
+
+export const getSnagListDetailById = async (snagListId, dbInstance) => {
+    const property = await dbInstance.productSnagList.findOne({
+        where: { id: snagListId },
+        include: [
+          {
+            model: dbInstance.productSnagListItem, 
+          },
+          {
+            model: dbInstance.productOffer, 
+            attributes: ["id", "amount", "notes", "status", "rejectReason"],
+            include: [
+                {
+                  model: dbInstance.user, 
+                  attributes: ["id", "firstName", "lastName", "email"],
+                },
+            ],
+          },
+        ],
+    });
+
+    if (!property) {
+        return false;
+    }
+
+    return property;
 }
