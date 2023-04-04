@@ -1,0 +1,138 @@
+<%- include('layout/header.ejs', { subject: "Offer" }) %>
+
+<tr>
+    <td valign="top" style="color:#947a8c;text-align:center;font-size:20px;font-family:'Manrope', sans-serif;font-weight:700;background-color:#fff;padding:0 20px 10px;">
+        <span>Welcome to U-See Homes</span>
+    </td>
+</tr>
+
+<tr>
+    <td valign="top" style="color:#3e2837;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px 30px;">
+        <span> You have <b style="color:#3e2837;font-weight:700;"><%= message %></b> an appointment</span>
+    </td>
+</tr>
+
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding:20px 20px 20px;">
+        <span style="color:#3e2837;font-size: 18px;font-family:'Manrope', sans-serif;font-weight:700;">
+            <b>Your Booking Information:</b>
+        </span>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding: 0 40px 30px 40px;">
+        <table style="width:100%;" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td valign="middle" style="width:130px;padding-right:30px;">
+                    <span style="box-shadow:0 0 21px #999;border:1px solid #00CB04;display:inline-block;width:112px;height:112px;border-radius:50%;overflow:hidden;">
+                        <img style="max-width:100%;" src="<%= agent_image %>" alt="estate agent photo">
+                    </span>
+                </td>
+                <td valign="middle">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td valign="middle"><img src="<?php echo asset('public/homeasset/images/html/calender.png');?>" alt="icon" style="margin-right:10px;"></td>
+                            <td valign="middle">
+                                <span style="color:#3E2837;font-size: 14.5px;font-family:'Manrope', sans-serif;font-weight:600;padding-right:30px;">
+                                    <%= appointment_date %>
+                                </span>
+                            </td>
+                            <td valign="middle"><img src="<?php echo asset('public/homeasset/images/html/clock.png');?>" alt="icon" style="margin-right:10px;"></td>
+                            <td valign="middle">
+                                <span style="color:#3E2837;font-size: 14.5px;font-family:'Manrope', sans-serif;font-weight:600;">
+                                    <%= appointment_time %>
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table style="width:100%;text-align:left;margin-top:10px;" border="0" cellspacing="5" cellpadding="0">
+                        <tr>
+                            <td>
+                                <span style="color:#92778a;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+                                    Your Estate Agent:
+                                    <span style="color:#3e2837;"><%= alloted %></span>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span style="color:#92778a;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+                                    Company:
+                                    <span style="color:#3e2837;"><%= company_name %></span>
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
+ <tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding:0 50px;">
+        <table border="0" cellpadding="0" cellspacing="0" style="width:100%;">
+            <tr>
+                <td valign="middle" style="width:132px;padding: 0 20px 15px 0;">
+                    <span style="box-shadow:0 0 21px rgba(110, 110, 110, 0.29);display:inline-block;overflow:hidden;border:1px solid #1fcf23;border-radius:15px;">
+                        <img src="<%= featuredImage %>" width="143" alt="image" style="display:block;">
+                    </span>
+                </td>
+                <td valign="middle" style="text-align:left;padding: 0 0 15px 0;">
+                    <span style="display:block;color:#432e3c;font-size:16px;font-family:'Manrope', sans-serif;font-weight:700;padding-bottom:10px;">
+                      <%= property_title %>
+                    </span>
+
+                   <span style="display:block;color:#432e3c;font-size:14px;font-family:'Manrope', sans-serif;font-weight:500;">
+                        <%= property_address %>, <%= property_city %> <br/> <%= property_region %>
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 20px;">
+        <span style="display: inline-block;max-width:380px;color:#92778a;font-size: 14px;font-family:'Manrope', sans-serif;font-weight:500;">
+            If you are unable to make this appointment, please contact
+            <span style="color:#3e2837;"> <%= alloted %> </span>
+            on the below details:
+        </span>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 40px;">
+        <span>
+            <a href="tel:{{ $details['phone_number'] }}" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+                <img src="<?php echo asset('public/homeasset/images/html/phone.png');?>" style="display:inline-block;vertical-align:middle;margin-right:6px" alt="icon">
+              <%= phone_number %>
+            </a>
+        </span>
+
+        <span style="margin-left:40px;">
+            <a href="mailto:{{ $details['email'] }}" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+                <img src="<?php echo asset('public/homeasset/images/html/email.png');?>" style="display:inline-block;vertical-align:middle;margin-right:6px" alt="icon">
+              <%= email %>
+            </a>
+        </span>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;padding: 0 20px 40px;">
+        <span style="color:#92778a;font-size: 16px;font-family:'Manrope', sans-serif;font-weight:500;">
+            Follow the link below to join the
+            <b style="color:#3e2837;font-weight:600;">Virtual Tour Room</b>
+        </span>
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="text-align:center;background-color:#fff;">
+        <span>
+            <a target="_blank" href="<%= link %>" style="border-radius:50px;text-decoration:none;font-size:14px;font-family:'Manrope', sans-serif;background-color:#00CB04;padding:12px 50px;display:inline-block;color:#fff;">
+                <img src="<?php echo asset('public/homeasset/images/html/camera.png');?>" alt="icon" style="margin-right:15px;position:relative;top:2px;">
+                <b>Join Virtual Tour</b>
+            </a>
+        </span>
+    </td>
+</tr>
+
+<%- include('layout/footer.ejs') %>
