@@ -668,16 +668,17 @@ export const searchCircle = async (req) => {
         const { center, radius } = req.body;
         const conversionFactor = Math.cos((center.lat * Math.PI) / 180.0); // conversion factor based on latitude
         const radiusInDegrees = radius / (111.32 * 1000) / conversionFactor; // convert radius to degrees
-
-        const whereClause = Sequelize.literal(`ST_DWithin(
-            ST_GeographyFromText('SRID=4326;POINT(' || longitude || ' ' || latitude || ')'),
-            ST_GeographyFromText('SRID=4326;POINT(${center.lng} ${center.lat})'),
-            200
-          )`);
-        const results = await req.dbInstance.product.findAll({
-            where: whereClause
+        const records = await req.dbInstance.product.findAll({
+            where: Sequelize.where(
+                Sequelize.fn(
+                    'ST_DWithin',
+                    Sequelize.col('geometry'),
+                    Sequelize.fn('ST_SetSRID', Sequelize.fn('ST_MakePoint', center.lng, center.lat), 4326),
+                    radius
+                ),
+            true)
         });
-        return results;
+        return records;
     } catch(err) {
         console.log('listRemovalReasonsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
