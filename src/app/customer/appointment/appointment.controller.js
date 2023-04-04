@@ -7,7 +7,7 @@ import * as appointmentService from './appointment.service';
  */
 export const listAppointments = async (req, res, next) => {
   try {
-    const result = await appointmentService.listAppointments(req.user, req.query, req);
+    const result = await appointmentService.listAppointments(req.user, req.query, req.dbInstance);
     if (result?.error && result?.message) {
         return next(createError(400, result.message));
     }
