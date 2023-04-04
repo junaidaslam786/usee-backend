@@ -11,7 +11,6 @@ export const getAgentAlerts = async (userId, dbInstance) => {
             },
             include: [{
                 model: dbInstance.user, 
-                where: { deletedAt: null },
                 attributes: ["id", "firstName", "lastName"],
             },
             {
@@ -39,25 +38,9 @@ export const getAgentAlerts = async (userId, dbInstance) => {
             }
         });
 
-        return formatedAlerts
+        return formatedAlerts;
     } catch(err) {
-        console.log('getAgentAlertsServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
-    }
-}
-
-export const getAgentUnReadAlertCounts = async (userId, dbInstance) => {
-    try {
-        const unReadAlertCounts = await dbInstance.userAlert.count({
-            where: { 
-                viewed: false,
-                productId: { [OP.in]: Sequelize.literal(`(select id from products where user_id = '${userId}')`) }
-            },
-        });
-
-        return unReadAlertCounts;
-    } catch(err) {
-        console.log('getAgentUnReadAlertCountsError', err)
+        console.log('lgetAgentAlertsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
@@ -132,7 +115,7 @@ export const getAgentAlertDetailById = async (id, dbInstance) => {
 
 const formatAlertText = (alert) => {
     let text = "";
-    const customerName = `<b>${alert.user.firstName} ${alert.user.lastName}</b>`;
+    const customerName = `<b>${alert.user.firstName} ${alert.user.firstName}</b>`;
     const productTitle = `<b>"${alert.product.title}"</b>`;
 
     switch(alert.alertMode) {
@@ -152,10 +135,6 @@ const formatAlertText = (alert) => {
             break;
         case USER_ALERT_MODE.OFFER: 
             text = `${customerName} made an offer for the property ${productTitle}`;
-
-            break;
-        case USER_ALERT_MODE.CUSTOMER_APPOINTMENT: 
-            text = `${customerName} made an appointment for the property ${productTitle}`;
 
             break;
         default:

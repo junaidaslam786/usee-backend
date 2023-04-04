@@ -12,6 +12,7 @@ export const registerAgentRules = [
   body('companyName').exists().withMessage('Please provide company name').notEmpty().withMessage('Please provide company name'),
   body('companyPosition').exists().withMessage('Please provide company position').notEmpty().withMessage('Please provide company position'),
   body('jobTitle').exists().withMessage('Please provide job title').notEmpty().withMessage('Please provide job title'),
+  body('licenseNo').exists().withMessage('Please provide company registration # or deed title').notEmpty().withMessage('Please provide company registration # or deed title'),
   body('phoneNumber').exists().withMessage('Please provide phone number').notEmpty().withMessage('Please provide phone number'),
   body('email').isEmail().exists().custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value } }).then(userData => {

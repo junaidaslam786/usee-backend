@@ -1,7 +1,7 @@
 import db from '@/database';
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, AGENT_TYPE } from '@/config/constants';
+import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, AGENT_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE } from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
 
@@ -24,7 +24,7 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
         },
       ],
-      order: [["id", "DESC"]],
+      order: [["appointmentDate", "DESC"]],
       offset: (itemPerPage * (page - 1)),
       limit: itemPerPage
     });
@@ -70,6 +70,11 @@ export const createAppointment = async (req, dbInstance) => {
       return { error: true, message: 'Unable to make appointment due to voice call issue.'}
     }
 
+    const vars = utilsHelper.checkIfTimeIsOld(appointmentDate, appointmentTime);
+    if (vars) {
+      return { error: true, message: 'Time is expired. Please select another timeslot.' };
+    }
+
     const result = await db.transaction(async (transaction) => {
         const prop = await dbInstance.product.findOne({ 
             where: { id: property },
@@ -91,6 +96,18 @@ export const createAppointment = async (req, dbInstance) => {
           allotedAgent: prop.userId,
           sessionId,
         }, { transaction });
+
+        // create agent alert
+        await dbInstance.userAlert.create({
+          customerId: req.user.id,
+          productId: property,
+          alertMode: USER_ALERT_MODE.CUSTOMER_APPOINTMENT,
+          alertType: USER_ALERT_TYPE.CUSTOMER_APPOINTMENT,
+          removed: false,
+          viewed: false,
+          emailed: false,
+          createdBy: req.user.id
+      }, { transaction });
 
         // Add products to appointment
         let findProducts = []

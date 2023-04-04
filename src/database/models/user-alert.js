@@ -32,10 +32,9 @@ export default function (sequelize) {
     },
     alertMode: {
       type: DataTypes.STRING,
-      enum: ["wishlist", "interest", "offer"]
     },
     alertType: {
-      type: DataTypes.INTEGER, // (wishlist 1-Added,2-Removed ##### Interest 1-Interested,2-Not interested)
+      type: DataTypes.INTEGER, // (wishlist 1-Added,2-Removed ##### Interest 1-Interested,2-Not interested ##### 1. customer appointment)
     },
     removed: {
       type: DataTypes.BOOLEAN,

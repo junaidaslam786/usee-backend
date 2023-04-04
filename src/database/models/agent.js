@@ -4,6 +4,7 @@ export default function (sequelize) {
   class Agent extends Model {
     static associate(models) {
       Agent.belongsTo(models.user, { foreignKey: 'userId' })
+      Agent.belongsTo(models.appointment, { foreignKey: 'userId' })
       Agent.belongsTo(models.agentBranch, { foreignKey: 'branchId' })
     }
   }

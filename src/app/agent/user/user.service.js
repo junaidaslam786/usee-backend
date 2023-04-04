@@ -217,6 +217,7 @@ export const checkAvailability = async (reqBody, req) => {
 }
 
 export const getAgentUser = async (agentUserId, dbInstance) => {
+    
     try {
         const agentUser = await getAgentUserDetailByUserId(agentUserId, dbInstance);
         if (!agentUser) {
@@ -259,6 +260,7 @@ export const deleteAgentUser = async (userId, dbInstance) => {
 }
 
 const getAgentUserByUserId = async (agentUserId, dbInstance) => {
+
     const agentUser = await dbInstance.agent.findOne({where: { userId: agentUserId }});
 
     if (!agentUser) {
@@ -269,6 +271,7 @@ const getAgentUserByUserId = async (agentUserId, dbInstance) => {
 }
 
 const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
+
     const agentUser = await dbInstance.agent.findOne({
         where: { userId: agentUserId },
         include: [

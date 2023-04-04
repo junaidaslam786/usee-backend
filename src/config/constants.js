@@ -39,7 +39,8 @@ export const VIRTUAL_TOUR_TYPE = {
 export const USER_ALERT_MODE = {
     WISHLIST: "wishlist",
     INTEREST: "interest",
-    OFFER: "offer"
+    OFFER: "offer",
+    CUSTOMER_APPOINTMENT: "customer_appointment"
 }
 
 export const USER_ALERT_TYPE = {
@@ -48,6 +49,7 @@ export const USER_ALERT_TYPE = {
     INTERESTED: 1,
     NOT_INTERESTED: 2,
     OFFER: 1,
+    CUSTOMER_APPOINTMENT: 1,
 }
 
 export const OFFER_STATUS = {
@@ -64,7 +66,9 @@ export const APPOINTMENT_TYPES = {
 
 export const EMAIL_SUBJECT = {
     REGISTER_AGENT: "You have registered as agent at Usee360",
+    ADMIN_REGISTER_AGENT: "Usee360 admin added you as a agent",
     REGISTER_CUSTOMER: "You have registered as customer at Usee360",
+    ADMIN_REGISTER_CUSTOMER: "Usee360 admin added you as a customer",
     FORGOT_PASSWORD: "Your password change request has been received",
     RESET_PASSWORD: "Your password on Usee360 has been changed",
     AGENT_ADDED_CUSTOMER: "Agent has added you as a customer at Usee360",
@@ -83,6 +87,7 @@ export const EMAIL_TEMPLATE_PATH = {
     FORGOT_PASSWORD: "email-template/forgot-password.ejs",
     RESET_PASSWORD: "email-template/reset-password.ejs",
     REGISTER_TEMP_PASSWORD: "email-template/register-temp-password.ejs",
+    ADMIN_REGISTER_TEMP_PASSWORD: "email-template/admin-register-temp-password.ejs",
     WISHLIST_ADD: "email-template/wishlist-add.ejs",
     WISHLIST_REMOVE: "email-template/wishlist-remove.ejs",
     OFFER: "email-template/property-offer.ejs",

@@ -27,9 +27,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
   },
   alertMode: {
     field: 'alert_mode',
-    type: Sequelize.ENUM,
-    defaultValue: "wishlist",
-    values: ["wishlist", "interest", "offer"]
+    type: Sequelize.STRING,
   },
   alertType: {
     field: 'alert_type',

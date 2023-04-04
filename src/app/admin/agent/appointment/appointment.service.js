@@ -1,16 +1,60 @@
 import db from '@/database';
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, AGENT_TYPE } from '@/config/constants';
+import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, AGENT_TYPE, APPOINTMENT_TYPES } from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
 
-export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
+export const listCompletedAppointments = async (agentInfo, reqBody, dbInstance) => {
   try {
     const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
 
-    const whereClause = agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { allotedAgent: agentInfo.id };
+    const whereClause = APPOINTMENT_TYPES== 'completed';
+    const { count, rows } = await dbInstance.appointment.findAndCountAll({
+      where: whereClause,
+      include: [
+        { 
+          model: dbInstance.product, 
+          attributes: ["id"],
+          through: { attributes: [] }
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'customerUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'agentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        
+      ],
+      order: [["id", "DESC"]],
+      offset: (itemPerPage * (page - 1)),
+      limit: itemPerPage
+    });
+    
+    return {
+      data: rows,
+      page,
+      size: itemPerPage,
+      totalPage: Math.ceil(count / itemPerPage),
+      totalItems: count
+    };
+  } catch(err) {
+    console.log('listAppointmentsServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.'}
+  }
+}
+
+export const listUpcomingAppointments = async (agentInfo, reqBody, dbInstance) => {
+  try {
+    const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
+    const page = (reqBody && reqBody.page) ? reqBody.page : 1;
+
+    const whereClause = APPOINTMENT_TYPES== 'upcoming';
     const { count, rows } = await dbInstance.appointment.findAndCountAll({
       where: whereClause,
       include: [
@@ -25,7 +69,7 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
         },
       ],
-      order: [["appointmentDate", "DESC"]],
+      order: [["id", "DESC"]],
       offset: (itemPerPage * (page - 1)),
       limit: itemPerPage
     });
@@ -68,12 +112,7 @@ export const createAppointment = async (req, dbInstance) => {
 
       const sessionId = await opentokHelper.getSessionId();
       if (!sessionId) {
-        return { error: true, message: 'Unable to make appointment due to voice call issue.' };
-      }
-      
-      const vars = utilsHelper.checkIfTimeIsOld(appointmentDate, appointmentTime);
-      if (vars) {
-        return { error: true, message: 'Time is expired. Please select another timeslot.' };
+        return { error: true, message: 'Unable to make appointment due to voice call issue.'}
       }
 
       const result = await db.transaction(async (transaction) => {
@@ -93,9 +132,8 @@ export const createAppointment = async (req, dbInstance) => {
           }, { transaction });
 
           // Add products to appointment
-          let findProducts = []
           if (appointment && properties) {
-            findProducts = await dbInstance.product.findAll({ where: { id: properties }});
+            const findProducts = await dbInstance.product.findAll({ where: { id: properties }});
             const productRecords = [];
             findProducts.forEach((product) => {
               productRecords.push({
@@ -106,25 +144,6 @@ export const createAppointment = async (req, dbInstance) => {
             });
             await dbInstance.appointment_product.bulkCreate(productRecords, {transaction});
           }
-
-          const emailData = [];
-          emailData.date = appointmentDate;
-          emailData.time = appointmentTime;
-          emailData.products = findProducts;
-          emailData.allotedAgent = req.user.fullName;
-          emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
-          emailData.agentImage = req.user.profileImage;
-          emailData.agentPhoneNumber = req.user.phoneNumber;
-          emailData.agentEmail = req.user.email
-          emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
-          emailData.appUrl = process.env.APP_URL;
-          const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.JOIN_APPOINTMENT), emailData);
-          const payload = {
-            to: customerDetails.email,
-            subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
-            html: htmlData,
-          }
-          mailHelper.sendMail(payload);
 
           return appointment;
       });
@@ -148,11 +167,6 @@ export const updateAppointment = async (req, dbInstance) => {
         const appointment = await getAppointmentDetailById(req.user, id, dbInstance);
         if (!appointment) {
           return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
-        }
-
-        const vars = utilsHelper.checkIfTimeIsOld(appointmentDate, appointmentTime);
-        if (vars) {
-          return { error: true, message: 'Time is expired. Please select another timeslot.' };
         }
 
         await db.transaction(async (transaction) => {

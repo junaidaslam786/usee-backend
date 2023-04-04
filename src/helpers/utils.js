@@ -71,7 +71,7 @@ export const generateUrl = (type, userType) => {
     return url;
 }
 
-export function createPolygonPath(coordinates) {
+export const createPolygonPath = (coordinates) => {
     if (coordinates.length < 3) {
       return null;
     }
@@ -88,7 +88,7 @@ export function createPolygonPath(coordinates) {
     return polygonPath;
 }
 
-export function calculateDistance(lat1, lon1, lat2, lon2, unit) {
+export const calculateDistance = (lat1, lon1, lat2, lon2, unit) => {
 	if ((lat1 == lat2) && (lon1 == lon2)) {
 		return 0;
 	}
@@ -108,4 +108,20 @@ export function calculateDistance(lat1, lon1, lat2, lon2, unit) {
 		if (unit=="N") { dist = dist * 0.8684 }
 		return dist;
 	}
+}
+
+export const checkIfTimeIsOld = (date, time) => {
+    const difdate = date;
+    const parts = difdate.split("-");
+    const fpdate = parts[1]+'-'+parts[2]+'-'+parts[0];
+
+    const givenDate = new Date(fpdate+' '+time);
+    const currentDate = new Date();
+
+    givenDate.setSeconds(0);
+    givenDate.setMilliseconds(0);
+    currentDate.setSeconds(0);
+    currentDate.setMilliseconds(0);
+
+    return givenDate < currentDate;
 }
