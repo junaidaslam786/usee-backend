@@ -687,19 +687,17 @@ export const searchPolygon = async (req) => {
 export const searchCircle = async (req) => {
     try {
         const { center, radius } = req.body;
-        const conversionFactor = Math.cos((center.lat * Math.PI) / 180.0); // conversion factor based on latitude
-        const radiusInDegrees = radius / (111.32 * 1000) / conversionFactor; // convert radius to degrees
         const records = await req.dbInstance.product.findAll({
-            where: Sequelize.where(
-                Sequelize.fn(
-                    'ST_DWithin',
-                    Sequelize.col('geometry'),
-                    Sequelize.fn('ST_SetSRID', Sequelize.fn('ST_MakePoint', center.lng, center.lat), 4326),
-                    radius
-                ),
-            true)
+            attributes: ["id","longitude", "latitude"]
         });
-        return records;
+  
+        const nearbyRecords = records.filter(record => {
+            const distance = haversine(center.lat, center.lng, record.latitude, record.longitude);
+            console.log(distance);
+            return distance <= radius/1000;
+        });
+        return nearbyRecords;
+  
     } catch(err) {
         console.log('listRemovalReasonsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
@@ -925,4 +923,23 @@ export const getSnagListDetailById = async (snagListId, dbInstance) => {
     }
 
     return property;
+}
+
+// Define the Haversine formula function
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = degToRad(lat2 - lat1);
+    const dLon = degToRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(degToRad(lat1)) * Math.cos(degToRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance;
+  }
+  
+// Define a function to convert degrees to radians
+function degToRad(degrees) {
+    return degrees * (Math.PI/180);
 }
