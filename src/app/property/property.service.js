@@ -470,9 +470,13 @@ export const addCustomerOffer = async (reqBody, req) => {
 
         const notes = reqBody?.notes ? reqBody.notes : "";
 
-        const offer = await dbInstance.productOffer.findOne({ where: { customerId: customerInfo.id, productId, status: { [OP.ne]: OFFER_STATUS.PENDING } } });
-        if (offer) {
-            return { error: true, message: 'Offer already exists.'}
+        const offer = await dbInstance.productOffer.findOne({ where: { customerId: customerInfo.id, productId, status: { [OP.ne]: OFFER_STATUS.REJECTED } } });
+        if (offer && offer.status === OFFER_STATUS.ACCEPTED) {
+            return { error: true, message: 'Offer is already accepted.'}
+        }
+
+        if (offer && offer.status === OFFER_STATUS.PENDING) {
+            return { error: true, message: 'Offer is already exists.'}
         }
 
         await db.transaction(async (transaction) => {
