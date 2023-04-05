@@ -37,7 +37,41 @@ export const getAppointment = async (req, res, next) => {
     }
 };
 
+/**
+ * POST /agent/appointment/create
+ * Create new appointment
+ */
+export const createAppointment = async (req, res, next) => {
+    try {
+        const result = await appointmentService.createAppointment(req, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
 
+        res.status(201).json(result);
+    } catch (err) {
+        console.log('createAppointmentError', err);
+        next(err);
+    }
+};
+
+/**
+ * PUT /agent/appointment/update
+ * update appointment details and permissions
+ */
+export const updateAppointment = async (req, res, next) => {
+    try {
+        const result = await appointmentService.updateAppointment(req, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Appointment updated successfully" });
+    } catch (err) {
+        console.log('updateAppointmentError', err);
+        next(err);
+    }
+};
 /**
  * GET /customer/appointment/getSessionToken/:id
  * Get opentok token for the meeting session

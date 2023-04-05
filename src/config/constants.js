@@ -86,4 +86,5 @@ export const EMAIL_TEMPLATE_PATH = {
     OFFER: "email-template/property-offer.ejs",
     OFFER_UPDATE: "email-template/property-offer-update.ejs",
     JOIN_APPOINTMENT: "email-template/join-appointment.ejs",
+    AGENT_JOIN_APPOINTMENT: "email-template/agent-join-appointment.ejs",
 }
