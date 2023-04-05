@@ -73,3 +73,17 @@ export const getProperty = async (req, res, next) => {
         next(err);
     }
 };
+
+export const chatAttachment = async (req, res, next) => {
+    try {
+        const result = await propertyService.chatAttachment(req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json(result);
+    } catch (err) {
+        console.log('updateOfferStatusError', err);
+        next(err);
+    }
+};

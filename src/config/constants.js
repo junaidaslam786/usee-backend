@@ -26,6 +26,7 @@ export const PROPERTY_ROOT_PATHS = {
     VIDEO_TOUR: "properties/vrvideos",
     DOCUMENT: "properties/documents",
     PROFILE_LOGO: "user/images",
+    CHAT_PATH: "chat"
 }
 
 export const VIRTUAL_TOUR_TYPE = {

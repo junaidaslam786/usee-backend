@@ -9,6 +9,7 @@ const router = Router();
 router.post('/list', propertyController.listHomePageProperties);
 router.post('/search-polygon', propertyController.searchPolygon);
 router.post('/search-circle', propertyController.searchCircle);
+router.put('/chat-attachment', propertyController.chatAttachment);
 router.get('/:id', propertyController.getProperty);
 
 export default router;

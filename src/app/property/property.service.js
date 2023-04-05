@@ -281,6 +281,19 @@ export const uploadPropertyDocuments = async (req) => {
     }
 }
 
+export const chatAttachment = async (req) => {
+    try {
+
+        const singleFile = req.files.featuredImage;
+        const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.CHAT_PATH, singleFile.name);
+
+        return result;
+    } catch(err) {
+        console.log('uploadPropertyDocumentsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
 export const uploadPropertyImages = async (req) => {
     try {
         const productImages = [];
