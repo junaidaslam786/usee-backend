@@ -592,6 +592,10 @@ export const getPropertyDetailById = async (propertyId, dbInstance) => {
         where: { id: propertyId },
         include: [
           {
+            model: dbInstance.user, 
+            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          },
+          {
             model: dbInstance.productDocument, 
             attributes: ["id", "title", "file"],
           },
@@ -714,7 +718,16 @@ export const listHomePageProperties = async (reqBody, req) => {
                 status: PRODUCT_STATUS.ACTIVE, 
                 categoryId: PRODUCT_CATEGORIES.PROPERTY
             },
-            
+            include: [{
+                model: req.dbInstance.productMetaTag, 
+                attributes: ["value"],
+                include: [
+                    {
+                    model: req.dbInstance.categoryField, 
+                    attributes: ["id", "label", "type", "options", "required"],
+                    },
+                ]
+            }],
             order: [["id", "DESC"]],
             offset: (itemPerPage * (page - 1)),
             limit: itemPerPage
