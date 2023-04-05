@@ -127,7 +127,7 @@ export const updateProperty = async (reqBody, req) => {
         const { productId, title, description, price, address, city, region, latitude, longitude, virtualTourType } = reqBody;
         const { user, dbInstance } = req;
 
-        const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`);
+        const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`, 4326);
         const result = await db.transaction(async (transaction) => {
             const product = await getPropertyById(productId, dbInstance);
             
