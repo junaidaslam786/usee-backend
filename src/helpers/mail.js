@@ -42,13 +42,9 @@ export async function sendMail(body) {
       transport.sendMail(message, function (error, response) {
           if (error) {
             console.log('mailErrorInfo', error);
-            reject(error);
           }
 
-          if (response) {
-            resolve(response);
-          }
-
+          resolve(true);
       });
     } catch(error) {
       console.log('sendMailError', error);

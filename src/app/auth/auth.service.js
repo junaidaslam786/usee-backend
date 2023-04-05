@@ -262,7 +262,7 @@ export const resetPassword = async (reqBody, dbInstance) => {
         emailData.login = utilsHelper.generateUrl((type == 'agent' ? 'agent-login' : 'customer-login'), user.userType);
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.RESET_PASSWORD), emailData);
         const payload = {
-            to: email,
+            to: user.email,
             subject: EMAIL_SUBJECT.RESET_PASSWORD,
             html: htmlData,
         }
