@@ -783,25 +783,25 @@ export const listHomePageProperties = async (reqBody, req) => {
             }
             if(reqBody.propertyCategory) {
                 const index = el.productMetaTags.findIndex(category => category.categoryField.id === 2)
-                if(el.productMetaTags[index].value !== reqBody.propertyCategory) {
+                if(index === -1 || el.productMetaTags[index].value !== reqBody.propertyCategory) {
                     return
                 }
             }
             if(reqBody.propertyCategoryType) {
                 const index = el.productMetaTags.findIndex(category => category.categoryField.id === 1)
-                if(el.productMetaTags[index].value !== reqBody.propertyCategoryType) {
+                if(index === -1 || el.productMetaTags[index].value !== reqBody.propertyCategoryType) {
                     return
                 }
             }
             if(reqBody.propertyType) {
                 const index = el.productMetaTags.findIndex(category => category.categoryField.id === 6)
-                if(el.productMetaTags[index].value !== reqBody.propertyType) {
+                if(index === -1 || el.productMetaTags[index].value !== reqBody.propertyType) {
                     return
                 }
             }
             if(reqBody.rooms) {
                 const index = el.productMetaTags.findIndex(category => category.categoryField.id === 5)
-                if(el.productMetaTags[index].value < reqBody.rooms) {
+                if(index === -1 || el.productMetaTags[index].value < reqBody.rooms) {
                     return
                 }
             }
