@@ -250,32 +250,56 @@ export const updateProperty = async (reqBody, req) => {
 
 export const uploadPropertyDocuments = async (req) => {
     try {
+        const productDocuments = [];
         const files = req.files.files;
         const { titles, productId } = req.body;
-        let totalFiles = files.length;
-        const productDocuments = [];
+        if (Array.isArray(files)) {
+            let totalFiles = files.length;
 
-        for (let i = 0; i < totalFiles; i++) {
-            const singleFile = files[i];
+            for (let i = 0; i < totalFiles; i++) {
+                const singleFile = files[i];
+                const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.DOCUMENT, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+
+                productDocuments.push({
+                    productId,
+                    title: titles[i],
+                    file: result,
+                    createdBy: req.user.id
+                });
+            }
+        } else if (files) {
+            const singleFile = files;
             const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
             const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.DOCUMENT, newFileName);
             if (result?.error) {
                 return { error: true, message: result?.error }
             } 
-
+            
             productDocuments.push({
                 productId,
-                title: titles[i],
+                title: titles,
                 file: result,
                 createdBy: req.user.id
             });
         }
 
-        if (productDocuments.length > 0) {
-            await req.dbInstance.productDocument.bulkCreate(productDocuments);
+        if (productDocuments.length === 0) {
+            return { error: true, message: 'Unable to upload documents.'}
         }
 
-        return true;
+        await req.dbInstance.productDocument.bulkCreate(productDocuments);
+
+        
+        const result = await req.dbInstance.productDocument.findAll({
+            where: { productId: req.body.productId},
+            attributes: ["id", "title", "file"],
+        });
+
+        return result;
     } catch(err) {
         console.log('uploadPropertyDocumentsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
@@ -334,6 +358,8 @@ export const uploadPropertyImages = async (req) => {
 
         if (productImages.length > 0) {
             await req.dbInstance.productImage.bulkCreate(productImages);
+        } else {
+            return { error: true, message: 'Unable to upload images.'}
         }
 
         return await req.dbInstance.productImage.findAll({

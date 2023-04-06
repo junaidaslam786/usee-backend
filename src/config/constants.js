@@ -72,7 +72,7 @@ export const EMAIL_SUBJECT = {
     WISHLIST_REMOVE: "Customer has removed your property to wishlist",
     OFFER: "Customer has made an offer to the property",
     OFFER_UPDATE: "Agent has made an update on your offer",
-    JOIN_APPOINTMENT: "Usee Homes Appointment"
+    JOIN_APPOINTMENT: "Usee 360 Appointment"
 }
 
 export const EMAIL_TEMPLATE_PATH = {

@@ -17,7 +17,7 @@ module.exports = {
           category_id: 1,
           label: "Property Type",
           type: "select",
-          options: "flat/apartment,house,bungalow,commercial,studio,room,residential,office,retail,leisure,hospitality,shop,shopping_center,store,hotels,club,restaurant,hotel_room,guest_house",
+          options: "commercial,residential",
           required: true,
           order: 1,
         },
@@ -60,11 +60,29 @@ module.exports = {
         {
           id: 6,
           category_id: 1,
-          label: "Description",
-          type: "textarea",
-          options: "",
+          label: "Residential Properties",
+          type: "select",
+          options: "apartment,house,bungalow,studio,room,duplex,triplex,cottage",
           required: false,
           order: 6,
+        },
+        {
+          id: 7,
+          category_id: 1,
+          label: "Commercial Properties",
+          type: "select",
+          options: "office,retail,shop,shopping_center,store,hotels,club,restaurant,hotel_room",
+          required: false,
+          order: 7,
+        },
+        {
+          id: 8,
+          category_id: 1,
+          label: "Price Type",
+          type: "select",
+          options: "weekly,monthly,yearly",
+          required: false,
+          order: 8,
         }
       ];
       await queryInterface.bulkInsert('category_fields', categoryFields);

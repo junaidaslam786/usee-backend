@@ -68,6 +68,12 @@ export default function (sequelize) {
     mortgageAdvisorEmail: {
         type: DataTypes.STRING,
     },
+    jobTitle: {
+      type: DataTypes.STRING,
+    },
+    licenseNo: {
+      type: DataTypes.STRING,
+    },
     branchId: {
       allowNull: true,
       type: DataTypes.UUID,

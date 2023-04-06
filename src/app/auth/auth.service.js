@@ -10,6 +10,7 @@ const ejs = require("ejs");
 export const login = async (reqBody, dbInstance) => {
     try {
         const { email, password, type } = reqBody;
+
         let userType = USER_TYPE.ADMIN;
         if (type === USER_TYPE.AGENT) {
             userType = USER_TYPE.AGENT;
@@ -75,7 +76,7 @@ export const login = async (reqBody, dbInstance) => {
 export const registerAsAgent = async (reqBody, dbInstance) => {
     try {
         const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
-        const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber } = reqBody;
+        const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber, jobTitle } = reqBody;
         
         const result = await db.transaction(async (transaction) => {
             // Create user
@@ -94,6 +95,8 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
                 userId: user.id,
                 companyName, 
                 companyPosition,
+                jobTitle,
+                licenseNo: reqBody?.licenseNo ? reqBody.licenseNo : "",
                 agentType: AGENT_TYPE.AGENT, 
                 apiCode: utilsHelper.generateRandomString(10, true),
             }, { transaction });

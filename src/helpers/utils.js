@@ -30,6 +30,7 @@ export const fileUpload = async (file, destPath, fileName) => {
         return new Promise((resolve, reject) => {
             file.mv(filePath, (err) => {
                 if (err) {
+                    console.log('fileUploadPromiseError', err);
                     reject({ error: err });
                 }
                 const accessPath = path.join(destPath, fileName);
@@ -37,7 +38,7 @@ export const fileUpload = async (file, destPath, fileName) => {
             });
         });
     } catch(err) {
-        console.log('fileUploaderr', err);
+        console.log('fileUploadCatchError', err);
         return { error: err };
     }
 }
