@@ -6,6 +6,7 @@ import db from '@/database';
 import * as userService from '../user/user.service'
 const path = require("path")
 const ejs = require("ejs");
+import { calculateDistance } from '@/helpers/utils';
 
 export const createProperty = async (reqBody, req) => {
     try {
@@ -725,29 +726,70 @@ export const listHomePageProperties = async (reqBody, req) => {
     try {
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
         const page = (reqBody && reqBody.page) ? reqBody.page : 1;
+        const order = (reqBody.sort) ? reqBody.sort : ["id", "DESC"];
     
         const { count, rows } = await req.dbInstance.product.findAndCountAll({
-            where: { 
+            where: {
                 status: PRODUCT_STATUS.ACTIVE, 
-                categoryId: PRODUCT_CATEGORIES.PROPERTY
+                categoryId: PRODUCT_CATEGORIES.PROPERTY,
             },
             include: [{
                 model: req.dbInstance.productMetaTag, 
                 attributes: ["value"],
                 include: [
                     {
-                    model: req.dbInstance.categoryField, 
-                    attributes: ["id", "label", "type", "options", "required"],
+                        model: req.dbInstance.categoryField, 
+                        attributes: ["id", "label", "type", "options", "required"],
                     },
                 ]
             }],
-            order: [["id", "DESC"]],
+            order: [order],
             offset: (itemPerPage * (page - 1)),
             limit: itemPerPage
         });
 
+        let arr = [];
+        rows.map((el) => {
+            if(reqBody.lat && reqBody.lng) {
+                if(calculateDistance(el.latitude, el.longitude, reqBody.lat, reqBody.lng) > 5) {
+                    return
+                }
+            }
+            if(reqBody.propertyCategory) {
+                if(!el.productMetaTags.find(category => category.value === reqBody.propertyCategory)) {
+                    return
+                }
+            }
+            if(reqBody.propertyCategoryType) {
+                if(!el.productMetaTags.find(category => category.value === reqBody.propertyCategoryType)) {
+                    return
+                }
+            }
+            if(reqBody.propertyType) {
+                if(!el.productMetaTags.find(category => category.value === reqBody.propertyType)) {
+                    return
+                }
+            }
+            if(reqBody.rooms) {
+                if(el.productMetaTags[4].value < reqBody.rooms) {
+                    return
+                }
+            }
+            if(reqBody.minPrice) {
+                if(el.price < reqBody.minPrice) {
+                    return
+                }
+            }
+            if(reqBody.maxPrice) {
+                if(el.price > reqBody.maxPrice) {
+                    return
+                }
+            }
+            arr.push(el)
+        });
+
         return {
-            data: rows,
+            data: arr,
             page,
             size: itemPerPage,
             totalPage: Math.ceil(count / itemPerPage),
