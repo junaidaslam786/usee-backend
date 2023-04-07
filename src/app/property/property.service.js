@@ -547,7 +547,7 @@ export const addCustomerOffer = async (reqBody, req) => {
             emailData.name = product.user.fullName;
             emailData.customerName = customerInfo.fullName;
             emailData.propertyTitle = product.title;
-            emailData.propertyImage = product.featuredImage;
+            emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;
             emailData.offerAmount = amount;
             emailData.notes = notes;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER), emailData);
@@ -593,7 +593,7 @@ export const updateOfferStatus = async (reqBody, req) => {
             emailData.name = customer.fullName;
             emailData.status = status;
             emailData.propertyTitle = product.title;
-            emailData.propertyImage = product.featuredImage;
+            emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER_UPDATE), emailData);
             const payload = {
                 to: customer.email,
