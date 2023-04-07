@@ -131,7 +131,7 @@ export const getAgentAlertDetailById = async (id, dbInstance) => {
 
 const formatAlertText = (alert) => {
     let text = "";
-    const customerName = `<b>${alert.user.firstName} ${alert.user.firstName}</b>`;
+    const customerName = `<b>${alert.user.firstName} ${alert.user.lastName}</b>`;
     const productTitle = `<b>"${alert.product.title}"</b>`;
 
     switch(alert.alertMode) {
