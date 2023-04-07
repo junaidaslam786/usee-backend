@@ -20,6 +20,24 @@ export const getAgentAlerts = async (req, res, next) => {
 };
 
 /**
+ * GET /agent/unread-count
+ * Get alert count of unread alerts
+ */
+export const getAgentUnReadAlertCounts = async (req, res, next) => {
+  try {
+    const result = await alertService.getAgentUnReadAlertCounts(req.user.id, req.dbInstance);
+    if (result?.error && result?.message) {
+        return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('getAgentUnReadAlertCountsError', err);
+    return next(err);
+  }
+};
+
+/**
  * POST /agent/alert/create
  * Create alert for agent
  */

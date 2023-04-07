@@ -38,9 +38,25 @@ export const getAgentAlerts = async (userId, dbInstance) => {
             }
         });
 
-        return formatedAlerts;
+        return formatedAlerts
     } catch(err) {
-        console.log('lgetAgentAlertsServiceError', err)
+        console.log('getAgentAlertsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const getAgentUnReadAlertCounts = async (userId, dbInstance) => {
+    try {
+        const unReadAlertCounts = await dbInstance.userAlert.count({
+            where: { 
+                viewed: false,
+                productId: { [OP.in]: Sequelize.literal(`(select id from products where user_id = '${userId}')`) }
+            },
+        });
+
+        return unReadAlertCounts;
+    } catch(err) {
+        console.log('getAgentUnReadAlertCountsError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
