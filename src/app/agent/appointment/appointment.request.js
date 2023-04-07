@@ -24,7 +24,7 @@ export const createAppointmentRules = [
       .exists()
       .withMessage('Name not provided')
       .notEmpty()
-      .withMessage('customerFirstName cannot be empty'),
+      .withMessage('Name cannot be empty'),
     body('customerEmail')
       .exists()
       .withMessage('Email not provided')

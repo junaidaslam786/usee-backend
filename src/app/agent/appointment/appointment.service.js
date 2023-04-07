@@ -111,7 +111,7 @@ export const createAppointment = async (req, dbInstance) => {
           emailData.agentImage = req.user.profileImage;
           emailData.agentPhoneNumber = req.user.phoneNumber;
           emailData.agentEmail = req.user.email
-          emailData.meetingLink = `${utilsHelper.generateUrl('customer-join-meeting')}/${appointment.id}/customer`;
+          emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
           emailData.appUrl = process.env.APP_URL;
           const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.JOIN_APPOINTMENT), emailData);
           const payload = {

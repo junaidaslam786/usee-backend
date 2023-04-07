@@ -81,7 +81,7 @@ export const createAppointment = async (req, dbInstance) => {
               },
             ]
         });
-        console.log(prop.user.email);
+
         // Create appointment
         const appointment = await dbInstance.appointment.create({
           appointmentDate,
@@ -111,10 +111,11 @@ export const createAppointment = async (req, dbInstance) => {
         emailData.date = appointmentDate;
         emailData.time = appointmentTime;
         emailData.products = findProducts;
+        emailData.customer = req.user.fullName;
         emailData.customerImage = req.user.profileImage;
         emailData.customerPhoneNumber = req.user.phoneNumber;
-        emailData.customerEmail = req.user.email
-        emailData.meetingLink = `${utilsHelper.generateUrl('customer-join-meeting')}/${appointment.id}/customer`;
+        emailData.customerEmail = req.user.email;
+        emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
         emailData.appUrl = process.env.APP_URL;
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_JOIN_APPOINTMENT), emailData);
         const payload = {
@@ -209,7 +210,6 @@ export const getSessionToken = async (appointmentId, dbInstance) => {
   }
 
 const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
-    console.log('dbInstance', dbInstance);
     const appointment = await dbInstance.appointment.findOne({
         where: { id: appointmentId, customerId: user.id },
         include: [
