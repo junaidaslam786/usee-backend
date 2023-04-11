@@ -15,6 +15,7 @@ import homePropertyRouter from '../app/home/property/property.route';
 
 export default function (app) {
   app.use('/', indexRouter);
+  app.use('/home', indexRouter);
   app.use('/auth', authRouter);
   app.use('/user', userRouter);
   app.use('/role', roleRouter);

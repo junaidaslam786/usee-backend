@@ -75,7 +75,6 @@ export default function (sequelize) {
     },
     status: {
       type: DataTypes.STRING,
-      enum: ["active", "archived", "disabled", "removed"]
     },
     apiCode: {
       type: DataTypes.STRING,

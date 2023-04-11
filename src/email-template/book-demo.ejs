@@ -1,0 +1,17 @@
+<%- include('layout/header.ejs', { subject: "Offer" }) %>
+
+<tr>
+    <td valign="top" style="color:#92778a;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px;">
+        <span><%= name %> had booked a meeting for Usee360 demo<br> 
+    </td>
+</tr>
+<tr>
+    <td valign="top" style="color:#92778a;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px;">
+        <span><b>Email: <%= email %></b><br><br></span>
+        <span><b>Phone Number: <%= phoneNumber %></b><br><br></span>
+        <span><b>Job Title: <%= jobTitle %></b><br><br></span>
+        <span><b>Message: <%= message %></b><br><br></span>
+    </td>
+</tr>
+
+<%- include('layout/footer.ejs') %>

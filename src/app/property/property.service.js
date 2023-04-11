@@ -413,7 +413,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
     try {
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
         const page = (reqBody && reqBody.page) ? reqBody.page : 1;
-        const status = (reqBody && reqBody.status == PRODUCT_STATUS.ARCHIVED) ? reqBody.status : PRODUCT_STATUS.ACTIVE;
+        const status = (reqBody && reqBody.status) ? reqBody.status : PRODUCT_STATUS.ACTIVE;
     
         const { count, rows } = await dbInstance.product.findAndCountAll({
             where: { 
@@ -588,6 +588,11 @@ export const updateOfferStatus = async (reqBody, req) => {
             offer.status = status == "accepted" ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.REJECTED;
             offer.rejectReason = reqBody?.reason ? reqBody?.reason : "";
             await offer.save({ transaction });
+
+            if (product) {
+                product.status = status == "accepted" ? PRODUCT_STATUS.UNDER_OFFER : PRODUCT_STATUS.ACTIVE;
+                await product.save();
+            }
 
             const emailData = [];
             emailData.name = customer.fullName;
@@ -849,6 +854,12 @@ export const deleteCustomerOffer = async (offerId, req) => {
 
         if (offer.status != OFFER_STATUS.PENDING) {
             return { error: true, message: 'You cannot delete this offer.'}
+        }
+
+        const product = await getPropertyById(offer.product_id, dbInstance);
+        if (product) {
+            product.status = PRODUCT_STATUS.ACTIVE;
+            await product.save();
         }
 
         await offer.destroy();

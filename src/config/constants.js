@@ -4,8 +4,9 @@ export const PRODUCT_CATEGORIES = {
 
 export const PRODUCT_STATUS = {
     ACTIVE: "active",
-    ARCHIVED: "archived",
-    DISABLED: "disabled",
+    INACTIVE: "inactive",
+    UNDER_OFFER: "under_offer",
+    SOLD: "sold",
     REMOVED: "removed"
 };
 
@@ -72,7 +73,8 @@ export const EMAIL_SUBJECT = {
     WISHLIST_REMOVE: "Customer has removed your property to wishlist",
     OFFER: "Customer has made an offer to the property",
     OFFER_UPDATE: "Agent has made an update on your offer",
-    JOIN_APPOINTMENT: "Usee 360 Appointment"
+    JOIN_APPOINTMENT: "Usee 360 Appointment",
+    BOOK_DEMO: "Usee 360 Demo"
 }
 
 export const EMAIL_TEMPLATE_PATH = {
@@ -87,4 +89,5 @@ export const EMAIL_TEMPLATE_PATH = {
     OFFER_UPDATE: "email-template/property-offer-update.ejs",
     JOIN_APPOINTMENT: "email-template/join-appointment.ejs",
     AGENT_JOIN_APPOINTMENT: "email-template/agent-join-appointment.ejs",
+    BOOK_DEMO: "email-template/book-demo.ejs",
 }

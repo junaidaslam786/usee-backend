@@ -12,4 +12,6 @@ router.get('/health', homeController.healthCheck);
 router.use('/docs', swaggerUi.serve);
 router.get('/docs', swaggerUi.setup(swaggerDocument));
 
+router.post('/book-demo', homeController.bookDemo);
+
 export default router;

@@ -2,7 +2,7 @@ import createError from 'http-errors';
 import * as propertyService from '../../property/property.service';
 
 /**
- * GET /home/property/search-polygon
+ * POST /home/property/search-polygon
  * List all properties based on polygon search coordinates
  */
 export const searchPolygon = async (req, res, next) => {
@@ -20,7 +20,7 @@ export const searchPolygon = async (req, res, next) => {
 };
 
 /**
- * GET /home/property/search-circle
+ * POST /home/property/search-circle
  * List all properties based on circle search coordinates
  */
 

@@ -77,9 +77,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
   },
   status: {
     field: 'status',
-    type: Sequelize.ENUM,
+    type: Sequelize.STRING,
     defaultValue: "active",
-    values: ["active", "archived", "disabled", "removed"]
   },
   apiCode: {
     type: Sequelize.STRING,
