@@ -750,15 +750,22 @@ export const searchCircle = async (req) => {
 
 export const listHomePageProperties = async (reqBody, req) => {
     try {
+        const whereClause = req?.query?.agentId ? {
+            status: PRODUCT_STATUS.ACTIVE, 
+            categoryId: PRODUCT_CATEGORIES.PROPERTY,
+            userId: req.query.agentId
+        }
+        : {
+            status: PRODUCT_STATUS.ACTIVE, 
+            categoryId: PRODUCT_CATEGORIES.PROPERTY,
+        };
+
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
         const page = (reqBody && reqBody.page) ? reqBody.page : 1;
         const order = (reqBody.sort) ? reqBody.sort : ["id", "DESC"];
     
         const { count, rows } = await req.dbInstance.product.findAndCountAll({
-            where: {
-                status: PRODUCT_STATUS.ACTIVE, 
-                categoryId: PRODUCT_CATEGORIES.PROPERTY,
-            },
+            where: whereClause,
             include: [{
                 model: req.dbInstance.productMetaTag, 
                 attributes: ["value"],
