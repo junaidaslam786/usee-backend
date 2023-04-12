@@ -11,6 +11,7 @@ export const getAgentAlerts = async (userId, dbInstance) => {
             },
             include: [{
                 model: dbInstance.user, 
+                where: { deletedAt: null },
                 attributes: ["id", "firstName", "lastName"],
             },
             {

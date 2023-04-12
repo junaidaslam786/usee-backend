@@ -12,6 +12,7 @@ import categoryRouter from '../app/category/category.route';
 import customerWishlistRouter from '../app/customer/wishlist/wishlist.route';
 import customerAppointmentRouter from '../app/customer/appointment/appointment.route';
 import homePropertyRouter from '../app/home/property/property.route';
+import iframeRouter from '../app/iframe/iframe.route';
 
 export default function (app) {
   app.use('/', indexRouter);
@@ -29,4 +30,5 @@ export default function (app) {
   app.use('/customer/wishlist', customerWishlistRouter);
   app.use('/customer/appointment', customerAppointmentRouter);
   app.use('/home/property', homePropertyRouter);
+  app.use('/iframe', iframeRouter);
 }
