@@ -764,12 +764,8 @@ export const listHomePageProperties = async (reqBody, req) => {
             status: PRODUCT_STATUS.ACTIVE, 
             categoryId: PRODUCT_CATEGORIES.PROPERTY,
         };
-
-        const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
-        const page = (reqBody && reqBody.page) ? reqBody.page : 1;
-        const order = (reqBody.sort) ? reqBody.sort : ["id", "DESC"];
     
-        const { count, rows } = await req.dbInstance.product.findAndCountAll({
+        const { rows } = await req.dbInstance.product.findAndCountAll({
             where: whereClause,
             include: [{
                 model: req.dbInstance.productMetaTag, 
@@ -781,9 +777,7 @@ export const listHomePageProperties = async (reqBody, req) => {
                     },
                 ]
             }],
-            order: [order],
-            offset: (itemPerPage * (page - 1)),
-            limit: itemPerPage
+            order: [["id", "DESC"]],
         });
 
         let arr = [];
@@ -806,7 +800,8 @@ export const listHomePageProperties = async (reqBody, req) => {
                 }
             }
             if(reqBody.propertyType) {
-                const index = el.productMetaTags.findIndex(category => category.categoryField.id === 6)
+                const id = (reqBody.propertyCategoryType === "commercial") ? 7 : 6
+                const index = el.productMetaTags.findIndex(category => category.categoryField.id === id)
                 if(index === -1 || el.productMetaTags[index].value !== reqBody.propertyType) {
                     return
                 }
@@ -830,12 +825,27 @@ export const listHomePageProperties = async (reqBody, req) => {
             arr.push(el)
         });
 
+        if(reqBody.sort) {
+            if(reqBody.sort[1] === "ASC") {
+                arr.sort((a, b) => a[reqBody.sort[0]] - b[reqBody.sort[0]])
+            } else if(reqBody.sort[1] === "DESC") {
+                arr.sort((a, b) => b[reqBody.sort[0]] - a[reqBody.sort[0]])
+            }
+        }
+
+        const page = (reqBody && reqBody.page) ? reqBody.page : 1
+        const perPage = (reqBody && reqBody.size) ? reqBody.size : 10
+        const offset = (page - 1) * perPage
+
+        const paginatedArr = arr.slice(offset).slice(0, perPage)
+        const totalPages = Math.ceil(arr.length / perPage)
+
         return {
-            data: arr,
-            page,
-            size: itemPerPage,
-            totalPage: Math.ceil(count / itemPerPage),
-            totalItems: count
+            data: paginatedArr,
+            page: page,
+            size: perPage,
+            totalPage: totalPages,
+            totalItems: arr.length,
         };
     } catch(err) {
         console.log('listActivePropertiesServiceError', err)
