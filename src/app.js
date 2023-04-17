@@ -31,9 +31,7 @@ if (NODE_ENV !== 'development') {
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors({
-  origin: '*'
-}));
+app.use(cors(configs.corsConfig));
 
 app.use(express.static('assets'))
 app.use(express.static('uploads'))
