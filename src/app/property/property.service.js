@@ -413,7 +413,9 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
     try {
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
         const page = (reqBody && reqBody.page) ? reqBody.page : 1;
-        const status = (reqBody && reqBody.status) ? reqBody.status : PRODUCT_STATUS.ACTIVE;
+        const status = (reqBody && reqBody.status) ? reqBody.status : {
+            [OP.notIn]: [PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
+        };
     
         const { count, rows } = await dbInstance.product.findAndCountAll({
             where: { 
@@ -423,7 +425,6 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
                     { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${userId}')`) }}
                 ]
             },
-            
             order: [["id", "DESC"]],
             offset: (itemPerPage * (page - 1)),
             limit: itemPerPage
@@ -580,20 +581,61 @@ export const updateOfferStatus = async (reqBody, req) => {
             return { error: true, message: 'Offer already updated.'}
         }
 
+        const result = await processUpdateOffer(offer, dbInstance, status, (reqBody?.reason ? reqBody.reason : ""));
+        if (!result) {
+            return { error: true, message: 'Server not responding, please try again later.'}
+        }
+
+        await rejectAllOtherOffers({ offerId, productId: offer.productId }, dbInstance);
+
+        return true;
+    } catch(err) {
+        console.log('updateOfferStatusServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const rejectAllOtherOffers = async (reqBody, dbInstance) => {
+    try {
+        const { offerId, productId } = reqBody;
+
+        const offers = await dbInstance.productOffer.findAll({ 
+            where: { 
+                productId, 
+                id: { [OP.ne]: offerId } 
+            } 
+        });
+
+        console.log('offers-to-reject', offers);
+        if (offers.length > 0) {
+            await Promise.all(
+                offers.map((offer) => processUpdateOffer(offer, dbInstance, OFFER_STATUS.REJECTED, "No longer accepting offers."))
+            );
+        }
+
+        return true;
+    } catch(err) {
+        console.log('updateOfferStatusServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const processUpdateOffer = async (offer, dbInstance, status, reason) => {
+    try {
         await db.transaction(async (transaction) => {
             const product = await getPropertyById(offer.productId, dbInstance);
             const customer = await userService.getUserById(offer.customerId);
-
+    
             // update offer status
             offer.status = status == "accepted" ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.REJECTED;
-            offer.rejectReason = reqBody?.reason ? reqBody?.reason : "";
+            offer.rejectReason = reason;
             await offer.save({ transaction });
-
+    
             if (product) {
                 product.status = status == "accepted" ? PRODUCT_STATUS.UNDER_OFFER : PRODUCT_STATUS.ACTIVE;
                 await product.save();
             }
-
+    
             const emailData = [];
             emailData.name = customer.fullName;
             emailData.status = status;
@@ -610,8 +652,7 @@ export const updateOfferStatus = async (reqBody, req) => {
 
         return true;
     } catch(err) {
-        console.log('updateOfferStatusServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return false;
     }
 }
 
@@ -866,7 +907,7 @@ export const deleteCustomerOffer = async (offerId, req) => {
             return { error: true, message: 'You cannot delete this offer.'}
         }
 
-        const product = await getPropertyById(offer.product_id, dbInstance);
+        const product = await getPropertyById(offer.productId, dbInstance);
         if (product) {
             product.status = PRODUCT_STATUS.ACTIVE;
             await product.save();

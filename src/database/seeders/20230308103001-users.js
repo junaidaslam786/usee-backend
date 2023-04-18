@@ -10,7 +10,7 @@ module.exports = {
         first_name: "Super",
         last_name: "Admin",
         email: "admin@admin.com",
-        password: await hash("12345678", 10),
+        password: await hash("admin@Usee-360", 10),
         status: true,
         user_type: "admin",
         role_id: 1,
