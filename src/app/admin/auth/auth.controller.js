@@ -42,23 +42,6 @@ export const listAgentUsers = async (req, res, next) => {
  * POST /auth/register-agent
  * Register agent request
  */
-export const registerAdmin = async (req, res, next) => {
-  try {
-    const result = await authService.registerAsAdmin(req.body, req.dbInstance);
-    if (result?.error && result?.message) {
-      return next(createError(400, result.message));
-    }
-
-    res.status(201).json(result);
-  } catch (err) {
-    next(err);
-  }
-};
-
-/**
- * POST /auth/register-agent
- * Register agent request
- */
 export const registerAgent = async (req, res, next) => {
   try {
     const result = await authService.registerAsAgent(req.body, req.dbInstance);
@@ -86,41 +69,5 @@ export const registerCustomer = async (req, res, next) => {
     res.status(201).json(result);
   } catch (err) {
     next(err);
-  }
-};
-
-/**
- * POST /auth/forgot-password
- * Request to reset user password
- */
-export const forgotPassword = async (req, res, next) => {
-  try {
-    const result = await authService.forgotPassword(req.query, req.dbInstance);
-    if (result?.error && result?.message) {
-      return next(createError(400, result.message));
-    }
-
-    return res.json({ success: true, message: "Change password email sent" });
-  } catch (err) {
-    console.log('forgotPasswordError', err);
-    return next(err);
-  }
-};
-
-/**
- * POST /auth/reset-password
- * Reset password of the user
- */
-export const resetPassword = async (req, res, next) => {
-  try {
-    const result = await authService.resetPassword(req.body, req.dbInstance);
-    if (result?.error && result?.message) {
-      return next(createError(400, result.message));
-    }
-    
-    return res.json({ success: true, message: "Password reset successfully" });
-  } catch (err) {
-    console.log('resetPasswordError', err);
-    return next(err);
   }
 };
