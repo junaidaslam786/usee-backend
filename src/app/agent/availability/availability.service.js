@@ -1,4 +1,6 @@
 import db from '@/database';
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
 
 export const listAgentAvailability = async (agentInfo, dbInstance) => {
     try {
@@ -17,47 +19,47 @@ export const listAgentAvailability = async (agentInfo, dbInstance) => {
 
 export const updateAgentAvailability = async (reqBody, req) => {
     try {
-        const { userId, allAvailable } = reqBody;
-        const { agentAvailability, agentTimeSlot } = req.dbInstance;
+        const { allAvailable, slotDay, timeSlots } = reqBody;
+        const { user: agentInfo, dbInstance } = req;
+        const { agentAvailability } = dbInstance;
 
         await db.transaction(async (transaction) => {
-            let agentAvailabilities = [];
             if (allAvailable) {
-                await agentAvailability.destroy({ where: { userId } });
-
-                const timeslots = await agentTimeSlot.findAll();
-                for (let day = 1; day <= 7; day++) {
-                    for (const slot of timeslots) {
-                        agentAvailabilities.push({
-                            userId,
-                            dayId: day,
-                            timeSlotId: slot.id,
-                            status: true,
-                        });
-                    }
-                }
+                // make all slots of the agent as available
+                await agentAvailability.update({ status: true }, { 
+                    where: { userId: agentInfo.id }
+                }, { transaction });
             } else {
-                const { slotDay, timeSlots } = reqBody;
-                await agentAvailability.destroy({ where: { userId, dayId: slotDay } });
+                // make all slots of the agent as un available
+                const condition = { userId: agentInfo.id, dayId: slotDay };
+                await agentAvailability.update({ status: false }, { where: condition }, { transaction });
 
-                for (const slot of timeSlots) {
-                    agentAvailabilities.push({
-                        userId,
-                        dayId: slotDay,
-                        timeSlotId: slot,
-                        status: true,
-                    });
-                }
-            }
-            
-            if (agentAvailabilities.length > 0) {
-                await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
+                // mark all given slots as available
+                condition.timeSlotId = { [OP.in]: timeSlots };
+                await agentAvailability.update({ status: true }, { where: condition }, { transaction });
             }
         });
 
         return true;
     } catch(err) {
         console.log('updateAgentAvailabilityServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const listAgentAvailabilitySlots = async (req) => {
+    try {
+        const { user: agentInfo, dbInstance } = req;
+
+        return await dbInstance.agentTimeSlot.findAll({
+            include: [{
+                model: dbInstance.agentAvailability,
+                where: { userId: (req?.query?.agent ? req.query.agent : agentInfo.id) },
+                attributes: []
+            }]
+        });
+    } catch(err) {
+        console.log('listAgentAvailabilityServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }

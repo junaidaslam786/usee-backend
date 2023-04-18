@@ -24,6 +24,14 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
           as: 'customerUser',
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
         },
+        { 
+          model: dbInstance.user, 
+          as: 'allotedAgentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        { 
+          model: dbInstance.agentTimeSlot, 
+        },
       ],
       order: [["appointmentDate", "DESC"]],
       offset: (itemPerPage * (page - 1)),
@@ -46,7 +54,7 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
 export const getAppointment = async (appointmentId, req) => {
   try {
     const { user, dbInstance } = req;
-    const appoinment = await getAppointmentDetailById(user, appointmentId, dbInstance);
+    const appoinment = await getAppointmentDetailById(user.agent, appointmentId, dbInstance);
     if (!appoinment) {
         return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
     }
@@ -63,7 +71,7 @@ export const createAppointment = async (req, dbInstance) => {
       const { 
         properties, 
         appointmentDate, 
-        appointmentTime
+        timeSlotId
       } = req.body;
 
       const sessionId = await opentokHelper.getSessionId();
@@ -71,9 +79,55 @@ export const createAppointment = async (req, dbInstance) => {
         return { error: true, message: 'Unable to make appointment due to voice call issue.' };
       }
       
-      const vars = utilsHelper.checkIfTimeIsOld(appointmentDate, appointmentTime);
-      if (vars) {
+      const timeSlot = await dbInstance.agentTimeSlot.findOne({ where: { id: timeSlotId } });
+      if (!timeSlot) {
+        return { error: true, message: 'Invalid time selected.' };
+      }
+
+      const isTimeExpired = utilsHelper.checkIfTimeIsOld(appointmentDate, timeSlot.fromTime);
+      if (isTimeExpired) {
         return { error: true, message: 'Time is expired. Please select another timeslot.' };
+      }
+
+      let agentSupervisor = null;
+      if (req.body.isAssignedToSupervisor) {
+        agentSupervisor = await dbInstance.agent.findOne({
+          where: { managerId: req.user.id },
+          include: [{
+            model: dbInstance.user, 
+            attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber"]
+          }],
+        });
+
+        if (!agentSupervisor) {
+          return { error: true, message: 'Please add supervisor in account details.' };
+        }
+
+        // Check if there's an existing appointment
+        const existingAppointment = await dbInstance.appointment.findOne({
+          where: {
+            allotedAgent: agentSupervisor.userId,
+            appointmentDate: appointmentDate,
+            timeSlotId: timeSlotId
+          }
+        });
+
+        if (existingAppointment) {
+          return { error: true, message: 'Supervisor already has an appointment at this slot, please select another slot.' };
+        }
+      } else {
+        // Check if there's an existing appointment
+        const existingAppointment = await dbInstance.appointment.findOne({
+          where: {
+            agentId: req.user.id,
+            appointmentDate: appointmentDate,
+            timeSlotId: timeSlotId
+          }
+        });
+
+        if (existingAppointment) {
+          return { error: true, message: 'Agent already has an appointment at this slot, please select another slot.' };
+        }
       }
 
       const result = await db.transaction(async (transaction) => {
@@ -85,17 +139,41 @@ export const createAppointment = async (req, dbInstance) => {
           // Create appointment
           const appointment = await dbInstance.appointment.create({
             appointmentDate,
-            appointmentTime,
+            timeSlotId,
             agentId: req.user.id,
             customerId: customerDetails.id,
-            allotedAgent: req.user.id,
+            allotedAgent: agentSupervisor ? agentSupervisor.userId : req.user.id,
             sessionId,
           }, { transaction });
 
           // Add products to appointment
           let findProducts = []
+          let allocatedUsers = [];
           if (appointment && properties) {
             findProducts = await dbInstance.product.findAll({ where: { id: properties }});
+
+            if (agentSupervisor?.userId) {
+              // Fetch the existing allocations for the supervisor
+              const existingAllocations = await dbInstance.productAllocation.findAll({
+                where: {
+                  userId: agentSupervisor.userId,
+                  productId: properties,
+                },
+              });
+
+              // Create a Set of existing productIds allocated to the supervisor
+              const existingProductIds = new Set(existingAllocations.map((allocation) => allocation.productId));
+
+              // Filter the products that are not already allocated to the supervisor
+              const unAllocatedProducts = findProducts.filter((product) => !existingProductIds.has(product.id));
+
+              // Create the new allocations
+              allocatedUsers = unAllocatedProducts.map((product) => ({
+                productId: product.id,
+                userId: agentSupervisor.userId,
+              }));
+            }
+
             const productRecords = [];
             findProducts.forEach((product) => {
               productRecords.push({
@@ -104,18 +182,26 @@ export const createAppointment = async (req, dbInstance) => {
                 interest: false,
               });
             });
-            await dbInstance.appointment_product.bulkCreate(productRecords, {transaction});
+
+            if (productRecords.length > 0) {
+              await dbInstance.appointmentProduct.bulkCreate(productRecords, {transaction});
+            }
+            
+            if (allocatedUsers.length > 0) {
+              await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
+            }
           }
 
+          // customer email
           const emailData = [];
           emailData.date = appointmentDate;
-          emailData.time = appointmentTime;
+          emailData.time = timeSlot.textShow;
           emailData.products = findProducts;
-          emailData.allotedAgent = req.user.fullName;
+          emailData.allotedAgent = agentSupervisor?.user?.lastName ? `${agentSupervisor.user.firstName} ${agentSupervisor.user.lastName}` : req.user.fullName;
           emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
-          emailData.agentImage = req.user.profileImage;
-          emailData.agentPhoneNumber = req.user.phoneNumber;
-          emailData.agentEmail = req.user.email
+          emailData.agentImage = agentSupervisor?.user?.profileImage ? agentSupervisor.user.profileImage : req.user.profileImage;
+          emailData.agentPhoneNumber = agentSupervisor?.user?.phoneNumber ? agentSupervisor.user.phoneNumber : req.user.phoneNumber;
+          emailData.agentEmail = agentSupervisor?.user?.email ? agentSupervisor.user.email : req.user.email
           emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
           emailData.appUrl = process.env.APP_URL;
           const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.JOIN_APPOINTMENT), emailData);
@@ -126,10 +212,32 @@ export const createAppointment = async (req, dbInstance) => {
           }
           mailHelper.sendMail(payload);
 
+          // supervisor email
+          if (agentSupervisor) {
+            const emailData = [];
+            emailData.date = appointmentDate;
+            emailData.time = timeSlot.textShow;
+            emailData.products = findProducts;
+            emailData.primaryAgent = req.user.fullName;
+            emailData.customer = customerDetails.fullName;
+            emailData.customerImage = customerDetails.profileImage;
+            emailData.customerPhoneNumber = customerDetails.phoneNumber;
+            emailData.customerEmail = customerDetails.email;
+            emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+            emailData.appUrl = process.env.APP_URL;
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.SUPERVISOR_JOIN_APPOINTMENT), emailData);
+            const payload = {
+              to: agentSupervisor.user.email,
+              subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
+              html: htmlData,
+            }
+            mailHelper.sendMail(payload);
+          }
+
           return appointment;
       });
 
-      return (result.id) ? await getAppointmentDetailById(req.user, result.id, dbInstance) : result;
+      return (result.id) ? await getAppointmentDetailById((agentSupervisor ? agentSupervisor : req.user.agent), result.id, dbInstance) : result;
     } catch(err) {
       console.log('createAppointmentServiceError', err)
       return { error: true, message: 'Server not responding, please try again later.'}
@@ -142,15 +250,20 @@ export const updateAppointment = async (req, dbInstance) => {
           id,
           properties, 
           appointmentDate, 
-          appointmentTime
+          timeSlotId
         } = req.body;
 
-        const appointment = await getAppointmentDetailById(req.user, id, dbInstance);
+        const appointment = await getAppointmentDetailById(req.user.agent, id, dbInstance);
         if (!appointment) {
           return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
         }
 
-        const vars = utilsHelper.checkIfTimeIsOld(appointmentDate, appointmentTime);
+        const timeSlot = dbInstance.agentTimeSlot.findOne({ where: { id: timeSlotId} });
+        if (!timeSlot) {
+          return { error: true, message: 'Invalid time selected.' };
+        }
+
+        const vars = utilsHelper.checkIfTimeIsOld(appointmentDate, timeSlot.fromTime);
         if (vars) {
           return { error: true, message: 'Time is expired. Please select another timeslot.' };
         }
@@ -163,7 +276,7 @@ export const updateAppointment = async (req, dbInstance) => {
 
             appointment.customerId = customerDetails.customerId;
             appointment.appointmentDate = appointmentDate;
-            appointment.appointmentTime = appointmentTime;
+            appointment.timeSlotId = timeSlotId;
             await appointment.save({ transaction });
 
             // remove old properties
@@ -180,8 +293,27 @@ export const updateAppointment = async (req, dbInstance) => {
                   interest: false,
                 });
               });
-              await dbInstance.appointment_product.bulkCreate(productRecords, {transaction});
-          }
+              await dbInstance.appointmentProduct.bulkCreate(productRecords, {transaction});
+            }
+
+            const emailData = [];
+            emailData.date = appointmentDate;
+            emailData.time = timeSlot.textShow;
+            emailData.products = findProducts;
+            emailData.allotedAgent = req.user.fullName;
+            emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
+            emailData.agentImage = req.user.profileImage;
+            emailData.agentPhoneNumber = req.user.phoneNumber;
+            emailData.agentEmail = req.user.email
+            emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
+            emailData.appUrl = process.env.APP_URL;
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.JOIN_APPOINTMENT), emailData);
+            const payload = {
+              to: customerDetails.email,
+              subject: EMAIL_SUBJECT.UPDATE_JOIN_APPOINTMENT,
+              html: htmlData,
+            }
+            mailHelper.sendMail(payload);
         });
 
         return true;
@@ -194,7 +326,7 @@ export const updateAppointment = async (req, dbInstance) => {
 export const deleteAppointment = async (appointmentId, req) => {
     try {
         const { user, dbInstance } = req;
-        const appointment = await getAppointmentDetailById(user, appointmentId, dbInstance);
+        const appointment = await getAppointmentDetailById(user.agent, appointmentId, dbInstance);
         if (!appointment) {
           return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
         }
@@ -212,8 +344,9 @@ export const deleteAppointment = async (appointmentId, req) => {
     }
 }
 
-const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
-  const whereClause = user.agentType == AGENT_TYPE.AGENT ? { id: appointmentId, agentId: user.id } : { id: appointmentId, allotedAgent: user.id };
+const getAppointmentDetailById = async (agent, appointmentId, dbInstance) => {
+  console.log('agent', agent);
+  const whereClause = agent.agentType == AGENT_TYPE.AGENT ? { id: appointmentId, agentId: agent.userId } : { id: appointmentId, allotedAgent: agent.userId };
   const appointment = await dbInstance.appointment.findOne({
       where: whereClause,
       include: [
@@ -231,6 +364,14 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
           model: dbInstance.user, 
           as: 'agentUser',
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'allotedAgentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        { 
+          model: dbInstance.agentTimeSlot, 
         },
       ],
   });
@@ -287,7 +428,7 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
       customerDetails = await userService.createUserWithPassword({
         firstName: reqBody.customerFirstName,
         lastName: reqBody.customerLastName,
-        email: reqBody.customerEmail,
+        email: reqBody.customerEmail.toLowerCase(),
         phoneNumber: reqBody.customerPhone,
         password: tempPassword,
         status: true,

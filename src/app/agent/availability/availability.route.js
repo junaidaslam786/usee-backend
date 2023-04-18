@@ -8,5 +8,6 @@ const router = Router();
 
 router.get('/list', isAuthenticated, availabilityController.listAgentAvailability);
 router.put('/update', validate(availabilityValidations.updateAgentAvailabilityRules), isAuthenticated, availabilityController.updateAgentAvailability);
+router.get('/list-slots', isAuthenticated, availabilityController.listAgentAvailabilitySlots);
 
 export default router;

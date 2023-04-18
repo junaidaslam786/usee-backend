@@ -5,7 +5,7 @@ export const createAgentAlertRules = [
     body('productId').exists().custom(async (value) => {
         return await db.models.product.findOne({ where: { id: value } }).then(productData => {
             if (!productData) {
-                return Promise.reject('Invalid product id or product do not exist.');
+                return Promise.reject('Invalid property id or property do not exist.');
             }
         });
     }),

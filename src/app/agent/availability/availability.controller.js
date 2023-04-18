@@ -36,3 +36,21 @@ export const updateAgentAvailability = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /agent/availability/list-slots
+ * List availability slots added by agent
+ */
+export const listAgentAvailabilitySlots = async (req, res, next) => {
+    try {
+      const result = await availabilityService.listAgentAvailabilitySlots(req);
+      if (result?.error && result?.message) {
+          return next(createError(400, result.message));
+      }
+  
+      return res.status(200).json(result);
+    } catch (err) {
+      console.log('listAgentAvailabilitySlotsError', err);
+      return next(err);
+    }
+};

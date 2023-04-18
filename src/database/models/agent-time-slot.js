@@ -2,6 +2,9 @@ import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
   class AgentTimeSlot extends Model {
+    static associate(models) {
+      AgentTimeSlot.hasMany(models.agentAvailability, { foreignKey: 'timeSlotId' })
+    }
   }
 
   AgentTimeSlot.init({

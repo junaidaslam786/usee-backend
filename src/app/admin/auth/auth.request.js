@@ -17,7 +17,7 @@ export const registerAdminRules = [
     .withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty()
     .withMessage('Please provide last name'),
-  body('email').isEmail().exists().custom(async (value) => await db.models.user.findOne({ where: { email: value } }).then((userData) => {
+  body('email').isEmail().exists().custom(async (value) => await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then((userData) => {
     if (userData) {
       return Promise.reject('Email address already exist.');
     }
@@ -45,7 +45,7 @@ export const registerAgentRules = [
     .withMessage('Please provide company position'),
   body('phoneNumber').exists().withMessage('Please provide phone number').notEmpty()
     .withMessage('Please provide phone number'),
-  body('email').isEmail().exists().custom(async (value) => await db.models.user.findOne({ where: { email: value } }).then((userData) => {
+  body('email').isEmail().exists().custom(async (value) => await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then((userData) => {
     if (userData) {
       return Promise.reject('Email address already exist.');
     }
@@ -69,7 +69,7 @@ export const registerCustomerRules = [
     .withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty()
     .withMessage('Please provide last name'),
-  body('email').isEmail().exists().custom(async (value) => await db.models.user.findOne({ where: { email: value } }).then((userData) => {
+  body('email').isEmail().exists().custom(async (value) => await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then((userData) => {
     if (userData) {
       return Promise.reject('Email address already exist.');
     }

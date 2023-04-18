@@ -1,11 +1,9 @@
 import { AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE } from '@/config/constants';
-import { utilsHelper } from '@/helpers';
+import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
 import * as userService from '../../user/user.service';
 const path = require("path")
 const ejs = require("ejs");
-import { Sequelize } from 'sequelize';
-const OP = Sequelize.Op;
 
 export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     try {
@@ -190,24 +188,41 @@ export const updateAgentUserSorting = async (reqBody, req) => {
 
 export const checkAvailability = async (reqBody, req) => {
     try {
-        const { userId, date, time } = reqBody;
-        const dayId = new Date(date);
+        const { date, time } = reqBody;
+        const { dbInstance } = req;
+        const userId = reqBody?.userId ? reqBody.userId : req.user.id;
 
-        const result = await req.dbInstance.agentAvailability.findOne({
+        const timeSlot = await dbInstance.agentTimeSlot.findOne({ where: { id: time } });
+        if (!timeSlot) {
+            return { error: true, message: 'Invalid time selected.' };
+        }
+
+        const isTimeExpired = utilsHelper.checkIfTimeIsOld(date, timeSlot.fromTime);
+        if (isTimeExpired) {
+            return { error: true, message: 'Time is expired. Please select another timeslot.' };
+        }
+
+        // Check if there's an existing appointment
+        const existingAppointment = await dbInstance.appointment.findOne({
+            where: {
+                agentId: userId,
+                appointmentDate: date,
+                timeSlotId: time,
+                allotedAgent: userId 
+            }
+        });
+
+        if (existingAppointment) {
+            return false;
+        }
+
+        const result = await dbInstance.agentAvailability.findOne({
             where: {
                 userId,
-                dayId: dayId.getDay() + 1,
+                dayId: (new Date(date).getDay() + 6) % 7 + 1,
+                timeSlotId: time,
                 status: true
-            },
-            include: [{
-                model: req.dbInstance.agentTimeSlot,
-                where: {
-                    [OP.and]: [
-                        { fromTime: { [OP.lte]: time }},
-                        { toTime: { [OP.gt]: time }},
-                    ]
-                }
-            }]
+            }
         });
         return result ? true : false;
     } catch(err) {
@@ -217,7 +232,6 @@ export const checkAvailability = async (reqBody, req) => {
 }
 
 export const getAgentUser = async (agentUserId, dbInstance) => {
-    
     try {
         const agentUser = await getAgentUserDetailByUserId(agentUserId, dbInstance);
         if (!agentUser) {
@@ -260,7 +274,6 @@ export const deleteAgentUser = async (userId, dbInstance) => {
 }
 
 const getAgentUserByUserId = async (agentUserId, dbInstance) => {
-
     const agentUser = await dbInstance.agent.findOne({where: { userId: agentUserId }});
 
     if (!agentUser) {
@@ -271,7 +284,6 @@ const getAgentUserByUserId = async (agentUserId, dbInstance) => {
 }
 
 const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
-
     const agentUser = await dbInstance.agent.findOne({
         where: { userId: agentUserId },
         include: [
@@ -296,4 +308,114 @@ const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
     }
 
     return agentUser;
+}
+
+export const getAgentSupervisor = async (req) => {
+    try {
+        const { user: agentInfo, dbInstance } = req;
+        const agentUser = await dbInstance.agent.findOne({
+            where: { managerId: agentInfo.id },
+            include: [{
+                model: dbInstance.user, 
+                attributes: ["firstName", "lastName", "email", "phoneNumber"]
+            }],
+        });
+
+        return agentUser;
+    } catch(err) {
+        console.log('getAgentSupervisorServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const createAgentSupervisor = async (reqBody, req) => {
+    try {
+        const { firstName, lastName, email } = reqBody;
+        const { user: agentInfo, dbInstance } = req;
+        const { agent, agentTimeSlot, agentAvailability } = dbInstance;
+
+        const result = await db.transaction(async (transaction) => {
+            const tempPassword = utilsHelper.generateRandomString(10);
+
+            // create user data
+            const newUser = await userService.createUserWithPassword({
+                firstName,
+                lastName,
+                email,
+                phoneNumber: reqBody?.phoneNumber ? reqBody.phoneNumber : "",
+                status: true,
+                userType: USER_TYPE.AGENT,
+                password: tempPassword,
+                createdBy: agentInfo.id,
+            }, transaction);
+
+            // create agent user data
+            let agentUserData = {
+                userId: newUser.id,
+                managerId: agentInfo.id,
+                agentType: AGENT_TYPE.MANAGER,
+                companyPosition: "Supervisor",
+                apiCode: utilsHelper.generateRandomString(10, true),
+                createdBy: agentInfo.id,
+            };
+            await agent.create(agentUserData, { transaction });
+
+            const timeslots = await agentTimeSlot.findAll();
+            for (let day = 1; day <= 7; day++) {
+                let agentAvailabilities = [];
+                for (const slot of timeslots) {
+                    agentAvailabilities.push({
+                        userId: newUser.id,
+                        dayId: day,
+                        timeSlotId: slot.id,
+                        status: true,
+                    });
+                }
+                await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
+            }
+
+            const emailData = [];
+            emailData.name = newUser.fullName;
+            emailData.tempPassword = tempPassword;
+            emailData.login = utilsHelper.generateUrl('agent-login', newUser.userType);
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailData);
+            const payload = {
+                to: newUser.email,
+                subject: `${EMAIL_SUBJECT.AGENT_ADDED_AS} ${agentUserData.companyPosition}`,
+                html: htmlData,
+            }
+            mailHelper.sendMail(payload);
+
+            return newUser;
+        });
+        
+        return (result.id) ? await getAgentUserDetailByUserId(result.id, dbInstance) : result;
+    } catch(err) {
+        console.log('createAgentUsersServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const updateAgentSupervisor = async (reqBody, req) => {
+    try {
+        const { id, firstName, lastName } = reqBody;
+        const { dbInstance } = req;
+
+        const agentUser = await dbInstance.user.findOne({ where: { id }});
+        if (!agentUser) {
+            return { error: true, message: 'Invalid supervisor id or supervisor do not exist.'}
+        }
+
+        agentUser.firstName = firstName;
+        agentUser.lastName = lastName;
+        if (reqBody?.phoneNumber) {
+            agentUser.phoneNumber = reqBody.phoneNumber;
+        }
+        await agentUser.save();
+        
+        return true;
+    } catch(err) {
+        console.log('updateAgentSupervisorServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
 }

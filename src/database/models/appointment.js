@@ -4,8 +4,10 @@ export default function (sequelize) {
   class Appointment extends Model {
     static associate(models) {
       Appointment.belongsToMany(models.product, { through: 'appointment_products', updatedAt: false, unique: false });
-      Appointment.belongsTo(models.user, { foreignKey: 'agentId', as: 'agentUser' })
-      Appointment.belongsTo(models.user, { foreignKey: 'customerId', as: 'customerUser' })
+      Appointment.belongsTo(models.user, { foreignKey: 'agentId', as: 'agentUser' });
+      Appointment.belongsTo(models.user, { foreignKey: 'customerId', as: 'customerUser' });
+      Appointment.belongsTo(models.user, { foreignKey: 'allotedAgent', as: 'allotedAgentUser' });
+      Appointment.belongsTo(models.agentTimeSlot, { foreignKey: 'timeSlotId' });
     }
   }
 
@@ -47,12 +49,14 @@ export default function (sequelize) {
     appointmentDate: {
       field: 'appointment_date',
       allowNull: false,
-      type: DataTypes.DATE
+      type: DataTypes.DATEONLY
     },
-    appointmentTime: {
-      field: 'appointment_time',
-      allowNull: false,
-      type: DataTypes.TIME
+    timeSlotId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'agent_time_slots',
+        key: 'id',
+      }
     },
     sessionId: {
       type: DataTypes.STRING,

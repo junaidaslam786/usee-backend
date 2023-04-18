@@ -21,7 +21,19 @@ export const registerAgentRules = [
       }
     });
   }),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists().withMessage('Please provide phone number').notEmpty().withMessage('Please provide phone number'),
+  body('password')
+    .exists().withMessage('Please provide valid password')
+    .notEmpty().withMessage('Please provide valid password')
+    .isLength({ min: 8 })
+    .withMessage('Password must contain at least 8 characters')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/)
+    .withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/)
+    .withMessage('Password must contain at least one number')
+    .matches(/[!@#$%^&*(),.?":{}|<>]/)
+    .withMessage('Password must contain at least one special character'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password and Confirm password should match');
@@ -42,7 +54,19 @@ export const registerCustomerRules = [
       }
     });
   }),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists().withMessage('Enter password to register'),
+  body('password')
+    .exists().withMessage('Please provide valid password')
+    .notEmpty().withMessage('Please provide valid password')
+    .isLength({ min: 8 })
+    .withMessage('Password must contain at least 8 characters')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/)
+    .withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/)
+    .withMessage('Password must contain at least one number')
+    .matches(/[!@#$%^&*(),.?":{}|<>]/)
+    .withMessage('Password must contain at least one special character'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password and confirm password should match');
@@ -59,7 +83,19 @@ export const forgotPasswordRules = [
 
 export const resetPasswordRules = [
   body('token').exists().withMessage('Please provide token').notEmpty().withMessage('Please provide token'),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists().withMessage('Please provide password'),
+  body('password')
+    .exists().withMessage('Please provide valid password')
+    .notEmpty().withMessage('Please provide valid password')
+    .isLength({ min: 8 })
+    .withMessage('Password must contain at least 8 characters')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/)
+    .withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/)
+    .withMessage('Password must contain at least one number')
+    .matches(/[!@#$%^&*(),.?":{}|<>]/)
+    .withMessage('Password must contain at least one special character'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password and Confirm password should match');

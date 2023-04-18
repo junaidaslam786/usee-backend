@@ -8,7 +8,7 @@
 
 <tr>
     <td valign="top" style="color:#3e2837;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px 30px;">
-        <span> Agent %> has <b style="color:#3e2837;font-weight:700;">successfully booked</b> an appointment with you.</span>
+        <span> <%= primaryAgent %> has <b style="color:#3e2837;font-weight:700;">booked</b> an appointment for you.</span>
     </td>
 </tr>
 
@@ -25,7 +25,7 @@
             <tr>
                 <td valign="middle" style="width:130px;padding-right:30px;">
                     <span style="box-shadow:0 0 21px #999;border:1px solid #00CB04;display:inline-block;width:112px;height:112px;border-radius:50%;overflow:hidden;">
-                        <img style="max-width:100%;" src="<%= appUrl %>/<%= agentImage %>" alt="estate agent photo">
+                        <img style="max-width:100%;" src="<%= appUrl %>/<%= customerImage %>" alt="customer photo">
                     </span>
                 </td>
                 <td valign="middle">
@@ -49,16 +49,8 @@
                         <tr>
                             <td>
                                 <span style="color:#92778a;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
-                                    Your Estate Agent:
-                                    <span style="color:#3e2837;"><%= allotedAgent %></span>
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span style="color:#92778a;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
-                                    Company:
-                                    <span style="color:#3e2837;"><%= companyName %></span>
+                                    Customer:
+                                    <span style="color:#3e2837;"><%= customer %></span>
                                 </span>
                             </td>
                         </tr>
@@ -96,7 +88,7 @@
     <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 20px;">
         <span style="display: inline-block;max-width:380px;color:#92778a;font-size: 14px;font-family:'Manrope', sans-serif;font-weight:500;">
             If you are unable to make this appointment, please contact
-            <span style="color:#3e2837;"> <%= allotedAgent %> </span>
+            <span style="color:#3e2837;"> <%= customer %> </span>
             on the below details:
         </span>
     </td>
@@ -104,16 +96,16 @@
 <tr>
     <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 40px;">
         <span>
-            <a href="tel:<%= agentPhoneNumber %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+            <a href="tel:<%= customerPhoneNumber %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
                 <img src="<%= appUrl %>/phone.png" style="display:inline-block;vertical-align:middle;margin-right:6px" alt="icon">
-              <%= agentPhoneNumber %>
+              <%= customerPhoneNumber %>
             </a>
         </span>
 
         <span style="margin-left:40px;">
-            <a href="mailto:<%= agentEmail %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+            <a href="mailto:<%= customerEmail %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
                 <img src="<%= appUrl %>/email.png" style="display:inline-block;vertical-align:middle;margin-right:6px" alt="icon">
-              <%= agentEmail %>
+              <%= customerEmail %>
             </a>
         </span>
     </td>

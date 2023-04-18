@@ -1,6 +1,7 @@
-import { EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_ALERT_MODE, USER_ALERT_TYPE } from "@/config/constants";
+import { EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_ALERT_MODE, USER_ALERT_TYPE, USER_TYPE } from "@/config/constants";
 import db from '@/database';
-import * as productService from '../../property/property.service'
+import * as productService from '../../property/property.service';
+import * as userService from '../../user/user.service';
 const path = require("path")
 const ejs = require("ejs");
 import { mailHelper, utilsHelper } from "@/helpers";
@@ -24,36 +25,73 @@ export const listWishlist = async (customerInfo, dbInstance) => {
 export const addProductToWishlist = async (productId, req) => {
     try {
         const { user: customerInfo, dbInstance } = req;
-
-        const wishlist = await getWishlistByUserAndProductId(customerInfo.id, productId, dbInstance);
-        if (wishlist) {
-            return { error: true, message: 'Already exists in the wishlist.'}
-        }
+        let customerDetails = customerInfo;
+        let isNewCustomer = false;
+        const tempPassword = utilsHelper.generateRandomString(10);
 
         const result = await db.transaction(async (transaction) => {
+            if (!customerDetails) {
+                customerDetails = await userService.createUserWithPassword({
+                    firstName: req.customerFirstName,
+                    lastName: req.customerLastName,
+                    email: req.customerEmail.toLowerCase(),
+                    password: tempPassword,
+                    status: true,
+                    userType: USER_TYPE.CUSTOMER,
+                }, transaction);
+
+                isNewCustomer = true;
+            }
+
+            if (!customerDetails) {
+                return { error: true, message: 'No customer exist to add wishlist.'}
+            }
+
+            const existingWishlist = await getWishlistByUserAndProductId(customerDetails.id, productId, dbInstance);
+            if (existingWishlist) {
+                return { error: true, message: 'Already exists in the wishlist.'}
+            }
+
             const product = await productService.getPropertyById(productId, dbInstance);
+            if (!product) {
+                return { error: true, message: 'Invalid property or property do not exist.'}
+            }
 
             // add product into the wishlist
             const wishlist = await dbInstance.customerWishlist.create({
-                customerId: customerInfo.id,
+                customerId: customerDetails.id,
                 productId
             }, { transaction });
 
             // create agent alert
             await dbInstance.userAlert.create({
-                customerId: customerInfo.id,
+                customerId: customerDetails.id,
                 productId,
                 alertMode: USER_ALERT_MODE.WISHLIST,
                 alertType: USER_ALERT_TYPE.WISHLIST_ADDED,
                 removed: false,
                 viewed: false,
                 emailed: false,
-                createdBy: customerInfo.id
+                createdBy: customerDetails.id
             }, { transaction });
+
+            if (isNewCustomer) {
+                const emailNewData = [];
+                emailNewData.name = customerDetails.fullName;
+                emailNewData.tempPassword = tempPassword;
+                emailNewData.login = utilsHelper.generateUrl('customer-login', USER_TYPE.CUSTOMER);
+                const htmlNewData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailNewData);
+                const newPayload = {
+                    to: customerDetails.email,
+                    subject: EMAIL_SUBJECT.AGENT_ADDED_CUSTOMER,
+                    html: htmlNewData,
+                }
+                mailHelper.sendMail(newPayload);
+            }
 
             const emailData = [];
             emailData.name = product.user.fullName;
-            emailData.customerName = customerInfo.fullName;
+            emailData.customerName = customerDetails.fullName;
             emailData.propertyTitle = product.title;
             emailData.propertyImage = product.featuredImage;
             emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;

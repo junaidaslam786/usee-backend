@@ -47,7 +47,7 @@ export default function (sequelize) {
       type: DataTypes.DATE
     },
   }, {
-    modelName: 'appointment_product',
+    modelName: 'appointmentProduct',
     tableName: 'appointment_products',
     sequelize,
   });

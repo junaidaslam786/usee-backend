@@ -113,9 +113,9 @@ export const calculateDistance = (lat1, lon1, lat2, lon2, unit) => {
 export const checkIfTimeIsOld = (date, time) => {
     const difdate = date;
     const parts = difdate.split("-");
-    const fpdate = parts[1]+'-'+parts[2]+'-'+parts[0];
+    const fpdate = parts[0]+'-'+parts[1]+'-'+parts[2];
 
-    const givenDate = new Date(fpdate+' '+time);
+    const givenDate = new Date(fpdate+'T'+time);
     const currentDate = new Date();
 
     givenDate.setSeconds(0);
@@ -123,5 +123,7 @@ export const checkIfTimeIsOld = (date, time) => {
     currentDate.setSeconds(0);
     currentDate.setMilliseconds(0);
 
+    // console.log('givenDateFormat', givenDate.toString());
+    // console.log('currentDateFormat', currentDate.toString());
     return givenDate < currentDate;
 }

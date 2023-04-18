@@ -6,6 +6,9 @@ import { validate } from '@/middleware';
 
 const router = Router();
 
-router.post('/register-customer', validate(iframeValidations.registerCustomerRules), iframeController.registerCustomer);
+router.post('/wishlist', validate(iframeValidations.addToWishlistRules), iframeController.addToWishlist);
+router.post('/appointment', validate(iframeValidations.addAppointmentRules), iframeController.addAppointment);
+router.get('/list-slots', iframeController.listAvailabilitySlots);
+router.post('/check-availability', validate(iframeValidations.checkAvailabilityRules), iframeController.checkAvailability);
 
 export default router;

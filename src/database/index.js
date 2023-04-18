@@ -22,7 +22,7 @@ import productImageModel from './models/product-image';
 import productMetaTagModel from './models/product-meta-tag';
 import productRemoveReasonModel from './models/product-remove-reason';
 import productRemoveRequestModel from './models/product-remove-request';
-import appoinmentModel from './models/appoinment';
+import appoinmentModel from './models/appointment';
 import roleModel from './models/role';
 import userModel from './models/user';
 import userAlertModel from './models/user-alert';

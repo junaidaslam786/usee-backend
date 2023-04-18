@@ -1,36 +1,72 @@
-import { USER_TYPE } from '@/config/constants';
-import * as userService from '../user/user.service';
 import * as wishlistService from '../customer/wishlist/wishlist.service';
-import { utilsHelper } from '@/helpers';
-import db from '@/database';
+import * as appoinmentService from '../customer/appointment/appointment.service';
 
-export const registerAsCustomer = async (reqBody, dbInstance) => {
+export const addToWishlist = async (reqBody, dbInstance) => {
     try {
         const { firstName, lastName, email, productId } = reqBody;
-
-        const result = await db.transaction(async (transaction) => {
-            const tempPassword = utilsHelper.generateRandomString(10);
-            const customerDetails = await userService.createUserWithPassword({
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                password: tempPassword,
-                status: true,
-                userType: USER_TYPE.CUSTOMER,
-            }, transaction);
-
-            const newReqObj = {
-                dbInstance: dbInstance,
-                user: customerDetails
-            }
-            wishlistService.addProductToWishlist(productId, newReqObj);
-
-            return customerDetails;
+        
+        const wishlistAdded = await wishlistService.addProductToWishlist(productId, {
+            dbInstance: dbInstance,
+            user: null,
+            customerFirstName: firstName, 
+            customerLastName: lastName, 
+            customerEmail: email
         });
+
+        if (wishlistAdded?.error && wishlistAdded?.message) {
+            return wishlistAdded;
+        }
 
         return true;
     } catch(err) {
-        console.log('registerAsCustomerError', err)
+        console.log('addToWishlistIframeServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const addAppointment = async (reqBody, dbInstance) => {
+    try {
+        const { firstName, lastName, email, productId, appointmentDate, timeSlotId } = reqBody;
+        
+        const appoinmentAdd = await appoinmentService.createAppointment({
+            user: null,
+            body: {
+                customerFirstName: firstName, 
+                customerLastName: lastName, 
+                customerEmail: email,
+                property: productId,
+                appointmentDate,
+                timeSlotId,
+                isAssignedToSupervisor: reqBody?.isAssignedToSupervisor ? reqBody.isAssignedToSupervisor : false
+            }
+        }, dbInstance);
+
+        if (appoinmentAdd?.error && appoinmentAdd?.message) {
+            return appoinmentAdd;
+        }
+
+        return true;
+    } catch(err) {
+        console.log('addToWishlistIframeServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const listAvailabilitySlots = async (req) => {
+    try {
+        if (!req?.query?.agent) {
+            return { error: true, message: 'Invalid id.'}
+        }
+
+        return await req.dbInstance.agentTimeSlot.findAll({
+            include: [{
+                model: req.dbInstance.agentAvailability,
+                where: { userId: (req?.query?.agent ? req.query.agent : 0) },
+                attributes: []
+            }]
+        });
+    } catch(err) {
+        console.log('listAvailabilitySlotsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }

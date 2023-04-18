@@ -1091,6 +1091,26 @@ export const getSnagListDetailById = async (snagListId, dbInstance) => {
     return property;
 }
 
+export const listPropertiesAllocateToCustomer = async (query, dbInstance) => {
+    try {
+        const searchStr = query?.q ? query.q  : "";
+        return await dbInstance.product.findAll({
+            where: { 
+                status: PRODUCT_STATUS.ACTIVE, 
+                categoryId: PRODUCT_CATEGORIES.PROPERTY,
+                [OP.or]: [
+                    { title: { [OP.iLike]: `%${searchStr}%` } },
+                ]
+            },
+            attributes: ["id", "title", "userId"],
+            order: [["id", "DESC"]],
+        });
+    } catch(err) {
+        console.log('listPropertiesAllocateToCustomerServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
 // Define the Haversine formula function
 function haversine(lat1, lon1, lat2, lon2) {
     const R = 6371; // Earth's radius in km

@@ -23,7 +23,7 @@ export const updatePropertyRules = [
   body('productId').exists().custom(async (value) => {
     return await db.models.product.findOne({ where: { id: value } }).then(productData => {
       if (!productData) {
-        return Promise.reject('Invalid product id or product do not exist.');
+        return Promise.reject('Invalid property id or property do not exist.');
       }
     });
   }), 
@@ -37,7 +37,7 @@ export const uploadPropertyDocumentRules = [
   body('productId').exists().custom(async (value) => {
     return await db.models.product.findOne({ where: { id: value } }).then(productData => {
       if (!productData) {
-        return Promise.reject('Invalid product id or product do not exist.');
+        return Promise.reject('Invalid property id or property do not exist.');
       }
     });
   }), 
@@ -48,7 +48,7 @@ export const uploadPropertyImageRules = [
   body('productId').exists().custom(async (value) => {
     return await db.models.product.findOne({ where: { id: value } }).then(productData => {
       if (!productData) {
-        return Promise.reject('Invalid product id or product do not exist.');
+        return Promise.reject('Invalid property id or property do not exist.');
       }
     });
   }), 
@@ -58,7 +58,7 @@ export const deletePropertyDocumentRules = [
   body('productId').exists().custom(async (value) => {
     return await db.models.product.findOne({ where: { id: value } }).then(productData => {
       if (!productData) {
-        return Promise.reject('Invalid product id or product do not exist.');
+        return Promise.reject('Invalid property id or property do not exist.');
       }
     });
   }), 
@@ -75,7 +75,7 @@ export const deletePropertyImageRules = [
   body('productId').exists().custom(async (value) => {
     return await db.models.product.findOne({ where: { id: value } }).then(productData => {
       if (!productData) {
-        return Promise.reject('Invalid product id or product do not exist.');
+        return Promise.reject('Invalid property id or property do not exist.');
       }
     });
   }), 
@@ -92,7 +92,7 @@ export const customerOfferRequestRules = [
   body('productId').exists().custom(async (value) => {
     return await db.models.product.findOne({ where: { id: value } }).then(productData => {
       if (!productData) {
-        return Promise.reject('Invalid product id or product do not exist.');
+        return Promise.reject('Invalid property id or property do not exist.');
       }
     });
   }), 

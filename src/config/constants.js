@@ -78,6 +78,7 @@ export const EMAIL_SUBJECT = {
     OFFER: "Customer has made an offer to the property",
     OFFER_UPDATE: "Agent has made an update on your offer",
     JOIN_APPOINTMENT: "Usee 360 Appointment",
+    UPDATE_JOIN_APPOINTMENT: "Usee 360 Appointment updated",
     BOOK_DEMO: "Usee 360 Demo"
 }
 
@@ -93,6 +94,8 @@ export const EMAIL_TEMPLATE_PATH = {
     OFFER: "email-template/property-offer.ejs",
     OFFER_UPDATE: "email-template/property-offer-update.ejs",
     JOIN_APPOINTMENT: "email-template/join-appointment.ejs",
+    UPDATE_JOIN_APPOINTMENT: "email-template/update-join-appointment.ejs",
     AGENT_JOIN_APPOINTMENT: "email-template/agent-join-appointment.ejs",
+    SUPERVISOR_JOIN_APPOINTMENT: "email-template/supervisor-join-appointment.ejs",
     BOOK_DEMO: "email-template/book-demo.ejs",
 }

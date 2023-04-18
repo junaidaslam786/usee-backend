@@ -1,6 +1,4 @@
-import { USER_TYPE } from '@/config/constants';
 import { body } from 'express-validator';
-import db from '@/database';
 
 export const createAppointmentRules = [
     body('properties')
@@ -15,7 +13,7 @@ export const createAppointmentRules = [
       .withMessage('Date not provided')
       .notEmpty()
       .withMessage('Date cannot be empty'),
-    body('appointmentTime')
+    body('timeSlotId')
       .exists()
       .withMessage('Time not provided')
       .notEmpty()
@@ -56,7 +54,7 @@ export const updateAppointmentRules = [
       .withMessage('Date not provided')
       .notEmpty()
       .withMessage('Date cannot be empty'),
-    body('appointmentTime')
+    body('timeSlotId')
       .exists()
       .withMessage('Time not provided')
       .notEmpty()

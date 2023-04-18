@@ -14,6 +14,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('agents', 'reject_reason');
+    await queryInterface.removeColumn('agents', 'job_title');
+    await queryInterface.removeColumn('agents', 'license_no');
   }
 };
