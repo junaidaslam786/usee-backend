@@ -511,6 +511,11 @@ export const addCustomerOffer = async (reqBody, req) => {
 
         const notes = reqBody?.notes ? reqBody.notes : "";
 
+        const product = await getPropertyById(productId, dbInstance);
+        if (product.status === PRODUCT_STATUS.UNDER_OFFER) {
+            return { error: true, message: 'Agent no longer accepting offers.'}
+        }
+
         const offer = await dbInstance.productOffer.findOne({ where: { customerId: customerInfo.id, productId, status: { [OP.ne]: OFFER_STATUS.REJECTED } } });
         if (offer && offer.status === OFFER_STATUS.ACCEPTED) {
             return { error: true, message: 'Offer is already accepted.'}
@@ -521,8 +526,6 @@ export const addCustomerOffer = async (reqBody, req) => {
         }
 
         await db.transaction(async (transaction) => {
-            const product = await getPropertyById(productId, dbInstance);
-
             // add offer to the product
             await dbInstance.productOffer.create({
                 customerId: customerInfo.id,
