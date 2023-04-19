@@ -1,12 +1,6 @@
-import db from '@/database';
-import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import {
-  EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, AGENT_TYPE, APPOINTMENT_TYPES,
+  AGENT_TYPE
 } from '@/config/constants';
-import * as userService from '../../user/user.service';
-
-const path = require('path');
-const ejs = require('ejs');
 
 export const listCompletedAppointments = async (agentInfo, reqBody, dbInstance) => {
   try {

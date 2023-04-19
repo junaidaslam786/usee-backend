@@ -1,15 +1,7 @@
 import {
-  AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE,
+  USER_TYPE,
 } from '@/config/constants';
-import { utilsHelper } from '@/helpers';
 import db from '@/database';
-import { Sequelize } from 'sequelize';
-import * as userService from '../../user/user.service';
-
-const path = require('path');
-const ejs = require('ejs');
-
-const OP = Sequelize.Op;
 
 export const listAgentUsers = async (dbInstance) => {
   try {

@@ -2,7 +2,7 @@ import createError from 'http-errors';
 import * as propertyService from './property.service';
 
 /**
- * GET /property/list
+ * GET /admin/property/list
  * List all properties
  */
 export const listProperties = async (req, res, next) => {

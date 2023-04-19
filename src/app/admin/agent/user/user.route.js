@@ -1,9 +1,7 @@
-/* eslint-disable max-len */
 import { Router } from 'express';
 
-import { isAuthenticated, validate } from '@/middleware';
+import { isAuthenticated } from '@/middleware';
 import * as userController from './user.controller';
-import * as userValidations from './user.request';
 
 const router = Router();
 

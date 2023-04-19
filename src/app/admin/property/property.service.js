@@ -1,13 +1,6 @@
-import { Sequelize } from 'sequelize';
-import { PRODUCT_STATUS } from '../../../config/constants';
-import * as userService from '../../user/user.service';
-
-export const listProperties = async (userId, reqBody, dbInstance) => {
+export const listProperties = async (dbInstance) => {
   try {
-    const status = (reqBody && reqBody.status) ? reqBody.status : PRODUCT_STATUS.ACTIVE;
-
     const { count, rows } = await dbInstance.product.findAndCountAll({
-      where: { status },
       include: [
         {
           model: dbInstance.user,
@@ -25,7 +18,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
       totalItems: count,
     };
   } catch (err) {
-    console.log('listActivePropertiesServiceError', err);
+    console.log('listPropertiesServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
