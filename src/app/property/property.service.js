@@ -586,7 +586,9 @@ export const updateOfferStatus = async (reqBody, req) => {
             return { error: true, message: 'Server not responding, please try again later.'}
         }
 
-        await rejectAllOtherOffers({ offerId, productId: offer.productId }, dbInstance);
+        if (status === OFFER_STATUS.ACCEPTED) {
+            await rejectAllOtherOffers({ offerId, productId: offer.productId }, dbInstance);
+        }
 
         return true;
     } catch(err) {
@@ -627,12 +629,12 @@ export const processUpdateOffer = async (offer, dbInstance, status, reason) => {
             const customer = await userService.getUserById(offer.customerId);
     
             // update offer status
-            offer.status = status == "accepted" ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.REJECTED;
+            offer.status = status === OFFER_STATUS.ACCEPTED ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.REJECTED;
             offer.rejectReason = reason;
             await offer.save({ transaction });
     
             if (product) {
-                product.status = status == "accepted" ? PRODUCT_STATUS.UNDER_OFFER : PRODUCT_STATUS.ACTIVE;
+                product.status = status === OFFER_STATUS.ACCEPTED ? PRODUCT_STATUS.UNDER_OFFER : PRODUCT_STATUS.ACTIVE;
                 await product.save();
             }
     
