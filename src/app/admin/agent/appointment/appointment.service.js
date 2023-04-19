@@ -1,5 +1,5 @@
 import {
-  AGENT_TYPE
+  AGENT_TYPE,
 } from '@/config/constants';
 
 export const listCompletedAppointments = async (agentInfo, reqBody, dbInstance) => {
@@ -13,11 +13,13 @@ export const listCompletedAppointments = async (agentInfo, reqBody, dbInstance) 
         },
         {
           model: dbInstance.user,
+          where: { deletedAt: null },
           as: 'customerUser',
           attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
         {
           model: dbInstance.user,
+          where: { deletedAt: null },
           as: 'agentUser',
           attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
@@ -86,4 +88,3 @@ export const deleteAppointment = async (appointmentId, req) => {
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
-
