@@ -633,8 +633,8 @@ export const processUpdateOffer = async (offer, dbInstance, status, reason) => {
             offer.rejectReason = reason;
             await offer.save({ transaction });
     
-            if (product) {
-                product.status = status === OFFER_STATUS.ACCEPTED ? PRODUCT_STATUS.UNDER_OFFER : PRODUCT_STATUS.ACTIVE;
+            if (product && status === OFFER_STATUS.ACCEPTED) {
+                product.status =  PRODUCT_STATUS.UNDER_OFFER;
                 await product.save();
             }
     
@@ -907,12 +907,6 @@ export const deleteCustomerOffer = async (offerId, req) => {
 
         if (offer.status != OFFER_STATUS.PENDING) {
             return { error: true, message: 'You cannot delete this offer.'}
-        }
-
-        const product = await getPropertyById(offer.productId, dbInstance);
-        if (product) {
-            product.status = PRODUCT_STATUS.ACTIVE;
-            await product.save();
         }
 
         await offer.destroy();
