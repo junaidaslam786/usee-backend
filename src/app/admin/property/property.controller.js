@@ -7,7 +7,7 @@ import * as propertyService from './property.service';
  */
 export const listProperties = async (req, res, next) => {
   try {
-    const result = await propertyService.listProperties(req.user.id, req.query, req.dbInstance);
+    const result = await propertyService.listProperties(req.dbInstance);
     if (result?.error && result?.message) {
         return next(createError(400, result.message));
     }
