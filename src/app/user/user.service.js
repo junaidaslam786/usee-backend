@@ -111,6 +111,7 @@ export const updatePassword = async (user, reqBody) => {
 
 export const createUserWithPassword = async (userData, transaction) => {
     try {
+        userData.email = userData.email.toLowerCase();
         return transaction ? await db.models.user.create(userData, { transaction }) : await db.models.user.create(userData);
     } catch(err) {
         console.log('createUserWithPasswordServiceError', err)

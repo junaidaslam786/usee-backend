@@ -7,7 +7,7 @@ export const createAgentUserRules = [
   body('phoneNumber').exists().notEmpty(),
   body('role').exists().notEmpty(),
   body('email').isEmail().exists().custom(async (value) => {
-    return await db.models.user.findOne({ where: { email: value } }).then(emailData => {
+    return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then(emailData => {
       if (emailData) {
         return Promise.reject('Email address already exist.');
       }

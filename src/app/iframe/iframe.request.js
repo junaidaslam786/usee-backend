@@ -6,7 +6,7 @@ export const registerCustomerRules = [
   body('firstName').exists().withMessage('Please provide first name').notEmpty().withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty().withMessage('Please provide last name'),
   body('email').isEmail().exists().custom(async (value) => {
-    return await db.models.user.findOne({ where: { email: value } }).then(userData => {
+    return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then(userData => {
       if (userData) {
         return Promise.reject('Email address already exist.');
       }

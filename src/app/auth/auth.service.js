@@ -33,7 +33,7 @@ export const login = async (reqBody, dbInstance) => {
                     }]
                 }
             ],
-            where: { email, userType } 
+            where: { email: email.toLowerCase(), userType } 
         });
         if (!user) {
             return { error: true, message: 'There is no user with this email address!'}
@@ -83,7 +83,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
             const user = await userService.createUserWithPassword({
                 firstName, 
                 lastName, 
-                email, 
+                email: toLowerCase(), 
                 password,
                 phoneNumber,
                 status: 1, 
@@ -158,7 +158,7 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
         const userData = {
             firstName, 
             lastName, 
-            email, 
+            email: email.toLowerCase(), 
             password,
             status: 1, 
             userType: USER_TYPE.CUSTOMER,
