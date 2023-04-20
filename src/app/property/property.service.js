@@ -486,7 +486,7 @@ export const removePropertyRequest = async (reqUser, reqBody, dbInstance) => {
             return { error: true, message: 'Invalid property id or Property do not exist.'}
         }
 
-        property.status = PRODUCT_STATUS.ARCHIVED;
+        property.status = reasonId === 1 ? PRODUCT_STATUS.SOLD : PRODUCT_STATUS.REMOVED;
         await property.save();
 
         await dbInstance.productRemoveRequest.create({
