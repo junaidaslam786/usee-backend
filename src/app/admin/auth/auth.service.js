@@ -19,10 +19,8 @@ const path = require('path');
 const ejs = require('ejs');
 
 export const login = async (reqBody, dbInstance) => {
-  console.log('in Login')
 
   try {
-    console.log('in Login Try')
     const { email, password, type } = reqBody;
     const userType = USER_TYPE.ADMIN;
 
@@ -76,86 +74,6 @@ export const login = async (reqBody, dbInstance) => {
     return { user: userData, token, refreshToken };
   } catch (err) {
     console.log('loginServiceError', err);
-    return { error: true, message: 'Server not responding, please try again later.' };
-  }
-};
-
-export const registerAsAdmin = async (reqBody, dbInstance) => {
-  try {
-    const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
-    const {
-      firstName, lastName, email, password, companyName, companyPosition,
-    } = reqBody;
-    console.log(reqBody)
-
-
-    const result = await db.transaction(async (transaction) => {
-      // Create user
-      const user = await userService.createUserWithPassword({
-        firstName,
-        lastName,
-        email,
-        password,
-        phoneNumber: reqBody.phoneNumber,
-        status: 1,
-        userType: USER_TYPE.ADMIN,
-      }, transaction);
-
-      // create agent profile
-      const agent = await agentTable.create({
-        userId: user.id,
-        companyName,
-        companyPosition,
-        agentType: AGENT_TYPE.AGENT,
-        apiCode: utilsHelper.generateRandomString(10, true),
-      }, { transaction });
-
-      const timeslots = await agentTimeSlot.findAll();
-      for (let day = 1; day <= 7; day++) {
-        const agentAvailabilities = [];
-        for (const slot of timeslots) {
-          agentAvailabilities.push({
-            userId: user.id,
-            dayId: day,
-            timeSlotId: slot.id,
-            status: true,
-          });
-        }
-        await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
-      }
-
-      // Generate and return tokens
-      const token = user.generateToken();
-      const refreshToken = user.generateToken('4h');
-
-      const returnedUserData = {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        companyName: agent.companyName,
-        companyPosition: agent.companyPosition,
-        phoneNumber: user.phoneNumber,
-        email: user.email,
-        type: user.userTypeDisplay,
-      };
-
-      const emailData = [];
-      emailData.name = user.firstName + user.lastName;
-      emailData.type = user.type;
-      emailData.tempPass = reqBody.password;
-      emailData.login = utilsHelper.generateUrl('admin-login', user.userType);
-      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD), emailData);
-      const payload = {
-        to: user.email,
-        subject: EMAIL_SUBJECT.ADMIN_REGISTER_AGENT,
-        html: htmlData,
-      };
-      mailHelper.sendMail(payload);
-
-      return { user: returnedUserData, token, refreshToken };
-    });
-    return result;
-  } catch (err) {
-    console.log('registerAsAdminError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
@@ -294,85 +212,3 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
   }
 };
 
-export const forgotPassword = async (reqBody, dbInstance) => {
-  try {
-    const { email, type } = reqBody;
-    const userModel = dbInstance.user;
-
-    // Find user by email address
-    const user = await userModel.findOne({ where: { email } });
-    if (!user) {
-      return { error: true, message: 'There is no user with this email address!' };
-    }
-
-    if (!user.status) {
-      return { error: true, message: 'Account is disabled, contact admin!' };
-    }
-
-    // Update remember token in database
-    user.rememberToken = utilsHelper.generateRandomString(32);
-    user.rememberTokenExpire = new Date();
-    await user.save();
-
-    const emailData = [];
-    emailData.name = user.fullName;
-    emailData.resetPasswordLink = `${utilsHelper.generateUrl((type == 'agent' ? 'agent-reset-password' : 'customer-reset-password'), user.userType)}/${user.rememberToken}`;
-    const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.FORGOT_PASSWORD), emailData);
-    const payload = {
-      to: email,
-      subject: EMAIL_SUBJECT.FORGOT_PASSWORD,
-      html: htmlData,
-    };
-    mailHelper.sendMail(payload);
-
-    return true;
-  } catch (err) {
-    console.log('forgotPasswordServiceError', err);
-    return { error: true, message: 'Server not responding, please try again later.' };
-  }
-};
-
-export const resetPassword = async (reqBody, dbInstance) => {
-  try {
-    const { token, password, type } = reqBody;
-    const userModel = dbInstance.user;
-
-    // Find user by email address
-    const user = await userModel.findOne({
-      where: {
-        rememberToken: token,
-        rememberTokenExpire: {
-          [OP.lt]: new Date(),
-          [OP.gt]: new Date(new Date() - 1 * 60 * 60 * 1000), // 1 hour
-        },
-      },
-    });
-
-    if (!user) {
-      return { error: true, message: 'Password reset token is invalid or has expired' };
-    }
-
-    // Update password
-    user.rememberToken = null;
-    user.rememberTokenExpire = null;
-    user.password = password;
-    await user.save();
-
-    const emailData = [];
-    emailData.name = user.fullName;
-    emailData.email = user.email;
-    emailData.login = utilsHelper.generateUrl((type == 'agent' ? 'agent-login' : 'customer-login'), user.userType);
-    const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.RESET_PASSWORD), emailData);
-    const payload = {
-      to: email,
-      subject: EMAIL_SUBJECT.RESET_PASSWORD,
-      html: htmlData,
-    };
-    mailHelper.sendMail(payload);
-
-    return true;
-  } catch (err) {
-    console.log('resetPasswordServiceError', err);
-    return { error: true, message: 'Server not responding, please try again later.' };
-  }
-};

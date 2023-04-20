@@ -9,56 +9,13 @@ import * as userService from '../../user/user.service';
 
 const OP = Sequelize.Op;
 
-export const listAgentUsers = async (dbInstance) => {
-  try {
-    return await dbInstance.user.findAll({
-      where: {
-        userType: USER_TYPE.AGENT,
-        status: true,
-      },
-      include: [
-        {
-          model: dbInstance.agent,
-          as: 'agent',
-        },
-      ],
-
-      order: [['id', 'DESC']],
-    });
-  } catch (err) {
-    console.log('listAgentUsersToAllocateServiceError', err);
-    return { error: true, message: 'Server not responding, please try again later.' };
-  }
-};
-export const listAdminUsers = async (dbInstance) => {
-  try {
-    return await dbInstance.user.findAll({
-      where: {
-        userType: USER_TYPE.ADMIN,
-        status: true,
-      },
-
-
-      order: [['id', 'DESC']],
-    });
-  } catch (err) {
-    console.log('listAgentUsersToAllocateServiceError', err);
-    return { error: true, message: 'Server not responding, please try again later.' };
-  }
-};
-
-
 export const updateCurrentUser = async (reqBody, req) => {
 
   try {
-
-    // const { user: userInfo } = req;
-
-    // let user = userInfo;
     const user = await db.models.user.update(reqBody, {
       where: { id: reqBody.id },
     });
-    console.log('user', user)
+
     const agent = await db.models.agent.update({
       companyName: reqBody.companyName,
       companyPosition: reqBody.companyPosition,
@@ -66,78 +23,6 @@ export const updateCurrentUser = async (reqBody, req) => {
     {
       where: { user_id: reqBody.id },
     });
-
-    // if (reqBody?.firstName) {
-    //     user.firstName = reqBody.firstName;
-    // }
-
-    // if (reqBody?.lastName) {
-    //     user.lastName = reqBody.lastName;
-    // }
-
-    // if (reqBody?.phoneNumber) {
-    //     user.phoneNumber = reqBody.phoneNumber;
-    // }
-
-    // if (reqBody?.city) {
-    //     user.cityName = reqBody.city;
-    // }
-
-    // // profile image upload
-    // if (req.files && req.files.profileImage) {
-    //     const profileImageFile = req.files.profileImage;
-    //     const newFileName = `${Date.now()}_${profileImageFile.name.replace(/ +/g, "")}`;
-    //     const result = await utilsHelper.fileUpload(profileImageFile, PROPERTY_ROOT_PATHS.PROFILE_LOGO, newFileName);
-    //     if (result?.error) {
-    //         return { error: true, message: result?.error }
-    //     }
-
-    //     user.profileImage = result;
-    // }
-
-    // if (reqBody?.companyPosition || reqBody?.mobileNumber || reqBody?.companyName || reqBody?.companyAddress || reqBody?.zipCode || reqBody?.mortgageAdvisorEmail || req?.files?.companyLogo) {
-    //     let agent = user.agent;
-
-    //     if (reqBody?.companyPosition) {
-    //         agent.companyPosition = reqBody.companyPosition;
-    //     }
-
-    //     if (reqBody?.mobileNumber) {
-    //         agent.mobileNumber = reqBody.mobileNumber;
-    //     }
-
-    //     if (reqBody?.companyName) {
-    //         agent.companyName = reqBody.companyName;
-    //     }
-
-    //     if (reqBody?.companyAddress) {
-    //         agent.companyAddress = reqBody.companyAddress;
-    //     }
-
-    //     if (reqBody?.zipCode) {
-    //         agent.zipCode = reqBody.zipCode;
-    //     }
-
-    //     if (reqBody?.mortgageAdvisorEmail) {
-    //         agent.mortgageAdvisorEmail = reqBody.mortgageAdvisorEmail;
-    //     }
-
-    //     // company logo upload
-    //     if (req.files && req.files.companyLogo) {
-    //         const companyLogoFile = req.files.companyLogo;
-    //         const newFileName = `${Date.now()}_${companyLogoFile.name.replace(/ +/g, "")}`;
-    //         const result = await utilsHelper.fileUpload(companyLogoFile, PROPERTY_ROOT_PATHS.PROFILE_LOGO, newFileName);
-    //         if (result?.error) {
-    //             return { error: true, message: result?.error }
-    //         }
-
-    //         agent.companyLogo = result;
-    //     }
-
-    //     await agent.save();
-    // }
-
-    // await user.save();
 
     return true;
   } catch (err) {
@@ -191,7 +76,7 @@ export const listCustomerUsers = async (dbInstance) => {
       order: [['id', 'DESC']],
     });
   } catch (err) {
-    console.log('listAgentUsersToAllocateServiceError', err);
+    console.log('listCustomerUsersServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
@@ -205,7 +90,7 @@ export const totalCustomers = async (dbInstance) => {
       order: [['id', 'DESC']],
     });
   } catch (err) {
-    console.log('listAgentUsersToAllocateServiceError', err);
+    console.log('totalCustomerServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
@@ -226,7 +111,7 @@ export const deleteCustomer = async (appointmentId, req) => {
 
     return true;
   } catch (err) {
-    console.log('deleteAppointmentServiceError', err);
+    console.log('deleteCustomerServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };

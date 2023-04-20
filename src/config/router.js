@@ -41,7 +41,6 @@ export default function (app) {
 
   // Login and Register
   app.use('/admin', adminUserRouter);
-  app.use('/role', roleRouter);
 
   app.use('/admin/auth', adminAuthRouter);
   app.use('/admin/agent', adminagentRouter);
