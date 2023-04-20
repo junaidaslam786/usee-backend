@@ -83,7 +83,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
             const user = await userService.createUserWithPassword({
                 firstName, 
                 lastName, 
-                email: toLowerCase(), 
+                email: email.toLowerCase(), 
                 password,
                 phoneNumber,
                 status: 1, 
