@@ -93,7 +93,7 @@ export const createProperty = async (reqBody, req) => {
             if (virtualTourType == VIRTUAL_TOUR_TYPE.URL) {
                 let virtualTourUrl = reqBody.virtualTourUrl;
                 if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
-                    const videoUrlDetail = videoUrl.split("?v=");
+                    const videoUrlDetail = virtualTourUrl.split("?v=");
                     if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
                         virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
                     }
@@ -218,7 +218,7 @@ export const updateProperty = async (reqBody, req) => {
             if (virtualTourType == VIRTUAL_TOUR_TYPE.URL) {
                 let virtualTourUrl = reqBody.virtualTourUrl;
                 if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
-                    const videoUrlDetail = videoUrl.split("?v=");
+                    const videoUrlDetail = virtualTourUrl.split("?v=");
                     if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
                         virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
                     }
