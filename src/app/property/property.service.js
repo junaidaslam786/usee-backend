@@ -92,12 +92,12 @@ export const createProperty = async (reqBody, req) => {
             // virtual tour
             if (virtualTourType == VIRTUAL_TOUR_TYPE.URL) {
                 let virtualTourUrl = reqBody.virtualTourUrl;
-                if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
-                    const videoUrlDetail = virtualTourUrl.split("?v=");
-                    if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
-                        virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
-                    }
-                }
+                // if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
+                //     const videoUrlDetail = virtualTourUrl.split("?v=");
+                //     if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
+                //         virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
+                //     }
+                // }
 
                 product.virtualTourUrl = virtualTourUrl;
             } else if (virtualTourType == VIRTUAL_TOUR_TYPE.VIDEO && req.files && req.files.virtualTourVideo) {
@@ -217,12 +217,12 @@ export const updateProperty = async (reqBody, req) => {
             // virtual tour
             if (virtualTourType == VIRTUAL_TOUR_TYPE.URL) {
                 let virtualTourUrl = reqBody.virtualTourUrl;
-                if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
-                    const videoUrlDetail = virtualTourUrl.split("?v=");
-                    if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
-                        virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
-                    }
-                }
+                // if (virtualTourUrl.indexOf('youtube.com') > 0 && virtualTourUrl.indexOf('?v=') > 0) {
+                //     const videoUrlDetail = virtualTourUrl.split("?v=");
+                //     if (videoUrlDetail.length > 0 && videoUrlDetail[1]) {
+                //         virtualTourUrl = `https://www.youtube.com/embed/${videoUrlDetail[1]}`;
+                //     }
+                // }
 
                 product.virtualTourUrl = virtualTourUrl;
             } else if (virtualTourType == VIRTUAL_TOUR_TYPE.VIDEO && req.files && req.files.virtualTourVideo) {
