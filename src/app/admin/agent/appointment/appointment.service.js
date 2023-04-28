@@ -23,7 +23,9 @@ export const listCompletedAppointments = async (agentInfo, reqBody, dbInstance) 
           as: 'agentUser',
           attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
-
+        { 
+          model: dbInstance.agentTimeSlot, 
+        },
       ],
       order: [['id', 'DESC']],
 
@@ -57,6 +59,9 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
         model: dbInstance.user,
         as: 'agentUser',
         attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
+      },
+      { 
+        model: dbInstance.agentTimeSlot, 
       },
     ],
   });
