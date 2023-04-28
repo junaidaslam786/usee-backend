@@ -295,7 +295,7 @@ export const updateAgentSnaglist = async (req, res, next) => {
  */
 export const listPropertiesAllocateToCustomer = async (req, res, next) => {
     try {
-      const result = await propertyService.listPropertiesAllocateToCustomer(req.user.id, req.dbInstance);
+      const result = await propertyService.listPropertiesAllocateToCustomer(req.query, req.dbInstance);
       if (result?.error && result?.message) {
           return next(createError(400, result.message));
       }

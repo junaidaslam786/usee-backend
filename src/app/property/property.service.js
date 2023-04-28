@@ -1098,7 +1098,7 @@ export const listPropertiesAllocateToCustomer = async (query, dbInstance) => {
             where: { 
                 status: PRODUCT_STATUS.ACTIVE, 
                 categoryId: PRODUCT_CATEGORIES.PROPERTY,
-                [OP.or]: [
+                [OP.and]: [
                     { title: { [OP.iLike]: `%${searchStr}%` } },
                 ]
             },
