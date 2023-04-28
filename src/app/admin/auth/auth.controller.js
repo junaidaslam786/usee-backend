@@ -21,6 +21,42 @@ export const login = async (req, res, next) => {
 };
 
 /**
+ * POST /auth/reset
+ * Login request
+ */
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const result = await authService.forgotPassword(req.body, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json({result, message: "A link has been sent to your email"});
+  } catch (err) {
+    console.log('loginError', err);
+    return next(err);
+  }
+};
+
+/**
+ * PUT /auth/update-password
+ * Login request
+ */
+export const updatePassword = async (req, res, next) => {
+  try {
+    const result = await authService.updatePassword(req.body, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json({result, message: "Your password has been updated successfully"});
+  } catch (err) {
+    console.log('loginError', err);
+    return next(err);
+  }
+};
+
+/**
  * GET /agent/user/list
  * List all users created by agent
  */

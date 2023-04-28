@@ -78,6 +78,81 @@ export const login = async (reqBody, dbInstance) => {
   }
 };
 
+export const forgotPassword = async (reqBody, dbInstance) => {
+  try {
+      const { email, type ='admin' } = reqBody;
+      const userModel = dbInstance.user;
+
+      // Find user by email address
+      const user = await userModel.findOne({ where: { email, user_type: type } });
+      if (!user) {
+          return { error: true, message: 'There is no user with this email address!'}
+      }
+
+      if (!user.status) {
+          return { error: true, message: 'Account is disabled, contact admin!'}
+      }
+
+      // Update remember token in database
+      user.rememberToken = utilsHelper.generateRandomString(32);
+      user.rememberTokenExpire = new Date();
+      await user.save();
+
+      const emailData = [];
+      emailData.name = user.fullName;
+      emailData.forgotPasswordLink = `${utilsHelper.generateUrl(('admin-forgot-password'), user.userType)}`;
+      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_FORGOT_PASSWORD), emailData);
+      const payload = {
+          to: email,
+          subject: EMAIL_SUBJECT.ADMIN_FORGOT_PASSWORD,
+          html: htmlData,
+      }
+      mailHelper.sendMail(payload);
+
+      return true;
+  } catch(err) {
+      console.log('forgotPasswordServiceError', err)
+      return { error: true, message: 'Server not responding, please try again later.'}
+  }
+}
+
+export const updatePassword = async (reqBody, dbInstance) => {
+  try {
+      const { email, password, type ='admin' } = reqBody;
+      const userModel = dbInstance.user;
+
+      // Find user by email address
+      const user = await userModel.findOne({ where: { email, user_type: type } });
+      if (!user) {
+          return { error: true, message: 'There is no user with this email address!'}
+      }
+
+      if (!user.status) {
+          return { error: true, message: 'Account is disabled, contact admin!'}
+      }
+      // Update password against email address
+      user.password = password
+      await user.save();
+
+      const emailData = [];
+      emailData.email = user.email;
+      emailData.name = user.fullName;
+      emailData.loginLink = `${utilsHelper.generateUrl(('admin-update-password'), user.userType)}`;
+      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_RESET_PASSWORD), emailData);
+      const payload = {
+          to: email,
+          subject: EMAIL_SUBJECT.ADMIN_RESET_PASSWORD,
+          html: htmlData,
+      }
+      mailHelper.sendMail(payload);
+
+      return true;
+  } catch(err) {
+      console.log('forgotPasswordServiceError', err)
+      return { error: true, message: 'Server not responding, please try again later.'}
+  }
+}
+
 export const registerAsAgent = async (reqBody, dbInstance) => {
   console.log('reqBody', reqBody)
   try {

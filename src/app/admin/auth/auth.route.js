@@ -7,6 +7,8 @@ import * as authValidations from './auth.request';
 const router = Router();
 
 router.post('/login', validate(authValidations.loginRules), authController.login);
+router.post('/forgot-password', validate(authValidations.forgotPasswordRules), authController.forgotPassword);
+router.put('/update-password', authController.updatePassword);
 router.post('/register-agent', validate(authValidations.registerAgentRules), authController.registerAgent);
 router.post('/register-customer', validate(authValidations.registerCustomerRules), authController.registerCustomer);
 

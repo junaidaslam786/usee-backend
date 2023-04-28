@@ -46,6 +46,12 @@ export const fileUpload = async (file, destPath, fileName) => {
 export const generateUrl = (type, userType) => {
     let url = (userType && userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL);
     switch (type) {
+        case 'admin-forgot-password':
+            url = `${url}/admin/update-password`;
+            break;
+        case 'admin-update-password':
+            url = `${url}/login`;
+            break;
         case 'agent-login':
             url = `${url}/agent/login`;
             break;
