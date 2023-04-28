@@ -29,11 +29,12 @@ export const listProperties = async (dbInstance) => {
 export const listPropertyRemovalRequest = async (dbInstance) => {
   try {
     const { count, rows } = await dbInstance.productRemoveRequest.findAndCountAll({
+      where: { status: { [Op.eq]: false } },
+
       include: [
         {
           model: dbInstance.product,
           as: 'product',
-          where: { status: { [Op.ne]: 'sold' } },
           include: [
             {
               model: dbInstance.user,
@@ -60,8 +61,15 @@ export const listPropertyRemovalRequest = async (dbInstance) => {
 };
 
 export const getPropertyById = async (propertyId, dbInstance) => {
-  const property = await dbInstance.product.findOne({
-    where: { id: propertyId },
+  const property = await dbInstance.productRemoveRequest.findOne({
+    where: { productId: propertyId },
+    include: [
+      {
+        model: dbInstance.product,
+        as: 'product',
+        attributes: ['title', 'status'],
+      },
+    ],
   });
   if (!property) {
     return false;
@@ -78,8 +86,8 @@ export const approvePropertyRemovalRequest = async (reqBody, dbInstance) => {
     if (!property) {
       return { error: true, message: 'Invalid property id or Property do not exist.' };
     }
-
-    property.status = reasonId === 1 ? PRODUCT_STATUS.SOLD : PRODUCT_STATUS.REMOVED;
+    property.status = true;
+    property.product.status = PRODUCT_STATUS.REMOVED;
 
     await property.save();
     return true;

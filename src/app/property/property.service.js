@@ -414,7 +414,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
         const page = (reqBody && reqBody.page) ? reqBody.page : 1;
         const status = (reqBody && reqBody.status) ? reqBody.status : {
-            [OP.notIn]: [PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
+            [OP.notIn]: [PRODUCT_STATUS.SOLD, PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
         };
     
         const { count, rows } = await dbInstance.product.findAndCountAll({
