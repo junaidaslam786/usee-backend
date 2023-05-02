@@ -40,7 +40,8 @@ export const USER_ALERT_MODE = {
     WISHLIST: "wishlist",
     INTEREST: "interest",
     OFFER: "offer",
-    CUSTOMER_APPOINTMENT: "customer_appointment"
+    APPOINTMENT: "appointment",
+    SNAGLIST: "snag_list",
 }
 
 export const USER_ALERT_TYPE = {
@@ -49,7 +50,9 @@ export const USER_ALERT_TYPE = {
     INTERESTED: 1,
     NOT_INTERESTED: 2,
     OFFER: 1,
-    CUSTOMER_APPOINTMENT: 1,
+    APPOINTMENT: 1,
+    SNAGLIST_UPDATED: 1,
+    SNAGLIST_APPROVED: 2,
 }
 
 export const OFFER_STATUS = {
@@ -65,23 +68,25 @@ export const APPOINTMENT_TYPES = {
 }
 
 export const EMAIL_SUBJECT = {
-    REGISTER_AGENT: "You have registered as agent at Usee360",
-    ADMIN_REGISTER_AGENT: "Usee360 admin added you as a agent",
+    REGISTER_AGENT: "You have registered as trader at Usee360",
+    ADMIN_REGISTER_AGENT: "Usee360 admin added you as a trader",
     REGISTER_CUSTOMER: "You have registered as customer at Usee360",
     ADMIN_REGISTER_CUSTOMER: "Usee360 admin added you as a customer",
     FORGOT_PASSWORD: "Your password change request has been received",
     ADMIN_FORGOT_PASSWORD: "Your password change request has been received",
     RESET_PASSWORD: "Your password on Usee360 has been changed",
     ADMIN_RESET_PASSWORD: "Your password on Usee360 has been changed",
-    AGENT_ADDED_CUSTOMER: "Agent has added you as a customer at Usee360",
-    AGENT_ADDED_AS: "Agent has added you as ",
+    AGENT_ADDED_CUSTOMER: "Trader has added you as a customer at Usee360",
+    AGENT_ADDED_AS: "Trader has added you as ",
     WISHLIST_ADD: "Customer has added your property to wishlist",
     WISHLIST_REMOVE: "Customer has removed your property to wishlist",
     OFFER: "Customer has made an offer to the property",
-    OFFER_UPDATE: "Agent has made an update on your offer",
+    OFFER_UPDATE: "Trader has made an update on your offer",
     JOIN_APPOINTMENT: "Usee 360 Appointment",
     UPDATE_JOIN_APPOINTMENT: "Usee 360 Appointment updated",
-    BOOK_DEMO: "Usee 360 Demo"
+    BOOK_DEMO: "Usee 360 Demo",
+    SNAGLIST_UPDATE: "Trader has made an update in the snaglist",
+    SNAGLIST_APPROVE: "Trader has approved the snaglist",
 }
 
 export const EMAIL_TEMPLATE_PATH = {
@@ -102,4 +107,42 @@ export const EMAIL_TEMPLATE_PATH = {
     AGENT_JOIN_APPOINTMENT: "email-template/agent-join-appointment.ejs",
     SUPERVISOR_JOIN_APPOINTMENT: "email-template/supervisor-join-appointment.ejs",
     BOOK_DEMO: "email-template/book-demo.ejs",
+    SNAGLIST_UPDATE: "email-template/property-snaglist-update.ejs",
 }
+
+export const DASHBOARD_FILTER = {
+    CUSTOM: "custom",
+    TODAY: "today",
+    YESTERDAY: "yesterday",
+    CURRENT_MONTH: "this_month",
+    PAST_MONTH: "past_month",
+    PAST_3_MONTH: "past_3_months"
+};
+
+export const APPOINTMENT_STATUS = {
+    PENDING: "pending",
+    INPROGRESS: "inprogress",
+    COMPLETED: "completed",
+    CANCELLED: "cancelled",
+};
+
+export const APPOINTMENT_LOG_TYPE = {
+    JOINED: "joined",
+    LEFT: "left",
+};
+
+export const PRODUCT_LOG_TYPE = {
+    WISHLIST_ADDED: "wishlist_added",
+    WISHLIST_REMOVED: "wishlist_removed",
+    INTERESTED: "interested",
+    NOT_INTERESTED: "not_interested",
+    OFFER: "offer_made",
+    OFFER_REJECTED: "offer_rejected",
+    OFFER_APPROVED: "offer_approved",
+    APPOINTMENT_CREATED: "appointment_created",
+    APPOINTMENT_COMPLETED: "appointment_completed",
+    APPOINTMENT_CANCELLED: "appointment_cancelled",
+    SNAGLIST_UPDATED: "snaglist_added",
+    SNAGLIST_APPROVED: "snaglist_approved",
+    VIEWED: "viewed",
+};

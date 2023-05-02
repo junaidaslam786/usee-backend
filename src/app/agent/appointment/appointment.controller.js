@@ -108,3 +108,39 @@ export const getSessionToken = async (req, res, next) => {
       next(err);
   }
 };
+
+/**
+ * PUT /agent/appointment/status
+ * Update status of the appointment
+ */
+export const updateStatusAppointment = async (req, res, next) => {
+    try {
+        const result = await appointmentService.updateStatus(req.body, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Appointment status updated successfully" });
+    } catch (err) {
+        console.log('updateStatusAppointmentError', err);
+        next(err);
+    }
+};
+
+/**
+ * POST /agent/appointment/log
+ * add logs of the appointment
+ */
+export const addAppointmentLog = async (req, res, next) => {
+    try {
+        const result = await appointmentService.addLog(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Appointment log added successfully" });
+    } catch (err) {
+        console.log('addAppointmentLogError', err);
+        next(err);
+    }
+};

@@ -13,8 +13,8 @@ export default function (sequelize) {
       return this.userType.charAt(0).toUpperCase() + this.userType.slice(1);
     }
 
-    generateToken(expiresIn = '4h') {
-      const data = { id: this.id, email: this.email };
+    generateToken(expiresIn = '4h', agentProfile) {
+      const data = { id: this.id, name: this.fullName, phoneNumber: this.phoneNumber, profileImage: this.profileImage, email: this.email, agent: agentProfile || this.agent };
       return tokenHelper.generateToken(data, expiresIn);
     }
 

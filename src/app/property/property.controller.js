@@ -306,3 +306,39 @@ export const listPropertiesAllocateToCustomer = async (req, res, next) => {
       return next(err);
     }
 };
+
+/**
+ * GET /property/offer/:id
+ * Get property offer detail by id
+ */
+export const getPropertyOffer = async (req, res, next) => {
+    try {
+        const result = await propertyService.getPropertyOffer((req.params?.id ? req.params?.id : 0), req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        res.status(200).json(result);
+    } catch (err) {
+        console.log('getPropertyOfferError', err);
+        next(err);
+    }
+};
+
+/**
+ * POST /property/log
+ * add logs of the property
+ */
+export const addPropertyLog = async (req, res, next) => {
+    try {
+        const result = await propertyService.addLog(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Property log added successfully" });
+    } catch (err) {
+        console.log('addPropertyLogError', err);
+        next(err);
+    }
+};

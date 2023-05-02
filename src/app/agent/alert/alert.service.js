@@ -1,45 +1,39 @@
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
-import { USER_ALERT_MODE, USER_ALERT_TYPE } from '../../../config/constants';
 
 export const getAgentAlerts = async (userId, dbInstance) => {
     try {
         const alerts = await dbInstance.userAlert.findAll({
-            where: { 
-                removed: false,
-                productId: { [OP.in]: Sequelize.literal(`(select id from products where user_id = '${userId}')`) }
+            where: {
+              removed: false,
             },
-            include: [{
-                model: dbInstance.user, 
+            include: [
+              {
+                model: dbInstance.user,
                 where: { deletedAt: null },
                 attributes: ["id", "firstName", "lastName"],
-            },
-            {
-                model: dbInstance.product, 
-                attributes: ["id", "title"],
-            }],
+              },
+              {
+                model: dbInstance.product,
+                where: { userId },
+                attributes: ["id", "title"]
+              },
+            ],
             order: [["id", "DESC"]],
         });
 
-        const formatedAlerts = [];
-        const alertIds = [];
+        const alertIds = alerts.map((alert) => alert.id);
 
-        for(const alert of alerts) {
-            alertIds.push(alert.id);
-            formatedAlerts.push({
-                id: alert.id,
-                text: formatAlertText(alert),
-                createdAt: alert.createdAt
-            });
-        }
-
-        await dbInstance.userAlert.update({ viewed: true }, {
-            where: {
-                id: alertIds
+        await dbInstance.userAlert.update(
+            { viewed: true },
+            {
+                where: {
+                    id: alertIds,
+                },
             }
-        });
+        );
 
-        return formatedAlerts
+        return alerts;
     } catch(err) {
         console.log('getAgentAlertsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
@@ -75,6 +69,7 @@ export const createAgentAlert = async (reqBody, req) => {
         const agentAlert = await dbInstance.userAlert.create({
             customerId: customerInfo.id,
             productId,
+            keyId: reqBody?.keyId ? reqBody?.keyId : null,
             alertMode,
             alertType,
             removed: false,
@@ -120,7 +115,12 @@ export const getAgentAlertDetailById = async (id, dbInstance) => {
         {
             model: dbInstance.product, 
             attributes: ["id", "title"],
-        }],
+        },
+        {
+            model: dbInstance.apppointment, 
+            attributes: ["id"],
+        }
+        ],
     });
 
     if (!agentAlert) {
@@ -128,39 +128,4 @@ export const getAgentAlertDetailById = async (id, dbInstance) => {
     }
 
     return agentAlert;
-}
-
-const formatAlertText = (alert) => {
-    let text = "";
-    const customerName = `<b>${alert.user.firstName} ${alert.user.lastName}</b>`;
-    const productTitle = `<b>"${alert.product.title}"</b>`;
-
-    switch(alert.alertMode) {
-        case USER_ALERT_MODE.WISHLIST: 
-            text = `${customerName} removed the property ${productTitle} from wishlist`;
-            if (alert.alertType == USER_ALERT_TYPE.WISHLIST_ADDED) {
-                text = `${customerName} added the property ${productTitle} to wishlist`;
-            }
-            
-            break;
-        case USER_ALERT_MODE.INTEREST: 
-            text = `${customerName} is interested in property ${productTitle}`;
-            if (alert.alertType == USER_ALERT_TYPE.NOT_INTERESTED) {
-                text = `${customerName} is not interested in property ${productTitle}`;
-            }
-
-            break;
-        case USER_ALERT_MODE.OFFER: 
-            text = `${customerName} made an offer for the property ${productTitle}`;
-
-            break;
-        case USER_ALERT_MODE.CUSTOMER_APPOINTMENT: 
-            text = `${customerName} made an appointment for the property ${productTitle}`;
-
-            break;
-        default:
-            break;
-    }
-    
-    return text;
 }

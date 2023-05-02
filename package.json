@@ -15,7 +15,8 @@
     "lint:fix": "eslint . --fix",
     "test": "NODE_ENV=test mocha --require @babel/register --exit",
     "db:migrate": "npx sequelize-cli db:migrate",
-    "db:seed": "npx sequelize-cli db:seed:all"
+    "db:seed": "npx sequelize-cli db:seed:all",
+    "db:create-migration": "npx sequelize-cli migration:create --name $1"
   },
   "dependencies": {
     "@sentry/node": "^6.7.2",
@@ -32,7 +33,7 @@
     "express-fileupload": "^1.4.0",
     "express-validator": "^6.4.1",
     "http-errors": "~1.6.3",
-    "jsonwebtoken": "^9.0.0",
+    "jsonwebtoken": "8.5.1",
     "morgan": "~1.9.1",
     "nodemailer": "^6.4.16",
     "opentok": "^2.16.0",

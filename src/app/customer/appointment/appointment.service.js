@@ -1,7 +1,17 @@
 import db from '@/database';
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE } from '@/config/constants';
+import { 
+  EMAIL_TEMPLATE_PATH,
+  EMAIL_SUBJECT, 
+  USER_TYPE, 
+  USER_ALERT_MODE, 
+  USER_ALERT_TYPE,
+  APPOINTMENT_TYPES,
+  APPOINTMENT_STATUS
+} from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
 
@@ -9,9 +19,23 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
   try {
     const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
+    const appointmentType = (reqBody && reqBody.type) ? reqBody.type : "upcoming";
+
+    const whereClause = { customerId: customerInfo.id };
+    whereClause.status = APPOINTMENT_STATUS.PENDING;
+    
+    if (appointmentType === APPOINTMENT_TYPES.COMPLETED) {
+      whereClause.status = {
+        [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.COMPLETED]
+      };
+    }
+
+    if (appointmentType === APPOINTMENT_TYPES.CANCELLED) {
+      whereClause.status = APPOINTMENT_STATUS.CANCELLED;
+    }
 
     const { count, rows } = await dbInstance.appointment.findAndCountAll({
-      where: { customerId: customerInfo.id },
+      where: whereClause,
       include: [
         { 
           model: dbInstance.product, 
@@ -108,7 +132,7 @@ export const createAppointment = async (req, dbInstance) => {
       });
 
       if (!agentSupervisor) {
-        return { error: true, message: 'Agent has not added any supervisor yet. Please select another slot for agent.' };
+        return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} has not added any supervisor yet. Please select another slot for agent.` };
       }
 
       // Check if there's an existing appointment
@@ -134,7 +158,7 @@ export const createAppointment = async (req, dbInstance) => {
       });
 
       if (existingAppointment) {
-        return { error: true, message: 'Agent already has an appointment at this slot, please select another slot.' };
+        return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} already has an appointment at this slot, please select another slot.` };
       }
     }
 
@@ -174,8 +198,9 @@ export const createAppointment = async (req, dbInstance) => {
       await dbInstance.userAlert.create({
         customerId: customerDetails.id,
         productId: property,
-        alertMode: USER_ALERT_MODE.CUSTOMER_APPOINTMENT,
-        alertType: USER_ALERT_TYPE.CUSTOMER_APPOINTMENT,
+        keyId: appointment.id,
+        alertMode: USER_ALERT_MODE.APPOINTMENT,
+        alertType: USER_ALERT_TYPE.APPOINTMENT,
         removed: false,
         viewed: false,
         emailed: false,

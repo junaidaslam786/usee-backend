@@ -4,9 +4,9 @@
     <td valign="top" style="color:#92778a;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px;">
         <p>Hello <%= name %>,</p>
         <span>
-            <%= process.env.AGENT_ENTITY_LABEL %> has <%= status %> your offer to the property.
+            <%= process.env.AGENT_ENTITY_LABEL %> has <%= status %> the snaglist.
             <br> <br> 
-            <b style="color:#3e2837;font-weight:700;"> <%= propertyTitle %></b> 
+            <a href="<%= process.env.HOME_PANEL_URL %>/customer/property-details/<%= propertyId %>"><b style="color:#3e2837;font-weight:700;"> <%= propertyTitle %> (click to see details)</b> </a>
         </span>
     </td>
 </tr>

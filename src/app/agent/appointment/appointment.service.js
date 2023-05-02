@@ -1,7 +1,17 @@
 import db from '@/database';
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, USER_TYPE, AGENT_TYPE } from '@/config/constants';
+import { 
+  EMAIL_TEMPLATE_PATH, 
+  EMAIL_SUBJECT, 
+  USER_TYPE, 
+  AGENT_TYPE, 
+  APPOINTMENT_STATUS, 
+  APPOINTMENT_LOG_TYPE,
+  APPOINTMENT_TYPES
+} from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
 
@@ -9,8 +19,21 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
   try {
     const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
+    const appointmentType = (reqBody && reqBody.type) ? reqBody.type : "upcoming";
 
     const whereClause = agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { allotedAgent: agentInfo.id };
+    whereClause.status = APPOINTMENT_STATUS.PENDING;
+    
+    if (appointmentType === APPOINTMENT_TYPES.COMPLETED) {
+      whereClause.status = {
+        [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.COMPLETED]
+      };
+    }
+
+    if (appointmentType === APPOINTMENT_TYPES.CANCELLED) {
+      whereClause.status = APPOINTMENT_STATUS.CANCELLED;
+    }
+
     const { count, rows } = await dbInstance.appointment.findAndCountAll({
       where: whereClause,
       include: [
@@ -126,7 +149,7 @@ export const createAppointment = async (req, dbInstance) => {
         });
 
         if (existingAppointment) {
-          return { error: true, message: 'Agent already has an appointment at this slot, please select another slot.' };
+          return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} already has an appointment at this slot, please select another slot.` };
         }
       }
 
@@ -452,5 +475,75 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
     }
 
     return customerDetails
+  }
+}
+
+export const updateStatus = async (reqBody, dbInstance) => {
+  try {
+    const { id, status } = reqBody;
+
+    const appointment = await dbInstance.appointment.findOne({
+      where: { id },
+      attributes: ['id']
+    });
+
+    if (!appointment) {
+      return { error: true, message: 'Invalid appointment id or Appointment do not exist.'};
+    } 
+
+    if (!Object.values(APPOINTMENT_STATUS).includes(status)) {
+      return { error: true, message: 'Invalid status.'};
+    } 
+    
+    appointment.status = status;
+    if (status === APPOINTMENT_STATUS.INPROGRESS) {
+      appointment.startMeetingTime = Date.now();
+    }
+
+    if (status === APPOINTMENT_STATUS.COMPLETED) {
+      appointment.endMeetingTime = Date.now();
+    }
+
+    await appointment.save();
+
+    return true;
+  } catch(err) {
+    console.log('updateStatusServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.'}
+  }
+}
+
+export const addLog = async (reqBody, req) => {
+  try {
+    const { id, logType, reason } = reqBody;
+    const { user: userInfo, dbInstance } = req; 
+
+    const appointment = await dbInstance.appointment.findOne({
+      where: { id },
+      attributes: ['id']
+    });
+
+    if (!appointment) {
+      return { error: true, message: 'Invalid appointment id or Appointment do not exist.'};
+    } 
+
+    if (!Object.values(APPOINTMENT_LOG_TYPE).includes(logType)) {
+      return { error: true, message: 'Invalid log type.'};
+    } 
+
+    // Create appointment log
+    await dbInstance.appointmentLog.create({
+      userId: userInfo.id,
+      appointmentId: id,
+      userType: userInfo.userType,
+      logType,
+      reason,
+      addedAt: Date.now(),
+    });
+    
+    return true;
+  } catch(err) {
+    console.log('addLogServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.'}
   }
 }

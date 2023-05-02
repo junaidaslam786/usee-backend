@@ -20,10 +20,12 @@ router.delete('/image', isAuthenticated, validate(propertyValidations.deleteProp
 router.post('/removal-request', isAuthenticated, validate(propertyValidations.removalRequestRules), propertyController.removePropertyRequest);
 
 // offer
+router.get('/offer/:id', isAuthenticated, propertyController.getPropertyOffer);
 router.post('/customer/make-offer', isAuthenticated, validate(propertyValidations.customerOfferRequestRules), propertyController.addCustomerOffer);
 router.delete('/customer/offer/:id', isAuthenticated, propertyController.deleteCustomerOffer);
 router.post('/agent/update-offer', isAuthenticated, validate(propertyValidations.updateOfferStatusRequestRules), propertyController.updateOfferStatus);
 router.post('/customer/snag-list', isAuthenticated, propertyController.updateCustomerSnaglist);
 router.post('/agent/snag-list', isAuthenticated, propertyController.updateAgentSnaglist);
+router.post('/log', isAuthenticated, validate(propertyValidations.addPropertyLogRules), propertyController.addPropertyLog);
 
 export default router;

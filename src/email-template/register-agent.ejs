@@ -1,9 +1,9 @@
-<%- include('layout/header.ejs', { subject: "Register as an agent" }) %>
+<%- include('layout/header.ejs', { subject: `Register as ${process.env.AGENT_ENTITY_LABEL}` }) %>
 
 <tr>
     <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 20px;">
         <span style="color:#3e2837;font-size: 22px;font-family:'Manrope', sans-serif;font-weight:700;">
-            <b> Agent Registration </b>
+            <b> <%= process.env.AGENT_ENTITY_LABEL %> Registration </b>
         </span>
     </td>
 </tr>

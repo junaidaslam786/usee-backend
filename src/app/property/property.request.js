@@ -107,3 +107,16 @@ export const updateOfferStatusRequestRules = [
   body('offerId').exists().withMessage('Please provide offer id').notEmpty().withMessage('Please provide offer id'),
   body('status').exists().withMessage('Please provide status').notEmpty().withMessage('Please provide status'),
 ];
+
+export const addPropertyLogRules = [
+  body('id')
+    .exists()
+    .withMessage('Id not provided')
+    .notEmpty()
+    .withMessage('Id cannot be empty'),
+  body('logType')
+    .exists()
+    .withMessage('Log type not provided')
+    .notEmpty()
+    .withMessage('Log type cannot be empty'),
+];

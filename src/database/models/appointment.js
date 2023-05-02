@@ -8,6 +8,7 @@ export default function (sequelize) {
       Appointment.belongsTo(models.user, { foreignKey: 'customerId', as: 'customerUser' });
       Appointment.belongsTo(models.user, { foreignKey: 'allotedAgent', as: 'allotedAgentUser' });
       Appointment.belongsTo(models.agentTimeSlot, { foreignKey: 'timeSlotId' });
+      Appointment.hasMany(models.appointmentLog, { foreignKey: 'appointmentId'})
     }
   }
 
@@ -61,6 +62,17 @@ export default function (sequelize) {
     sessionId: {
       type: DataTypes.STRING,
       field: 'session_id'
+    },
+    status: {
+      type: DataTypes.STRING,
+    },
+    startMeetingTime: {
+      type: DataTypes.STRING,
+      field: 'start_meeting_time'
+    },
+    endMeetingTime: {
+      type: DataTypes.STRING,
+      field: 'end_meeting_time'
     },
     createdAt: {
       allowNull: false,

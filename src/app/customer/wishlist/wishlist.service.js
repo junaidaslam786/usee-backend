@@ -119,7 +119,7 @@ export const removeProductFromWishlist = async (productId, req) => {
 
         const wishlist = await getWishlistByUserAndProductId(customerInfo.id, productId, dbInstance);
         if (!wishlist) {
-            return { error: true, message: 'Invalid product id or wishlist do not exist.'}
+            return { error: true, message: 'Invalid wishlist id or wishlist do not exist.'}
         }
 
         await db.transaction(async (transaction) => {

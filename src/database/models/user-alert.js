@@ -30,6 +30,9 @@ export default function (sequelize) {
         key: 'id',
       }
     },
+    keyId: {
+      type: DataTypes.UUID,
+    },
     alertMode: {
       type: DataTypes.STRING,
     },

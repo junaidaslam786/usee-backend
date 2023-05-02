@@ -80,3 +80,29 @@ export const updateAppointmentRules = [
     //     });
     //   }),
 ];
+
+export const updateStatusAppointmentRules = [
+  body('id')
+    .exists()
+    .withMessage('Id not provided')
+    .notEmpty()
+    .withMessage('Id cannot be empty'),
+  body('status')
+    .exists()
+    .withMessage('Status not provided')
+    .notEmpty()
+    .withMessage('Status cannot be empty'),
+];
+
+export const addAppointmentLogRules = [
+  body('id')
+    .exists()
+    .withMessage('Id not provided')
+    .notEmpty()
+    .withMessage('Id cannot be empty'),
+  body('logType')
+    .exists()
+    .withMessage('Log type not provided')
+    .notEmpty()
+    .withMessage('Log type cannot be empty'),
+];

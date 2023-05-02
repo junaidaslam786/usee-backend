@@ -1,6 +1,17 @@
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
-import { PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH } from '../../config/constants';
+import { 
+    PRODUCT_STATUS, 
+    PRODUCT_CATEGORIES, 
+    PROPERTY_ROOT_PATHS, 
+    VIRTUAL_TOUR_TYPE, 
+    USER_ALERT_MODE, 
+    USER_ALERT_TYPE, 
+    OFFER_STATUS, 
+    EMAIL_SUBJECT, 
+    EMAIL_TEMPLATE_PATH, 
+    PRODUCT_LOG_TYPE
+ } from '../../config/constants';
 import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
 import * as userService from '../user/user.service'
@@ -490,6 +501,9 @@ export const removePropertyRequest = async (reqUser, reqBody, dbInstance) => {
         }
 
         property.status = reasonId === 1 ? PRODUCT_STATUS.SOLD : PRODUCT_STATUS.REMOVED;
+        if (reasonId === 1) {
+            property.soldTime = Date.now();
+        }
         await property.save();
 
         await dbInstance.productRemoveRequest.create({
@@ -516,7 +530,7 @@ export const addCustomerOffer = async (reqBody, req) => {
 
         const product = await getPropertyById(productId, dbInstance);
         if (product.status === PRODUCT_STATUS.UNDER_OFFER) {
-            return { error: true, message: 'Agent no longer accepting offers.'}
+            return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} no longer accepting offers.`}
         }
 
         const offer = await dbInstance.productOffer.findOne({ where: { customerId: customerInfo.id, productId, status: { [OP.ne]: OFFER_STATUS.REJECTED } } });
@@ -530,7 +544,7 @@ export const addCustomerOffer = async (reqBody, req) => {
 
         await db.transaction(async (transaction) => {
             // add offer to the product
-            await dbInstance.productOffer.create({
+            const productOffer = await dbInstance.productOffer.create({
                 customerId: customerInfo.id,
                 productId,
                 amount,
@@ -542,6 +556,7 @@ export const addCustomerOffer = async (reqBody, req) => {
             await dbInstance.userAlert.create({
                 customerId: customerInfo.id,
                 productId,
+                keyId: productOffer.id,
                 alertMode: USER_ALERT_MODE.OFFER,
                 alertType: USER_ALERT_TYPE.OFFER,
                 removed: false,
@@ -972,6 +987,19 @@ export const updateCustomerSnaglist = async (reqBody, req) => {
                 await dbInstance.productSnagListItem.bulkCreate(snagListItemToSave, { transaction });
             }
 
+            // create agent alert
+            await dbInstance.userAlert.create({
+                customerId: customerInfo.id,
+                productId: offer.productId,
+                keyId: offer.id,
+                alertMode: USER_ALERT_MODE.SNAGLIST,
+                alertType: isApprovedByCustomer ? USER_ALERT_TYPE.SNAGLIST_APPROVED : USER_ALERT_TYPE.SNAGLIST_UPDATED,
+                removed: false,
+                viewed: false,
+                emailed: false,
+                createdBy: customerInfo.id
+            }, { transaction });
+
             return snagList;
         });
 
@@ -995,9 +1023,15 @@ export const updateAgentSnaglist = async (reqBody, req) => {
                 model: dbInstance.product,
                 where: {
                     userId: agentInfo.id
-                }
+                },
+                attributes: ["title", "featuredImage"]
+            },
+            {
+                model: dbInstance.user,
+                attributes: ["firstName", "lastName", "email"]
             }]
         });
+
         if (!offer) {
             return { error: true, message: 'Invalid offer id or offer do not exist.'}
         }
@@ -1036,6 +1070,22 @@ export const updateAgentSnaglist = async (reqBody, req) => {
                     });
                 });
                 await dbInstance.productSnagListItem.bulkCreate(snagListItemToSave, { transaction });
+            }
+
+            if (offer?.user?.email) {
+                const emailData = [];
+                emailData.name = `${offer.user.firstName} ${offer.user.lastName}`;
+                emailData.status = isApprovedByAgent ? "approved" : "updated";
+                emailData.propertyId = offer.productId;
+                emailData.propertyTitle = offer.product.title;
+                emailData.propertyImage = `${process.env.APP_URL}/${offer.product.featuredImage}`;
+                const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.SNAGLIST_UPDATE), emailData);
+                const payload = {
+                    to: offer.user.email,
+                    subject: isApprovedByAgent ? EMAIL_SUBJECT.SNAGLIST_APPROVE : EMAIL_SUBJECT.SNAGLIST_UPDATE,
+                    html: htmlData,
+                }
+                mailHelper.sendMail(payload);
             }
 
             return snagList;
@@ -1113,6 +1163,58 @@ export const listPropertiesAllocateToCustomer = async (query, dbInstance) => {
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
+
+export const getPropertyOffer = async (offerId, dbInstance) => {
+    try {
+        const propertyOffer = await dbInstance.productOffer.findOne({
+            where: {
+                id: offerId
+            },
+        });
+
+        if (!propertyOffer) {
+            return { error: true, message: 'Invalid offer id or Offer do not exist.'}
+        }
+
+        return propertyOffer;
+    } catch(err) {
+        console.log('getPropertyOfferError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const addLog = async (reqBody, req) => {
+    try {
+      const { id, logType } = reqBody;
+      const { user: userInfo, dbInstance } = req; 
+  
+      const product = await dbInstance.product.findOne({
+        where: { id },
+        attributes: ['id']
+      });
+  
+      if (!product) {
+        return { error: true, message: 'Invalid property id or property do not exist.'};
+      } 
+  
+      if (!Object.values(PRODUCT_LOG_TYPE).includes(logType)) {
+        return { error: true, message: 'Invalid log type.'};
+      } 
+  
+      // Create product log
+      await dbInstance.productLog.create({
+        userId: userInfo.id,
+        productId: id,
+        userType: userInfo.userType,
+        logType,
+      });
+      
+      return true;
+    } catch(err) {
+      console.log('addLogServiceError', err)
+      return { error: true, message: 'Server not responding, please try again later.'}
+    }
+  }
 
 // Define the Haversine formula function
 function haversine(lat1, lon1, lat2, lon2) {

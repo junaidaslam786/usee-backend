@@ -23,6 +23,10 @@ export const login = async (reqBody, dbInstance) => {
         // Find user by email address
         const user = await dbInstance.user.findOne({ 
             include: [
+                { 
+                    model: dbInstance.agent, 
+                    attributes: ["jobTitle", "agentType"],
+                },
                 {
                     attributes: ["id", "name"],
                     model: dbInstance.role, as: 'role',
@@ -51,7 +55,7 @@ export const login = async (reqBody, dbInstance) => {
 
         // Generate and return token
         const token = user.generateToken();
-        const refreshToken = user.generateToken('4h');
+        // const refreshToken = user.generateToken('4h');
 
         const userData = {
             firstName: user.firstName,
@@ -66,7 +70,8 @@ export const login = async (reqBody, dbInstance) => {
                 permissions: user.role.permissions
             } : null   
         };
-        return { user: userData, token, refreshToken };
+
+        return { user: userData, token };
     } catch(err) {
         console.log('loginServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
@@ -116,8 +121,8 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
             }
 
             // Generate and return tokens
-            const token = user.generateToken();
-            const refreshToken = user.generateToken('4h');
+            const token = user.generateToken('4h', agent);
+            // const refreshToken = user.generateToken('4h');
 
             const returnedUserData = {
                 firstName: user.firstName,
@@ -140,7 +145,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
             }
             mailHelper.sendMail(payload);
 
-            return { user: returnedUserData, token, refreshToken };
+            return { user: returnedUserData, token };
         });
        return result;
     } catch(err) {

@@ -11,6 +11,7 @@ export default function (sequelize) {
       Product.hasMany(models.productAllocation, { foreignKey: 'productId'})
       Product.belongsToMany(models.appointment, { through: 'appointment_products', updatedAt: false, unique: false });
       Product.hasMany(models.productOffer, { foreignKey: 'productId'})
+      Product.hasMany(models.productLog, { foreignKey: 'productId'})
     }
   }
 
@@ -82,6 +83,9 @@ export default function (sequelize) {
     geometry: {
       type: DataTypes.GEOMETRY('POINT'),
       allowNull: true,
+    },
+    soldTime: {
+      type: DataTypes.STRING,
     },
     createdBy: {
         type: DataTypes.UUID,
