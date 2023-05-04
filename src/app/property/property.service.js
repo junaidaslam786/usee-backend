@@ -418,8 +418,11 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
         };
     
         const { count, rows } = await dbInstance.product.findAndCountAll({
-            where: { 
+            where: {
                 status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
+                title: {
+                    [OP.like]: '%' + reqBody.search + '%'
+                },
                 [OP.or]: [
                     { userId },
                     { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${userId}')`) }}
@@ -854,7 +857,7 @@ export const listHomePageProperties = async (reqBody, req) => {
             }
             if(reqBody.rooms) {
                 const index = el.productMetaTags.findIndex(category => category.categoryField.id === 5)
-                if(index === -1 || el.productMetaTags[index].value < reqBody.rooms) {
+                if(index === -1 || el.productMetaTags[index].value !== reqBody.rooms) {
                     return
                 }
             }
