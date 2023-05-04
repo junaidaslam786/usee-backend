@@ -129,6 +129,8 @@ export const APPOINTMENT_STATUS = {
 export const APPOINTMENT_LOG_TYPE = {
     JOINED: "joined",
     LEFT: "left",
+    COMPLETED: "completed",
+    CANCELLED: "cancelled",
 };
 
 export const PRODUCT_LOG_TYPE = {
