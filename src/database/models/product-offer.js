@@ -36,7 +36,7 @@ export default function (sequelize) {
       allowNull: false,
     },
     notes: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
     },
     status: {
       type: DataTypes.STRING,
