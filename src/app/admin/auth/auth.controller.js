@@ -75,6 +75,23 @@ export const listAgentUsers = async (req, res, next) => {
 };
 
 /**
+ * POST /auth/register-admin
+ * Register admin request
+ */
+export const registerAdmin = async (req, res, next) => {
+  try {
+    const result = await authService.registerAsAdmin(req.body, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * POST /auth/register-agent
  * Register agent request
  */

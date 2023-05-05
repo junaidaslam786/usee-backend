@@ -59,6 +59,7 @@ export const login = async (reqBody, dbInstance) => {
     const refreshToken = user.generateToken('4h');
 
     const userData = {
+      id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       phoneNumber: user.phoneNumber,
@@ -153,6 +154,88 @@ export const updatePassword = async (reqBody, dbInstance) => {
   }
 }
 
+export const registerAsAdmin = async (reqBody, dbInstance) => {
+  try {
+    const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
+    const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber, jobTitle } = reqBody;
+    
+    const result = await db.transaction(async (transaction) => {
+        // Create user
+        const user = await userService.createUserWithPassword({
+            firstName, 
+            lastName, 
+            email,
+            password,
+            phoneNumber,
+            status: 1, 
+            userType: USER_TYPE.ADMIN,
+        }, transaction);
+        console.log('user', user)
+
+        // create agent profile
+        const agent = await agentTable.create({
+            userId: user.id,
+            companyName, 
+            companyPosition,
+            jobTitle,
+            licenseNo: reqBody?.licenseNo ? reqBody.licenseNo : "",
+            agentType: AGENT_TYPE.AGENT, 
+            apiCode: utilsHelper.generateRandomString(10, true),
+        }, { transaction });
+        console.log('agent', agent)
+
+        const timeslots = await agentTimeSlot.findAll();
+        for (let day = 1; day <= 7; day++) {
+            let agentAvailabilities = [];
+            for (const slot of timeslots) {
+                agentAvailabilities.push({
+                    userId: user.id,
+                    dayId: day,
+                    timeSlotId: slot.id,
+                    status: true,
+                });
+            }
+            await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
+        }
+
+        // Generate and return tokens
+        const token = user.generateToken();
+        const refreshToken = user.generateToken('4h');
+
+        const returnedUserData = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            companyName: agent.companyName,
+            companyPosition: agent.companyPosition,
+            phoneNumber: user.phoneNumber,
+            email: user.email,
+            type: user.userTypeDisplay,
+        };
+
+        const emailData = [];
+        emailData.name = user.fullName;
+        emailData.type = user.userType;
+        emailData.tempPass = reqBody.password;
+        emailData.login = utilsHelper.generateUrl('agent-login', user.userType);
+        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD), emailData);
+        const payload = {
+            to: user.email,
+            subject: EMAIL_SUBJECT.ADMIN_REGISTER_AGENT,
+            html: htmlData,
+            body: `Please login through ${user.email, user.password}`
+        }
+        mailHelper.sendMail(payload);
+
+        return { user: returnedUserData, token, refreshToken };
+    });
+   return result;
+} catch(err) {
+    console.log('registerAsAgentError', err)
+    return { error: true, message: 'Server not responding, please try again later.'}
+}
+};
+
+
 export const registerAsAgent = async (reqBody, dbInstance) => {
   console.log('reqBody', reqBody)
   try {
@@ -182,7 +265,6 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
             agentType: AGENT_TYPE.AGENT, 
             apiCode: utilsHelper.generateRandomString(10, true),
         }, { transaction });
-        console.log('agent', agent)
 
         const timeslots = await agentTimeSlot.findAll();
         for (let day = 1; day <= 7; day++) {

@@ -11,6 +11,11 @@ export const listProperties = async (dbInstance) => {
           where: { deletedAt: null },
           attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
+        {
+          model: dbInstance.productRemoveRequest,
+          as: 'removeRequest',
+          // where: { deletedAt: null },
+        },
       ],
 
       order: [['id', 'DESC']],

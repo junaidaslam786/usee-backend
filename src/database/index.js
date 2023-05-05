@@ -4,6 +4,12 @@ import * as config from '@/config/sequelize';
 
 // import models
 import agentModel from './models/agent';
+import cmsPages from './models/cms-page';
+import cmsAssets from './models/cms-asset';
+import cmsPageCategoryFields from './models/cms-page-category-field';
+import cmsCommunityPost from './models/cms-community-post';
+import cmsCommunityPostComment from './models/cms-community-post-comment';
+import cmsCommunityCategoryField from './models/cms-community-category-field';
 import agentAvailabilityModel from './models/agent-availability';
 import agentBranchModel from './models/agent-branch';
 import agentTimeSlotModel from './models/agent-time-slot';
@@ -46,6 +52,12 @@ const sequelize = new Sequelize(sequelizeConfig);
 // Import all model files
 const modelDefiners = [
   agentModel,
+  cmsPages,
+  cmsAssets,
+  cmsPageCategoryFields,
+  cmsCommunityPost,
+  cmsCommunityPostComment,
+  cmsCommunityCategoryField,
   agentAvailabilityModel,
   agentBranchModel,
   agentTimeSlotModel,
@@ -76,7 +88,7 @@ const modelDefiners = [
   bookDemo,
   productLogModel,
   appointmentLogModel,
-  appointmentNoteModel
+  appointmentNoteModel,
 ];
 
 // eslint-disable-next-line no-restricted-syntax

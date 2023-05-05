@@ -3,6 +3,8 @@ import authRouter from '../app/auth/auth.route';
 import adminAuthRouter from '../app/admin/auth/auth.route';
 import userRouter from '../app/user/user.route';
 import adminUserRouter from '../app/admin/user/user.route';
+import adminNewsRouter from '../app/admin/cms/pages/cms.route';
+import adminCommunityRouter from '../app/admin/cms/community/community.route';
 import roleRouter from '../app/role/role.route';
 import propertyRouter from '../app/property/property.route';
 import adminPropertyRouter from '../app/admin/property/property.route';
@@ -20,6 +22,7 @@ import customerAppointmentRouter from '../app/customer/appointment/appointment.r
 import customerDashboardRouter from '../app/customer/dashboard/dashboard.route';
 import homePropertyRouter from '../app/home/property/property.route';
 import iframeRouter from '../app/iframe/iframe.route';
+import cmsRouter from '../app/home/cms/cms.route';
 
 export default function (app) {
   app.use('/', indexRouter);
@@ -40,6 +43,7 @@ export default function (app) {
   app.use('/customer/dashboard', customerDashboardRouter);
   app.use('/home/property', homePropertyRouter);
   app.use('/iframe', iframeRouter);
+  app.use('/cms', cmsRouter);
 
   // Admin Routes
 
@@ -48,6 +52,8 @@ export default function (app) {
 
   app.use('/admin/auth', adminAuthRouter);
   app.use('/admin/agent', adminagentRouter);
+  app.use('/admin/cms/page', adminNewsRouter);
+  app.use('/admin/cms/community', adminCommunityRouter);
 
   app.use('/admin/property', adminPropertyRouter);
   app.use('/admin/appointment', adminAppointmentRouter);

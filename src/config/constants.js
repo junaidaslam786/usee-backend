@@ -22,6 +22,11 @@ export const AGENT_TYPE = {
     STAFF: "staff",
 };
 
+export const CMS_STATUS = {
+    PUBLISHED: "published",
+    UNPUBLISHED: "unpublished",
+};
+
 export const PROPERTY_ROOT_PATHS = {
     FEATURE_IMAGE: "properties/images",
     VIDEO_TOUR: "properties/vrvideos",
@@ -30,6 +35,20 @@ export const PROPERTY_ROOT_PATHS = {
     PROFILE_DOCUMENT: "user/document",
     CHAT_PATH: "chat"
 }
+
+export const ADMIN_PROFILE_PATHS = {
+    PROFILE_IMAGE: "admin/profile",
+}
+
+export const CMS_ROOT_PATHS = {
+    FEATURE_IMAGE: "cms/images",
+    DOCUMENT: "cms/documents",
+}
+
+export const CMS_PAGE_TYPE = {
+    NEWS: "news",
+    BLOG: "blogs",
+};
 
 export const VIRTUAL_TOUR_TYPE = {
     VIDEO: "video",

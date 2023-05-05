@@ -1,20 +1,38 @@
 import {
-  AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, PROPERTY_ROOT_PATHS, USER_TYPE,
+  ADMIN_PROFILE_PATHS, USER_TYPE,
 } from '@/config/constants';
 
 import { utilsHelper } from '@/helpers';
 import db from '@/database';
 import { Sequelize } from 'sequelize';
-import * as userService from '../../user/user.service';
 
 const OP = Sequelize.Op;
 
 export const updateCurrentUser = async (reqBody, req) => {
 
   try {
-    const user = await db.models.user.update(reqBody, {
+    const user = await db.models.user.findOne({
       where: { id: reqBody.id },
     });
+
+    user.firstName = reqBody.firstName,
+    user.lastName = reqBody.lastName,
+    user.email = reqBody.email,
+    user.phoneNumber = reqBody.phoneNumber,
+    await user.save()
+
+    // feature image upload
+    if (req.files && req.files.image) {
+      const featuredImageFile = req.files.image;
+      const removeImg = utilsHelper.removeFile(user.profileImage)
+      const newImageName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
+      const result = await utilsHelper.fileUpload(featuredImageFile, ADMIN_PROFILE_PATHS.PROFILE_IMAGE, newImageName);
+      if (result?.error) {
+          return { error: true, message: result?.error }
+      }
+      user.profileImage = result
+      await user.save()
+    }
 
     const agent = await db.models.agent.update({
       companyName: reqBody.companyName,
@@ -23,8 +41,7 @@ export const updateCurrentUser = async (reqBody, req) => {
     {
       where: { user_id: reqBody.id },
     });
-
-    return true;
+    return {user};
   } catch (err) {
     console.log('updateCurrentUserServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
@@ -64,6 +81,22 @@ export const createUserWithPassword = async (userData, transaction) => {
 export const getUserById = async (id) => await db.models.user.findOne({ where: { id } });
 
 export const getUserByEmail = async (email) => await db.models.user.findOne({ where: { email } });
+
+export const listAdminUsers = async (dbInstance) => {
+  try {
+    return await dbInstance.user.findAll({
+      where: {
+        userType: USER_TYPE.ADMIN,
+        status: true,
+      },
+
+      order: [['id', 'DESC']],
+    });
+  } catch (err) {
+    console.log('listCustomerUsersServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};
 
 export const listCustomerUsers = async (dbInstance) => {
   try {

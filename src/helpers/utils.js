@@ -28,6 +28,21 @@ export const generateRandomString = (length, isApiCode = false) => {
     }
 };
 
+export const removeFile = async (file) => {
+    try {
+        if (!fs.existsSync(`uploads/${file}`)) {
+            return ('file is not exist')
+        }
+        fs.unlink(`uploads/${file}`, (err) => {
+            if (err) throw err;
+            console.log(`File has been deleted successfully`);
+          });
+    } catch (error) {
+        console.log('fileRemoveCatchError', err);
+        return { error: err };
+    }
+}
+
 export const fileUpload = async (file, destPath, fileName) => {
     try {
         if (!fs.existsSync(`uploads/${destPath}`)) {
