@@ -432,7 +432,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
             where: {
                 status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
                 title: {
-                    [OP.like]: '%' + reqBody.search + '%'
+                    [OP.iLike]: '%' + reqBody.search + '%'
                 },
                 [OP.or]: [
                     { userId },
