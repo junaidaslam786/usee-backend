@@ -13,9 +13,11 @@ import appointmentRouter from '../app/agent/appointment/appointment.route';
 import adminAppointmentRouter from '../app/admin/agent/appointment/appointment.route';
 import adminagentRouter from '../app/admin/agent/user/user.route';
 import agentAvailabilityRouter from '../app/agent/availability/availability.route';
+import agentDashboardRouter from '../app/agent/dashboard/dashboard.route';
 import categoryRouter from '../app/category/category.route';
 import customerWishlistRouter from '../app/customer/wishlist/wishlist.route';
 import customerAppointmentRouter from '../app/customer/appointment/appointment.route';
+import customerDashboardRouter from '../app/customer/dashboard/dashboard.route';
 import homePropertyRouter from '../app/home/property/property.route';
 import iframeRouter from '../app/iframe/iframe.route';
 
@@ -31,9 +33,11 @@ export default function (app) {
   app.use('/agent/user', agentUserRouter);
   app.use('/agent/appointment', appointmentRouter);
   app.use('/agent/availability', agentAvailabilityRouter);
+  app.use('/agent/dashboard', agentDashboardRouter);
   app.use('/category', categoryRouter);
   app.use('/customer/wishlist', customerWishlistRouter);
   app.use('/customer/appointment', customerAppointmentRouter);
+  app.use('/customer/dashboard', customerDashboardRouter);
   app.use('/home/property', homePropertyRouter);
   app.use('/iframe', iframeRouter);
 

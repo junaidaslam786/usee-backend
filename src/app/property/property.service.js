@@ -479,6 +479,8 @@ export const listPropertiesToAllocate = async (userId, dbInstance) => {
 
 export const getProperty = async (propertyId, dbInstance) => {
     try {
+        
+
         const property = await getPropertyDetailById(propertyId, dbInstance);
         if (!property) {
             return { error: true, message: 'Invalid property id or Property do not exist.'}
@@ -502,6 +504,7 @@ export const removePropertyRequest = async (reqUser, reqBody, dbInstance) => {
 
         property.status = reasonId === 1 ? PRODUCT_STATUS.SOLD : PRODUCT_STATUS.REMOVED;
         if (reasonId === 1) {
+            property.soldDate = new Date();
             property.soldTime = Date.now();
         }
         await property.save();
@@ -697,6 +700,10 @@ export const getPropertyById = async (propertyId, dbInstance) => {
 }
 
 export const getPropertyDetailById = async (propertyId, dbInstance) => {
+    if (!propertyId) {
+        return false;
+    }
+
     const property = await dbInstance.product.findOne({
         where: { id: propertyId },
         include: [

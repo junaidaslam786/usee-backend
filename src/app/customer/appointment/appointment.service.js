@@ -10,28 +10,65 @@ import {
   USER_ALERT_MODE, 
   USER_ALERT_TYPE,
   APPOINTMENT_TYPES,
-  APPOINTMENT_STATUS
+  APPOINTMENT_STATUS,
+  DASHBOARD_FILTER
 } from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
+import moment from 'moment';
 
 export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
   try {
     const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
-    const appointmentType = (reqBody && reqBody.type) ? reqBody.type : "upcoming";
+    const appointmentType = (reqBody && reqBody.type) ? reqBody.type : APPOINTMENT_TYPES.UPCOMING;
 
     const whereClause = { customerId: customerInfo.id };
-    whereClause.status = APPOINTMENT_STATUS.PENDING;
+    whereClause.status = {
+      [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.PENDING]
+    };
     
     if (appointmentType === APPOINTMENT_TYPES.COMPLETED) {
-      whereClause.status = {
-        [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.COMPLETED]
-      };
+      whereClause.status = APPOINTMENT_STATUS.COMPLETED;
     }
 
     if (appointmentType === APPOINTMENT_TYPES.CANCELLED) {
       whereClause.status = APPOINTMENT_STATUS.CANCELLED;
+    }
+
+    if (reqBody?.filter) {
+      switch(reqBody?.filter) {
+        case DASHBOARD_FILTER.CUSTOM:
+          if (reqBody?.startDate && reqBody?.endDate) {
+            whereClause.appointmentDate = {
+              [OP.between]: [reqBody.startDate, reqBody.endDate]
+            };
+          }
+          break;
+        case DASHBOARD_FILTER.TODAY:
+          whereClause.appointmentDate = moment().startOf('day').format('YYYY-MM-DD');
+          break;
+        case DASHBOARD_FILTER.YESTERDAY:
+          whereClause.appointmentDate = moment().subtract(1, 'day').startOf('day').format('YYYY-MM-DD');
+          break;
+        case DASHBOARD_FILTER.CURRENT_MONTH:
+          whereClause.appointmentDate = {
+            [OP.between]: [moment().startOf('month').format('YYYY-MM-DD'), moment().endOf('month').format('YYYY-MM-DD')]
+          };
+          break;
+        case DASHBOARD_FILTER.PAST_MONTH:
+          whereClause.appointmentDate = {
+            [OP.between]: [moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD'), moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD')]
+          };
+          break;
+        case DASHBOARD_FILTER.PAST_3_MONTH:
+          whereClause.appointmentDate = {
+            [OP.between]: [moment().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]
+          };
+          break;
+        default:
+          break;
+      }
     }
 
     const { count, rows } = await dbInstance.appointment.findAndCountAll({

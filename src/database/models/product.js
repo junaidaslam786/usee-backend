@@ -84,6 +84,9 @@ export default function (sequelize) {
       type: DataTypes.GEOMETRY('POINT'),
       allowNull: true,
     },
+    soldDate: {
+      type: DataTypes.DATEONLY
+    },
     soldTime: {
       type: DataTypes.STRING,
     },
