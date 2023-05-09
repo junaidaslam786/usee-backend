@@ -106,3 +106,26 @@ export const addAppointmentLogRules = [
     .notEmpty()
     .withMessage('Log type cannot be empty'),
 ];
+
+export const addAppointmentNoteRules = [
+  body('id')
+    .exists()
+    .withMessage('Id not provided')
+    .notEmpty()
+    .withMessage('Id cannot be empty'),
+  body('userId')
+    .exists()
+    .withMessage('User id not provided')
+    .notEmpty()
+    .withMessage('User id cannot be empty'),
+  body('userType')
+    .exists()
+    .withMessage('User type not provided')
+    .notEmpty()
+    .withMessage('User type cannot be empty'),
+  body('notes')
+    .exists()
+    .withMessage('Notes not provided')
+    .notEmpty()
+    .withMessage('Notes cannot be empty'),
+];

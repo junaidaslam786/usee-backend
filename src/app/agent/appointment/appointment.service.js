@@ -55,6 +55,12 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
         { 
           model: dbInstance.agentTimeSlot, 
         },
+        { 
+          model: dbInstance.appointmentNote, 
+          where: { agentId: agentInfo.id },
+          attributes: ["id", "notes"],
+          required: false,
+        },
       ],
       order: [["appointmentDate", "DESC"]],
       offset: (itemPerPage * (page - 1)),
@@ -368,7 +374,6 @@ export const deleteAppointment = async (appointmentId, req) => {
 }
 
 const getAppointmentDetailById = async (agent, appointmentId, dbInstance) => {
-  console.log('agent', agent);
   const whereClause = agent.agentType == AGENT_TYPE.AGENT ? { id: appointmentId, agentId: agent.userId } : { id: appointmentId, allotedAgent: agent.userId };
   const appointment = await dbInstance.appointment.findOne({
       where: whereClause,
@@ -395,6 +400,12 @@ const getAppointmentDetailById = async (agent, appointmentId, dbInstance) => {
         },
         { 
           model: dbInstance.agentTimeSlot, 
+        },
+        { 
+          model: dbInstance.appointmentNote, 
+          where: { agentId: agent.userId },
+          attributes: ["id", "notes"],
+          required: false,
         },
       ],
   });
@@ -533,9 +544,9 @@ export const addLog = async (reqBody, req) => {
 
     // Create appointment log
     await dbInstance.appointmentLog.create({
-      userId: userInfo.id,
+      userId: reqBody?.userId ? reqBody?.userId : userInfo.id,
       appointmentId: id,
-      userType: userInfo.userType,
+      userType: reqBody?.userType ? reqBody?.userType : userInfo.userType,
       logType,
       reason,
       addedAt: Date.now(),
@@ -544,6 +555,43 @@ export const addLog = async (reqBody, req) => {
     return true;
   } catch(err) {
     console.log('addLogServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.'}
+  }
+}
+
+export const addNote = async (reqBody, req) => {
+  try {
+    const { id, userId, userType, notes } = reqBody;
+    const { dbInstance } = req; 
+
+    const appointment = await dbInstance.appointment.findOne({
+      where: { id },
+      attributes: ['id']
+    });
+
+    if (!appointment) {
+      return { error: true, message: 'Invalid appointment id or Appointment do not exist.'};
+    } 
+
+    const appoinmentNote = {
+      appointmentId: id,
+      notes,
+    }
+
+    if (userId && userType === USER_TYPE.AGENT) {
+      appoinmentNote.agentId = userId;
+    }
+
+    if (userId && userType === USER_TYPE.CUSTOMER) {
+      appoinmentNote.customerId = userId;
+    }
+
+    // Create appointment note
+    await dbInstance.appointmentNote.create(appoinmentNote);
+    
+    return true;
+  } catch(err) {
+    console.log('addNoteServiceError', err)
     return { error: true, message: 'Server not responding, please try again later.'}
   }
 }

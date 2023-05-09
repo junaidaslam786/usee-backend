@@ -14,5 +14,6 @@ router.put('/update', isAuthenticated, validate(appointmentValidations.updateApp
 router.delete('/:id', isAuthenticated, appointmentController.deleteAppointment);
 router.put('/status', isAuthenticated, validate(appointmentValidations.updateStatusAppointmentRules), appointmentController.updateStatusAppointment);
 router.post('/log', isAuthenticated, validate(appointmentValidations.addAppointmentLogRules), appointmentController.addAppointmentLog);
+router.post('/note', isAuthenticated, validate(appointmentValidations.addAppointmentNoteRules), appointmentController.addAppointmentNote);
 
 export default router;

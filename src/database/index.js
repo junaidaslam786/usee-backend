@@ -34,6 +34,7 @@ import productSnagListItem from './models/product-snag-list-item';
 import bookDemo from './models/book-demo';
 import productLogModel from './models/product-log';
 import appointmentLogModel from './models/appointment-log';
+import appointmentNoteModel from './models/appointment-note';
 
 // Configuration
 const env = process.env.NODE_ENV;
@@ -74,7 +75,8 @@ const modelDefiners = [
   productSnagListItem,
   bookDemo,
   productLogModel,
-  appointmentLogModel
+  appointmentLogModel,
+  appointmentNoteModel
 ];
 
 // eslint-disable-next-line no-restricted-syntax

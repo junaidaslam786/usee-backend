@@ -50,6 +50,12 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
         { 
           model: dbInstance.agentTimeSlot, 
         },
+        { 
+          model: dbInstance.appointmentNote, 
+          where: { customerId: customerInfo.id },
+          attributes: ["id", "notes"],
+          required: false,
+        },
       ],
       order: [["appointmentDate", "DESC"]],
       offset: (itemPerPage * (page - 1)),
@@ -376,6 +382,12 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
           },
           { 
             model: dbInstance.agentTimeSlot, 
+          },
+          { 
+            model: dbInstance.appointmentNote, 
+            where: { customerId: user.id },
+            attributes: ["id", "notes"],
+            required: false,
           },
         ],
     });

@@ -144,3 +144,21 @@ export const addAppointmentLog = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * POST /agent/appointment/note
+ * add logs of the appointment
+ */
+export const addAppointmentNote = async (req, res, next) => {
+    try {
+        const result = await appointmentService.addNote(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Appointment note added successfully" });
+    } catch (err) {
+        console.log('addAppointmentNoteError', err);
+        next(err);
+    }
+};
