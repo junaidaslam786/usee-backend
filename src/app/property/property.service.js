@@ -1206,15 +1206,23 @@ export const addLog = async (reqBody, req) => {
   
       if (!Object.values(PRODUCT_LOG_TYPE).includes(logType)) {
         return { error: true, message: 'Invalid log type.'};
-      } 
-  
-      // Create product log
-      await dbInstance.productLog.create({
+      }
+      
+      const productLogObject = {
         userId: userInfo.id,
         productId: id,
         userType: userInfo.userType,
         logType,
+      };
+
+      const existingProductLog = await dbInstance.productLog.findOne({
+        where: productLogObject
       });
+
+      if (!existingProductLog) {
+        // Create product log
+        await dbInstance.productLog.create(productLogObject);
+      } 
       
       return true;
     } catch(err) {
