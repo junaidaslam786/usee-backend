@@ -87,6 +87,14 @@ export default function (sequelize) {
         key: 'id',
       }
     },
+    otpVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    signupStep: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
     createdBy: {
       type: DataTypes.UUID,
       field: "created_by",

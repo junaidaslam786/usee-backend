@@ -26,6 +26,14 @@ export const updateCurrentUser = async (reqBody, req) => {
             user.cityName = reqBody.city;
         }
 
+        if(reqBody?.signupStep) {
+            user.signupStep = reqBody.signupStep;
+        }
+
+        if(reqBody?.otpVerified) {
+            user.otpVerified = reqBody.otpVerified;
+        }
+
         // profile image upload
         if (req.files && req.files.profileImage) {
             const profileImageFile = req.files.profileImage;

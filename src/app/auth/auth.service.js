@@ -2,6 +2,7 @@ import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
 import db from '@/database';
 import { USER_TYPE, AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH } from '@/config/constants';
+import { PROPERTY_ROOT_PATHS } from '@/config/constants';
 import * as userService from '../user/user.service';
 import { mailHelper, utilsHelper } from '@/helpers';
 const path = require("path")
@@ -68,7 +69,9 @@ export const login = async (reqBody, dbInstance) => {
             role: user.role ? {
                 name: user.role.name,
                 permissions: user.role.permissions
-            } : null   
+            } : null,
+            signupStep: user.signupStep,
+            otpVerified: user.otpVerified 
         };
 
         return { user: userData, token };
@@ -78,7 +81,7 @@ export const login = async (reqBody, dbInstance) => {
     }
 }
 
-export const registerAsAgent = async (reqBody, dbInstance) => {
+export const registerAsAgent = async (req, reqBody, dbInstance) => {
     try {
         const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
         const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber, jobTitle } = reqBody;
@@ -93,18 +96,31 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
                 phoneNumber,
                 status: 1, 
                 userType: USER_TYPE.AGENT,
+                signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
             }, transaction);
 
-            // create agent profile
-            const agent = await agentTable.create({
+            let agentPayload = {
                 userId: user.id,
                 companyName, 
                 companyPosition,
                 jobTitle,
                 licenseNo: reqBody?.licenseNo ? reqBody.licenseNo : "",
                 agentType: AGENT_TYPE.AGENT, 
-                apiCode: utilsHelper.generateRandomString(10, true),
-            }, { transaction });
+                apiCode: utilsHelper.generateRandomString(10, true)
+            }
+
+            if (req.files && req.files.document) {
+                const documentFile = req.files.document;
+                const newFileName = `${Date.now()}_${documentFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(documentFile, PROPERTY_ROOT_PATHS.PROFILE_DOCUMENT, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                }
+                agentPayload.documentUrl = result;
+            }
+
+            // create agent profile
+            const agent = await agentTable.create(agentPayload, { transaction });
 
             const timeslots = await agentTimeSlot.findAll();
             for (let day = 1; day <= 7; day++) {

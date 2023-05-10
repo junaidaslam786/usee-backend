@@ -85,10 +85,14 @@ export default function (sequelize) {
       onUpdate: "CASCADE",
     },
     apiCode: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     sortOrder: {
       type: DataTypes.INTEGER,
+    },
+    documentUrl: {
+      type: DataTypes.STRING,
+      defaultValue: null
     },
     createdBy: {
         type: DataTypes.UUID,
