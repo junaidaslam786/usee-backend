@@ -173,16 +173,18 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
 export const registerAsCustomer = async (reqBody, dbInstance) => {
     try {
         const { user: userTable } = dbInstance;
-        const { firstName, lastName, email, password } = reqBody;
+        const { firstName, lastName, email, phoneNumber, password } = reqBody;
 
         // Create user
         const userData = {
             firstName, 
             lastName, 
-            email: email.toLowerCase(), 
+            email: email.toLowerCase(),
+            phoneNumber, 
             password,
             status: 1, 
             userType: USER_TYPE.CUSTOMER,
+            signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
         }
         const user = await userTable.create(userData);
 
