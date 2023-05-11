@@ -81,7 +81,8 @@ export const updateCurrentUser = async (reqBody, req) => {
         
         await user.save();
 
-        return true;
+        // update token
+        return user.generateToken();
     } catch(err) {
         console.log('updateCurrentUserServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}

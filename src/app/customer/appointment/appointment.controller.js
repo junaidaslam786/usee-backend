@@ -55,6 +55,24 @@ export const createAppointment = async (req, res, next) => {
     }
 };
 
+/**
+ * DELETE /appointment/:id
+ * Delete appointment by id
+ */
+export const deleteAppointment = async (req, res, next) => {
+    try {
+        const result = await appointmentService.deleteAppointment((req.params?.id ? req.params?.id : 0), req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Appointment deleted successfully" });
+    } catch (err) {
+        console.log('deleteAppointmentError', err);
+        next(err);
+    }
+};
+
 // /**
 //  * PUT /agent/appointment/update
 //  * update appointment details and permissions

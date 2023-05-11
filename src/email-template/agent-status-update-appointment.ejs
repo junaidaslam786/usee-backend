@@ -1,4 +1,4 @@
-<%- include('layout/header.ejs', { subject: "Usee 360 Appointment" }) %>
+<%- include('layout/header.ejs', { subject: "Usee 360 Appointment status update" }) %>
 
 <tr>
     <td valign="top" style="color:#947a8c;text-align:center;font-size:20px;font-family:'Manrope', sans-serif;font-weight:700;background-color:#fff;padding:0 20px 10px;">
@@ -8,7 +8,7 @@
 
 <tr>
     <td valign="top" style="color:#3e2837;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px 30px;">
-        <span> <%= process.env.AGENT_ENTITY_LABEL %> has <b style="color:#3e2837;font-weight:700;">successfully booked</b> an appointment with you.</span>
+        <span> <%= process.env.AGENT_ENTITY_LABEL %> has marked this booking as <%= appointmentStatus %>.</span>
     </td>
 </tr>
 
@@ -95,7 +95,7 @@
 <tr>
     <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 20px;">
         <span style="display: inline-block;max-width:380px;color:#92778a;font-size: 14px;font-family:'Manrope', sans-serif;font-weight:500;">
-            If you are unable to make this appointment, please contact
+            If you have question or concern regarding this appointment, please contact
             <span style="color:#3e2837;"> <%= allotedAgent %> </span>
             on the below details:
         </span>
@@ -114,24 +114,6 @@
             <a href="mailto:<%= agentEmail %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
                 <img src="<%= appUrl %>/email.png" style="display:inline-block;vertical-align:middle;margin-right:6px" alt="icon">
               <%= agentEmail %>
-            </a>
-        </span>
-    </td>
-</tr>
-<tr>
-    <td valign="top" style="text-align:center;background-color:#fff;padding: 0 20px 40px;">
-        <span style="color:#92778a;font-size: 16px;font-family:'Manrope', sans-serif;font-weight:500;">
-            Follow the link below to join the
-            <b style="color:#3e2837;font-weight:600;">Virtual Tour Room</b>
-        </span>
-    </td>
-</tr>
-<tr>
-    <td valign="top" style="text-align:center;background-color:#fff;">
-        <span>
-            <a target="_blank" href="<%= meetingLink %>" style="border-radius:50px;text-decoration:none;font-size:14px;font-family:'Manrope', sans-serif;background-color:#00CB04;padding:12px 50px;display:inline-block;color:#fff;">
-                <img src="<%= appUrl %>/camera.png" alt="icon" style="margin-right:15px;position:relative;top:2px;">
-                <b>Join Virtual Tour</b>
             </a>
         </span>
     </td>

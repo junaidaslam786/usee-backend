@@ -115,7 +115,7 @@ export const getSessionToken = async (req, res, next) => {
  */
 export const updateStatusAppointment = async (req, res, next) => {
     try {
-        const result = await appointmentService.updateStatus(req.body, req.dbInstance);
+        const result = await appointmentService.updateStatus(req);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }

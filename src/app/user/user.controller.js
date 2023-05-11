@@ -25,7 +25,7 @@ export const updateCurrentUser = async (req, res, next) => {
       return next(createError(400, result.message));
     }
 
-    return res.json({ success: true, message: "Profile updated successfully" });
+    return res.json({ success: true, message: "Profile updated successfully", token: result });
   } catch (err) {
     next(err);
   }

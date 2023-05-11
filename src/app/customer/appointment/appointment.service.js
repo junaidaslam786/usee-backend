@@ -435,3 +435,22 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
   
     return appointment;
 }
+
+export const deleteAppointment = async (appointmentId, req) => {
+  try {
+      const { dbInstance } = req;
+
+      const whereClause = { id: appointmentId, customerId: req.user.id };
+      const appointment = await dbInstance.appointment.findOne({ where: whereClause });
+      if (!appointment) {
+        return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
+      }
+
+      await dbInstance.appointment.destroy({ where: whereClause });
+
+      return true;
+  } catch(err) {
+      console.log('deleteAppointmentServiceError', err)
+      return { error: true, message: 'Server not responding, please try again later.'}
+  }
+}

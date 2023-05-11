@@ -10,6 +10,7 @@ router.get('/list', isAuthenticated, appointmentController.listAppointments);
 router.get('/session-token/:id', isAuthenticated, appointmentController.getSessionToken);
 router.post('/create', isAuthenticated, validate(appointmentValidations.createAppointmentRules), appointmentController.createAppointment);
 // router.put('/update', isAuthenticated, validate(appointmentValidations.updateAppointmentRules), appointmentController.updateAppointment);
+router.delete('/:id', isAuthenticated, appointmentController.deleteAppointment);
 router.get('/:id', isAuthenticated, appointmentController.getAppointment);
 
 export default router;

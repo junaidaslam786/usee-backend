@@ -391,17 +391,15 @@ export const updateAppointment = async (req, dbInstance) => {
 
 export const deleteAppointment = async (appointmentId, req) => {
     try {
-        const { user, dbInstance } = req;
-        const appointment = await getAppointmentDetailById(user.agent, appointmentId, dbInstance);
+        const { dbInstance } = req;
+
+        const whereClause = { id: appointmentId, allotedAgent: req.user.id };
+        const appointment = await dbInstance.appointment.findOne({ where: whereClause });
         if (!appointment) {
           return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
         }
 
-        await dbInstance.appointment.destroy({
-            where: {
-              id: appointmentId
-            }
-        });
+        await dbInstance.appointment.destroy({ where: whereClause });
 
         return true;
     } catch(err) {
@@ -526,18 +524,42 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
   }
 }
 
-export const updateStatus = async (reqBody, dbInstance) => {
+export const updateStatus = async (req) => {
   try {
-    const { id, status } = reqBody;
+    const { id, status } = req.body;
+    const { user: userInfo, dbInstance } = req;
 
     const appointment = await dbInstance.appointment.findOne({
       where: { id },
-      attributes: ['id']
+      include: [
+        {
+          model: dbInstance.product,
+          attributes: ["id", "title", "description", "price", "featuredImage", "address", "city", "region"],
+          through: { attributes: [] }
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'customerUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        { 
+          model: dbInstance.user, 
+          as: 'allotedAgentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        { 
+          model: dbInstance.agentTimeSlot, 
+        },
+      ],
     });
 
     if (!appointment) {
       return { error: true, message: 'Invalid appointment id or Appointment do not exist.'};
     } 
+
+    if (appointment.status === status) {
+      return { error: true, message: 'The status of the appointment already updated.'};
+    }
 
     if (!Object.values(APPOINTMENT_STATUS).includes(status)) {
       return { error: true, message: 'Invalid status.'};
@@ -550,6 +572,45 @@ export const updateStatus = async (reqBody, dbInstance) => {
 
     if (status === APPOINTMENT_STATUS.COMPLETED) {
       appointment.endMeetingTime = Date.now();
+    }
+
+    if (status === APPOINTMENT_STATUS.COMPLETED || status === APPOINTMENT_STATUS.CANCELLED) {
+      const emailData = [];
+      emailData.date = appointment.appointmentDate;
+      emailData.time = appointment.agentTimeSlot.textShow;
+      emailData.products = appointment.products;
+      emailData.appUrl = process.env.APP_URL;
+      emailData.appointmentStatus = status;
+
+      const emailSubject = status === APPOINTMENT_STATUS.COMPLETED ? EMAIL_SUBJECT.COMPLETED_APPOINTMENT : EMAIL_SUBJECT.CANCELLED_APPOINTMENT;
+      let htmlData = "";
+      let payload = {};
+      if (userInfo.userType === USER_TYPE.AGENT) {
+        emailData.companyName = userInfo?.agent?.companyName ? userInfo.agent.companyName : "";
+        emailData.allotedAgent = appointment.allotedAgentUser.fullName;
+        emailData.agentImage = appointment.allotedAgentUser.profileImage;
+        emailData.agentPhoneNumber = appointment.allotedAgentUser.phoneNumber;
+        emailData.agentEmail = appointment.allotedAgentUser.email;
+        htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_STATUS_UPDATE_APPOINTMENT), emailData);
+        payload = {
+          to: appointment.customerUser.email,
+          subject: emailSubject,
+          html: htmlData,
+        }
+      } else {
+        emailData.customer = userInfo.fullName;
+        emailData.customerImage = userInfo.profileImage;
+        emailData.customerPhoneNumber = userInfo.phoneNumber;
+        emailData.customerEmail = userInfo.email;
+        htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CUSTOMER_STATUS_UPDATE_APPOINTMENT), emailData);
+        payload = {
+          to: appointment.allotedAgentUser.email,
+          subject: emailSubject,
+          html: htmlData,
+        }
+      }
+
+      mailHelper.sendMail(payload);
     }
 
     await appointment.save();

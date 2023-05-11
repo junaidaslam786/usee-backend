@@ -87,6 +87,8 @@ export const EMAIL_SUBJECT = {
     BOOK_DEMO: "Usee 360 Demo",
     SNAGLIST_UPDATE: "Trader has made an update in the snaglist",
     SNAGLIST_APPROVE: "Trader has approved the snaglist",
+    COMPLETED_APPOINTMENT: "Usee 360 Appointment Completed",
+    CANCELLED_APPOINTMENT: "Usee 360 Appointment Cancelled",
 }
 
 export const EMAIL_TEMPLATE_PATH = {
@@ -108,6 +110,8 @@ export const EMAIL_TEMPLATE_PATH = {
     SUPERVISOR_JOIN_APPOINTMENT: "email-template/supervisor-join-appointment.ejs",
     BOOK_DEMO: "email-template/book-demo.ejs",
     SNAGLIST_UPDATE: "email-template/property-snaglist-update.ejs",
+    AGENT_STATUS_UPDATE_APPOINTMENT: "email-template/agent-status-update-appointment.ejs",
+    CUSTOMER_STATUS_UPDATE_APPOINTMENT: "email-template/customer-status-update-appointment.ejs",
 }
 
 export const DASHBOARD_FILTER = {

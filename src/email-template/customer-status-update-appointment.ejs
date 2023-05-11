@@ -8,7 +8,7 @@
 
 <tr>
     <td valign="top" style="color:#3e2837;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px 30px;">
-        <span> <%= process.env.AGENT_ENTITY_LABEL %> has <b style="color:#3e2837;font-weight:700;">successfully booked</b> an appointment with you.</span>
+        <span> <%= customer %> has marked this booking as <%= appointmentStatus %>.</span>
     </td>
 </tr>
 
@@ -25,7 +25,7 @@
             <tr>
                 <td valign="middle" style="width:130px;padding-right:30px;">
                     <span style="box-shadow:0 0 21px #999;border:1px solid #00CB04;display:inline-block;width:112px;height:112px;border-radius:50%;overflow:hidden;">
-                        <img style="max-width:100%;" src="<%= appUrl %>/<%= agentImage %>" alt="<%= process.env.AGENT_ENTITY_LABEL %> photo">
+                        <img style="max-width:100%;" src="<%= appUrl %>/<%= customerImage %>" alt="customer photo">
                     </span>
                 </td>
                 <td valign="middle">
@@ -41,24 +41,6 @@
                             <td valign="middle">
                                 <span style="color:#3E2837;font-size: 14.5px;font-family:'Manrope', sans-serif;font-weight:600;">
                                     <%= time %>
-                                </span>
-                            </td>
-                        </tr>
-                    </table>
-                    <table style="width:100%;text-align:left;margin-top:10px;" border="0" cellspacing="5" cellpadding="0">
-                        <tr>
-                            <td>
-                                <span style="color:#92778a;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
-                                    Your Estate <%= process.env.AGENT_ENTITY_LABEL %>:
-                                    <span style="color:#3e2837;"><%= allotedAgent %></span>
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span style="color:#92778a;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
-                                    Company:
-                                    <span style="color:#3e2837;"><%= companyName %></span>
                                 </span>
                             </td>
                         </tr>
@@ -95,8 +77,8 @@
 <tr>
     <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 20px;">
         <span style="display: inline-block;max-width:380px;color:#92778a;font-size: 14px;font-family:'Manrope', sans-serif;font-weight:500;">
-            If you are unable to make this appointment, please contact
-            <span style="color:#3e2837;"> <%= allotedAgent %> </span>
+            If you have question or concerns regarding this appointment, please contact
+            <span style="color:#3e2837;"> <%= customer %> </span>
             on the below details:
         </span>
     </td>
@@ -104,34 +86,16 @@
 <tr>
     <td valign="top" style="text-align:center;background-color:#fff;padding:0 20px 40px;">
         <span>
-            <a href="tel:<%= agentPhoneNumber %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+            <a href="tel:<%= customerPhoneNumber %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
                 <img src="<%= appUrl %>/phone.png" style="display:inline-block;vertical-align:middle;margin-right:6px" alt="icon">
-              <%= agentPhoneNumber %>
+              <%= customerPhoneNumber %>
             </a>
         </span>
 
         <span style="margin-left:40px;">
-            <a href="mailto:<%= agentEmail %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
+            <a href="mailto:<%= customerEmail %>" target="_blank" style="text-decoration:none;color:#3e2837;font-size:14px;font-family:'Manrope', sans-serif;font-weight:600;">
                 <img src="<%= appUrl %>/email.png" style="display:inline-block;vertical-align:middle;margin-right:6px" alt="icon">
-              <%= agentEmail %>
-            </a>
-        </span>
-    </td>
-</tr>
-<tr>
-    <td valign="top" style="text-align:center;background-color:#fff;padding: 0 20px 40px;">
-        <span style="color:#92778a;font-size: 16px;font-family:'Manrope', sans-serif;font-weight:500;">
-            Follow the link below to join the
-            <b style="color:#3e2837;font-weight:600;">Virtual Tour Room</b>
-        </span>
-    </td>
-</tr>
-<tr>
-    <td valign="top" style="text-align:center;background-color:#fff;">
-        <span>
-            <a target="_blank" href="<%= meetingLink %>" style="border-radius:50px;text-decoration:none;font-size:14px;font-family:'Manrope', sans-serif;background-color:#00CB04;padding:12px 50px;display:inline-block;color:#fff;">
-                <img src="<%= appUrl %>/camera.png" alt="icon" style="margin-right:15px;position:relative;top:2px;">
-                <b>Join Virtual Tour</b>
+              <%= customerEmail %>
             </a>
         </span>
     </td>
