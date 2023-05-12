@@ -28,6 +28,9 @@ export const dashboardData = async (reqBody, req) => {
 
     let totalPropertiesSoldWhere = { 
       userId: agentInfo.id, 
+      soldDate: {
+        [OP.ne]: null
+      }
     };
 
     let totalCompletedAppointmentWhere = { 

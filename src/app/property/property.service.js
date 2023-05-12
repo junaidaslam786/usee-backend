@@ -598,7 +598,7 @@ export const updateOfferStatus = async (reqBody, req) => {
 
         const offer = await dbInstance.productOffer.findOne({ where: { id: offerId } });
         if (!offer) {
-            return { error: true, message: 'Invalid offer id or offer do not exist.'}
+            return { error: true, message: 'Invalid offer id or offer is deleted by customer.'}
         }
 
         if (offer.status != OFFER_STATUS.PENDING) {
