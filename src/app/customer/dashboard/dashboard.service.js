@@ -5,7 +5,7 @@ import {
   DASHBOARD_FILTER,
   PRODUCT_LOG_TYPE
 } from '@/config/constants';
-import moment from 'moment';
+import { utilsHelper } from '@/helpers';
 
 export const dashboardData = async (reqBody, req) => {
   try {
@@ -54,7 +54,7 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.TODAY:
-        const today = moment().startOf('day').format('YYYY-MM-DD');
+        const today = utilsHelper.getCustomDate("today");
 
         totalPropertiesViewedWhere.createdAt = where(fn('date', col('created_at')), OP.eq, today);
         totalPropertiesInWishlistWhere.createdAt = where(fn('date', col('created_at')), OP.eq, today);
@@ -63,7 +63,7 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.YESTERDAY:
-        const yesterday = moment().subtract(1, 'day').startOf('day').format('YYYY-MM-DD');
+        const yesterday = utilsHelper.getCustomDate("yesterday");
 
         totalPropertiesViewedWhere.createdAt = where(fn('date', col('created_at')), OP.eq, yesterday);
         totalPropertiesInWishlistWhere.createdAt = where(fn('date', col('created_at')), OP.eq, yesterday);
@@ -72,8 +72,8 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.CURRENT_MONTH:
-        const thisMonthStart = moment().startOf('month').format('YYYY-MM-DD');
-        const thisMonthEnd = moment().endOf('month').format('YYYY-MM-DD');
+        const thisMonthStart = utilsHelper.getCustomDate("thisMonthStart");
+        const thisMonthEnd = utilsHelper.getCustomDate("thisMonthEnd");
         
         totalPropertiesViewedWhere.createdAt = where(fn('date', col('created_at')), {
           [OP.between]: [thisMonthStart, thisMonthEnd],
@@ -86,8 +86,8 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.PAST_MONTH:
-        const lastMonthStart = moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
-        const lastMonthEnd = moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD');
+        const lastMonthStart = utilsHelper.getCustomDate("lastMonthStart");
+        const lastMonthEnd = utilsHelper.getCustomDate("lastMonthEnd");
 
         totalPropertiesViewedWhere.createdAt = where(fn('date', col('created_at')), {
           [OP.between]: [lastMonthStart, lastMonthEnd],
@@ -100,8 +100,8 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.PAST_3_MONTH:
-        const startOfPeriod = moment().subtract(3, 'month').startOf('day').format('YYYY-MM-DD');
-        const endOfPeriod = moment().format('YYYY-MM-DD');
+        const startOfPeriod = utilsHelper.getCustomDate("startOfPeriod");
+        const endOfPeriod = utilsHelper.getCustomDate("endOfPeriod");
 
         totalPropertiesViewedWhere.createdAt = where(fn('date', col('created_at')), {
           [OP.between]: [startOfPeriod, endOfPeriod],

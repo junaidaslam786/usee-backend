@@ -8,7 +8,8 @@ export const getSessionId = async () => {
         if (error) {
           resolve(false);
         }
-        resolve(session.sessionId)
+
+        resolve(session?.sessionId ? session.sessionId : false);
       });
     });
   } catch (err) {

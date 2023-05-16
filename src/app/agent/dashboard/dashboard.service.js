@@ -2,10 +2,11 @@ import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
 const { fn, col, where } = require('sequelize');
 import { 
+  APPOINTMENT_STATUS,
   DASHBOARD_FILTER,
   PRODUCT_STATUS
 } from '@/config/constants';
-import moment from 'moment';
+import { utilsHelper } from '@/helpers';
 
 export const dashboardData = async (reqBody, req) => {
   try {
@@ -35,12 +36,12 @@ export const dashboardData = async (reqBody, req) => {
 
     let totalCompletedAppointmentWhere = { 
       allotedAgent: agentInfo.id, 
-      status: 'completed',
+      status: APPOINTMENT_STATUS.COMPLETED,
     };
 
     let totalUpcomingAppointmentWhere = { 
       allotedAgent: agentInfo.id, 
-      status: 'pending', 
+      status: { [OP.in]: [APPOINTMENT_STATUS.PENDING, APPOINTMENT_STATUS.INPROGRESS] },
     };
 
     switch(filter) {
@@ -55,7 +56,7 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.TODAY:
-        const today = moment().startOf('day').format('YYYY-MM-DD');
+        const today = utilsHelper.getCustomDate("today");
 
         totalPropertiesWhere.createdAt = where(fn('date', col('created_at')), OP.eq, today);
         totalPropertiesSoldWhere.soldDate = today;
@@ -64,7 +65,7 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.YESTERDAY:
-        const yesterday = moment().subtract(1, 'day').startOf('day').format('YYYY-MM-DD');
+        const yesterday = utilsHelper.getCustomDate("yesterday");
 
         totalPropertiesWhere.createdAt = where(fn('date', col('created_at')), OP.eq, yesterday);
         totalPropertiesSoldWhere.soldDate = yesterday;
@@ -73,8 +74,8 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.CURRENT_MONTH:
-        const thisMonthStart = moment().startOf('month').format('YYYY-MM-DD');
-        const thisMonthEnd = moment().endOf('month').format('YYYY-MM-DD');
+        const thisMonthStart = utilsHelper.getCustomDate("thisMonthStart");
+        const thisMonthEnd = utilsHelper.getCustomDate("thisMonthEnd");
         
         totalPropertiesWhere.createdAt = where(fn('date', col('created_at')), {
           [OP.between]: [thisMonthStart, thisMonthEnd],
@@ -85,8 +86,8 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.PAST_MONTH:
-        const lastMonthStart = moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
-        const lastMonthEnd = moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD');
+        const lastMonthStart = utilsHelper.getCustomDate("lastMonthStart");
+        const lastMonthEnd = utilsHelper.getCustomDate("lastMonthEnd");
 
         totalPropertiesWhere.createdAt = where(fn('date', col('created_at')), {
           [OP.between]: [lastMonthStart, lastMonthEnd],
@@ -97,8 +98,8 @@ export const dashboardData = async (reqBody, req) => {
 
         break;
       case DASHBOARD_FILTER.PAST_3_MONTH:
-        const startOfPeriod = moment().subtract(3, 'month').startOf('day').format('YYYY-MM-DD');
-        const endOfPeriod = moment().format('YYYY-MM-DD');
+        const startOfPeriod = utilsHelper.getCustomDate("startOfPeriod");
+        const endOfPeriod = utilsHelper.getCustomDate("endOfPeriod");
 
         totalPropertiesWhere.createdAt = where(fn('date', col('created_at')), {
           [OP.between]: [startOfPeriod, endOfPeriod],

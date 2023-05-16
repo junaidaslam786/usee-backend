@@ -8,7 +8,6 @@ const router = Router();
 
 router.get('/list', isAuthenticated, userController.listAgentUsers);
 router.get('/to-allocate', isAuthenticated, userController.listAgentUsersToAllocate);
-router.post('/check-availability', validate(userValidations.checkAvailabilityRules), isAuthenticated, userController.checkAvailability);
 router.post('/create', validate(userValidations.createAgentUserRules), isAuthenticated, userController.createAgentUser);
 router.get('/supervisor', isAuthenticated, userController.getAgentSupervisor);
 router.post('/create-supervisor', validate(userValidations.createAgentSupervisorRules), isAuthenticated, userController.createAgentSupervisor);

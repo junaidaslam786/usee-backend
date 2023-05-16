@@ -75,6 +75,10 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       field: 'end_meeting_time'
     },
+    appointmentTimeGmt: {
+      type: DataTypes.STRING,
+      field: 'appointment_time_gmt'
+    },
     createdAt: {
       allowNull: false,
       field: 'created_at',

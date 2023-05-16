@@ -71,7 +71,8 @@ export const login = async (reqBody, dbInstance) => {
                 permissions: user.role.permissions
             } : null,
             signupStep: user.signupStep,
-            otpVerified: user.otpVerified 
+            otpVerified: user.otpVerified,
+            timezone: user.timezone 
         };
 
         return { user: userData, token };

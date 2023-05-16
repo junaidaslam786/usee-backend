@@ -15,7 +15,6 @@ import {
 } from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
-import moment from 'moment';
 
 export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
   try {
@@ -46,24 +45,24 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
           }
           break;
         case DASHBOARD_FILTER.TODAY:
-          whereClause.appointmentDate = moment().startOf('day').format('YYYY-MM-DD');
+          whereClause.appointmentDate = utilsHelper.getCustomDate("today");
           break;
         case DASHBOARD_FILTER.YESTERDAY:
-          whereClause.appointmentDate = moment().subtract(1, 'day').startOf('day').format('YYYY-MM-DD');
+          whereClause.appointmentDate = utilsHelper.getCustomDate("yesterday");
           break;
         case DASHBOARD_FILTER.CURRENT_MONTH:
           whereClause.appointmentDate = {
-            [OP.between]: [moment().startOf('month').format('YYYY-MM-DD'), moment().endOf('month').format('YYYY-MM-DD')]
+            [OP.between]: [utilsHelper.getCustomDate("thisMonthStart"), utilsHelper.getCustomDate("thisMonthEnd")]
           };
           break;
         case DASHBOARD_FILTER.PAST_MONTH:
           whereClause.appointmentDate = {
-            [OP.between]: [moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD'), moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD')]
+            [OP.between]: [utilsHelper.getCustomDate("lastMonthStart"), utilsHelper.getCustomDate("lastMonthEnd")]
           };
           break;
         case DASHBOARD_FILTER.PAST_3_MONTH:
           whereClause.appointmentDate = {
-            [OP.between]: [moment().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]
+            [OP.between]: [utilsHelper.getCustomDate("startOfPeriod"), utilsHelper.getCustomDate("endOfPeriod")]
           };
           break;
         default:
@@ -83,6 +82,12 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
           model: dbInstance.user, 
           as: 'agentUser',
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          include: [
+            {
+              model: dbInstance.agent,
+              attributes: ["id", "agentType"],
+            },
+          ]
         },
         { 
           model: dbInstance.agentTimeSlot, 
@@ -140,28 +145,25 @@ export const createAppointment = async (req, dbInstance) => {
       return { error: true, message: 'Unable to make appointment due to voice call issue.'}
     }
 
-    const timeSlot = await dbInstance.agentTimeSlot.findOne({ where: { id: timeSlotId } });
-    if (!timeSlot) {
-      return { error: true, message: 'Invalid time selected.' };
-    }
-
-    const isTimeExpired = utilsHelper.checkIfTimeIsOld(appointmentDate, timeSlot.fromTime);
-    if (isTimeExpired) {
-      return { error: true, message: 'Time is expired. Please select another timeslot.' };
-    }
-
     const propertyDetail = await dbInstance.product.findOne({ 
       where: { id: property },
       attributes: ["id", "userId"],
       include: [
         {
           model: dbInstance.user, 
-          attributes: ["id", "firstName", "lastName", "email"],
+          attributes: ["id", "firstName", "lastName", "email", "timezone"],
         },
       ]
     });
+
     if (!propertyDetail) {
       return { error: true, message: 'Invalid property id or property do not exist.' };
+    }
+
+    // check if slot selected by customer is valid
+    const timeSlot = await dbInstance.agentTimeSlot.findOne({ where: { id: timeSlotId } });
+    if (!timeSlot) {
+      return { error: true, message: 'Invalid timeslot selected.' };
     }
 
     let agentSupervisor = null;
@@ -177,63 +179,52 @@ export const createAppointment = async (req, dbInstance) => {
       if (!agentSupervisor) {
         return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} has not added any supervisor yet. Please select another slot for agent.` };
       }
-
-      // Check if there's an existing appointment
-      const existingAppointment = await dbInstance.appointment.findOne({
-        where: {
-          allotedAgent: agentSupervisor.userId,
-          appointmentDate: appointmentDate,
-          timeSlotId: timeSlotId
-        }
-      });
-
-      if (existingAppointment) {
-        return { error: true, message: 'Supervisor already has an appointment at this slot, please select another slot.' };
-      }
-    } else {
-      // Check if there's an existing appointment
-      const existingAppointment = await dbInstance.appointment.findOne({
-        where: {
-          agentId: propertyDetail.userId,
-          appointmentDate: appointmentDate,
-          timeSlotId: timeSlotId
-        }
-      });
-
-      if (existingAppointment) {
-        return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} already has an appointment at this slot, please select another slot.` };
-      }
     }
 
     let customerDetails = req.user;
     let isNewCustomer = false;
     const tempPassword = utilsHelper.generateRandomString(10);
-    
+    if (!customerDetails) {
+      customerDetails = await userService.createUserWithPassword({
+        firstName: req.body.customerFirstName,
+        lastName: req.body.customerLastName,
+        email: req.body.customerEmail.toLowerCase(),
+        password: tempPassword,
+        status: true,
+        userType: USER_TYPE.CUSTOMER,
+      });
+
+      isNewCustomer = true;
+    }
+
+    if (!customerDetails) {
+      return { error: true, message: 'Session expired, please login to create appointment.'}
+    }
+
+    // check availability algorithm
+    const foundTimeSlots = await checkAvailability({
+      dbInstance,
+      user: req.user,
+      body: {
+        date: appointmentDate,
+        time: timeSlotId,
+        userId: agentSupervisor?.userId ? agentSupervisor.userId : propertyDetail.userId
+      }
+    });
+
+    if (foundTimeSlots?.error && foundTimeSlots?.message) {
+      return foundTimeSlots;
+    }
+
     const result = await db.transaction(async (transaction) => {
-      if (!customerDetails) {
-        customerDetails = await userService.createUserWithPassword({
-          firstName: req.body.customerFirstName,
-          lastName: req.body.customerLastName,
-          email: req.body.customerEmail.toLowerCase(),
-          password: tempPassword,
-          status: true,
-          userType: USER_TYPE.CUSTOMER,
-        }, transaction);
-
-        isNewCustomer = true;
-      }
-
-      if (!customerDetails) {
-        return { error: true, message: 'No customer exist to add wishlist.'}
-      }
-
       // Create appointment
       const appointment = await dbInstance.appointment.create({
         appointmentDate,
         timeSlotId,
         agentId: propertyDetail.userId,
         customerId: customerDetails.id,
-        allotedAgent: agentSupervisor ? agentSupervisor.userId : propertyDetail.userId,
+        allotedAgent: agentSupervisor?.userId ? agentSupervisor.userId : propertyDetail.userId,
+        appointmentTimeGmt: utilsHelper.convertTimeToGmt(timeSlot.fromTime, req.user.timezone),
         sessionId,
       }, { transaction });
 
@@ -283,16 +274,16 @@ export const createAppointment = async (req, dbInstance) => {
         emailNewData.login = utilsHelper.generateUrl('customer-login', USER_TYPE.CUSTOMER);
         const htmlNewData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailNewData);
         const newPayload = {
-            to: customerDetails.email,
-            subject: EMAIL_SUBJECT.AGENT_ADDED_CUSTOMER,
-            html: htmlNewData,
+          to: customerDetails.email,
+          subject: EMAIL_SUBJECT.AGENT_ADDED_CUSTOMER,
+          html: htmlNewData,
         }
         mailHelper.sendMail(newPayload);
       }
 
       const emailData = [];
       emailData.date = appointmentDate;
-      emailData.time = timeSlot.textShow;
+      emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, (agentSupervisor?.user?.email ? agentSupervisor.user.timezone : propertyDetail.user.timezone), "HH:mm a");
       emailData.products = [propertyDetail];
       emailData.customer = customerDetails.fullName;
       emailData.customerImage = customerDetails.profileImage;
@@ -318,57 +309,6 @@ export const createAppointment = async (req, dbInstance) => {
   }
 }
 
-// this needs to be re-write
-// export const updateAppointment = async (req, dbInstance) => {
-//   try {
-//       const { 
-//         id,
-//         properties, 
-//         appointmentDate, 
-//         appointmentTime
-//       } = req.body;
-
-//       const appointment = await getAppointmentDetailById(req.user, id, dbInstance);
-//       if (!appointment) {
-//         return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
-//       }
-
-//       await db.transaction(async (transaction) => {
-//           const customerDetails = await getOrCreateCustomer(req.user.id, req.body, transaction);
-//           if (customerDetails?.error && customerDetails?.message) {
-//             return customerDetails;
-//           }
-
-//           appointment.customerId = customerDetails.customerId;
-//           appointment.appointmentDate = appointmentDate;
-//           appointment.appointmentTime = appointmentTime;
-//           await appointment.save({ transaction });
-
-//           // remove old properties
-//           await appointment.setProducts([]);
-
-//           // Add properties to appointment
-//           if (appointment && properties) {
-//             const findProducts = await dbInstance.product.findAll({ where: { id: properties }});
-//             const productRecords = [];
-//             findProducts.forEach((product) => {
-//               productRecords.push({
-//                 appointmentId: appointment.id,
-//                 productId: product.id,
-//                 interest: false,
-//               });
-//             });
-//             await dbInstance.appointmentProduct.bulkCreate(productRecords, {transaction});
-//         }
-//       });
-
-//       return true;
-//   } catch(err) {
-//     console.log('updateAppointmentServiceError', err)
-//     return { error: true, message: 'Server not responding, please try again later.'}
-//   }
-// }
-
 export const getSessionToken = async (appointmentId, dbInstance) => {
     try {
         const appointment = await dbInstance.appointment.findOne({
@@ -391,7 +331,7 @@ export const getSessionToken = async (appointmentId, dbInstance) => {
         console.log('getSessionTokenServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
-  }
+}
 
 const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
     const appointment = await dbInstance.appointment.findOne({
@@ -411,6 +351,12 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
             model: dbInstance.user, 
             as: 'agentUser',
             attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+            include: [
+              {
+                model: dbInstance.agent,
+                attributes: ["id", "agentType"],
+              },
+            ]
           },
           { 
             model: dbInstance.user, 
@@ -452,5 +398,36 @@ export const deleteAppointment = async (appointmentId, req) => {
   } catch(err) {
       console.log('deleteAppointmentServiceError', err)
       return { error: true, message: 'Server not responding, please try again later.'}
+  }
+}
+
+export const checkAvailability = async (req) => {
+  try {
+    const { user: userRequestingAvailabilityCheck, dbInstance } = req;
+    const { date, time, userId } = req.body;
+
+    // check if slot selected by user(agent or customer) is valid
+    let timeSlot = await dbInstance.agentTimeSlot.findOne({ where: { id: time } });
+    if (!timeSlot) {
+      return { error: true, message: 'Invalid timeslot selected.' };
+    }
+
+    // check if customer is available
+    const customerAvailability = await utilsHelper.availabilityAlgorithm(userRequestingAvailabilityCheck, userRequestingAvailabilityCheck.id, date, timeSlot, USER_TYPE.CUSTOMER, dbInstance);
+    if (customerAvailability?.error && customerAvailability?.message) {
+      return customerAvailability;
+    }
+
+    // if customer is available, check if agent is available or not
+    const agentAvailability = await utilsHelper.availabilityAlgorithm(userRequestingAvailabilityCheck, userId, date, timeSlot, USER_TYPE.AGENT, dbInstance);
+    if (agentAvailability?.error && agentAvailability?.message) {
+      return agentAvailability;
+    }
+
+    // if both are available, then appointment can be created
+    return true;
+  } catch(err) {
+    console.log('checkAvailabilityServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' }
   }
 }

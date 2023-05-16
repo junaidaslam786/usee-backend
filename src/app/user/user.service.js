@@ -178,3 +178,18 @@ export const validateOtp = async (user, reqBody) => {
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
+
+export const updateTimezone = async (req) => {
+    try {
+        const { timezone } = req.body;
+        let user = req.user;
+
+        user.timezone = timezone;
+        await user.save();
+
+        return true;
+    } catch(err) {
+        console.log('updateTimezoneServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}

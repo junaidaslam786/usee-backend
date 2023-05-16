@@ -103,6 +103,9 @@ export default function (sequelize) {
       type: DataTypes.INTEGER,
       defaultValue: 0
     },
+    timezone: {
+      type: DataTypes.STRING,
+    },
     createdBy: {
       type: DataTypes.UUID,
       field: "created_by",
