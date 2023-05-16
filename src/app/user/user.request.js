@@ -1,4 +1,3 @@
-
 import { body } from 'express-validator';
 
 export const updateProfileRules = [
@@ -22,4 +21,8 @@ export const changePasswordRules = [
         .withMessage('Password must contain at least one number')
         .matches(/[!@#$%^&*(),.?":{}|<>]/)
         .withMessage('Password must contain at least one special character'),
+];
+
+export const validateOtpRules = [
+    body('otp').exists().withMessage('Please provide otp').notEmpty().withMessage('Please provide otp'),
 ];

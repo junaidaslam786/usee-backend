@@ -97,6 +97,8 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 status: 1, 
                 userType: USER_TYPE.AGENT,
                 signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
+                otpCode: reqBody?.otpCode ? reqBody.otpCode : null,
+                otpExpiry: reqBody?.otpExpiry ? reqBody.otpExpiry : null
             }, transaction);
 
             let agentPayload = {
@@ -185,6 +187,8 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
             status: 1, 
             userType: USER_TYPE.CUSTOMER,
             signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
+            otpCode: reqBody?.otpCode ? reqBody.otpCode : null,
+            otpExpiry: reqBody?.otpExpiry ? reqBody.otpExpiry : null
         }
         const user = await userTable.create(userData);
 
@@ -297,6 +301,28 @@ export const resetPassword = async (reqBody, dbInstance) => {
         return true;
     } catch(err) {
         console.log('resetPasswordServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const sendOtp = async (reqBody) => {
+    try {
+        const { name, email, otp } = reqBody;
+
+        const emailData = [];
+        emailData.name = name;
+        emailData.otp = otp;
+        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.SEND_OTP), emailData);
+        const payload = {
+            to: email,
+            subject: EMAIL_SUBJECT.SEND_OTP,
+            html: htmlData,
+        };
+        mailHelper.sendMail(payload);
+
+        return true;
+    } catch(err) {
+        console.log('sendOtpError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }

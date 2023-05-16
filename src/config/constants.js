@@ -90,6 +90,7 @@ export const EMAIL_SUBJECT = {
     SNAGLIST_APPROVE: "Trader has approved the snaglist",
     COMPLETED_APPOINTMENT: "Usee 360 Appointment Completed",
     CANCELLED_APPOINTMENT: "Usee 360 Appointment Cancelled",
+    SEND_OTP: "Usee 360 One Time Passcode (OTP)",
 }
 
 export const EMAIL_TEMPLATE_PATH = {
@@ -113,6 +114,7 @@ export const EMAIL_TEMPLATE_PATH = {
     SNAGLIST_UPDATE: "email-template/property-snaglist-update.ejs",
     AGENT_STATUS_UPDATE_APPOINTMENT: "email-template/agent-status-update-appointment.ejs",
     CUSTOMER_STATUS_UPDATE_APPOINTMENT: "email-template/customer-status-update-appointment.ejs",
+    SEND_OTP: "email-template/send-otp.ejs",
 }
 
 export const DASHBOARD_FILTER = {

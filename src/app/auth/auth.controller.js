@@ -88,3 +88,21 @@ export const resetPassword = async (req, res, next) => {
     return next(err);
   }
 };
+
+/**
+ * POST /auth/send-otp
+ * Send Otp to the user
+ */
+ export const sendOtp = async (req, res, next) => {
+  try {
+    const result = await authService.sendOtp(req.body);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+    
+    return res.json({ success: true, message: "Otp sent successfully" });
+  } catch (err) {
+    console.log('sendOtpError', err);
+    return next(err);
+  }
+};

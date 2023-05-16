@@ -91,6 +91,14 @@ export default function (sequelize) {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
+    otpCode: {
+      type: DataTypes.INTEGER,
+      defaultValue: null
+    },
+    otpExpiry: {
+      type: DataTypes.DATE,
+      defaultValue: null
+    },
     signupStep: {
       type: DataTypes.INTEGER,
       defaultValue: 0

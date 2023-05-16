@@ -106,3 +106,9 @@ export const resetPasswordRules = [
     return true;
   }),
 ];
+
+export const sendOtpRules = [
+  body('name').exists().withMessage('Please provide name').notEmpty().withMessage('Please provide name'),
+  body('email').isEmail().withMessage('Please provide valid email address').exists().withMessage('Please provide email address'),
+  body('otp').exists().withMessage('Please provide otp').notEmpty().withMessage('Please provide otp'),
+];

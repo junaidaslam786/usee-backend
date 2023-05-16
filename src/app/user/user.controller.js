@@ -78,3 +78,21 @@ export const listCustomerUsers = async (req, res, next) => {
     return next(err);
   }
 };
+
+/**
+ * POST /user/validate-opt
+ * Validate user Otp 
+ */
+ export const validateOtp = async (req, res, next) => {
+  try {
+    const result = await userService.validateOtp(req.user, req.body);
+    if (result?.error && result?.message) {
+        return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.log('validateOtpError', err);
+    return next(err);
+  }
+};

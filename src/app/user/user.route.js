@@ -13,5 +13,6 @@ router.route('/profile')
 
 router.put('/update-password', isAuthenticated, validate(userValidations.changePasswordRules), userController.updatePassword);
 router.get('/list-customer', isAuthenticated, userController.listCustomerUsers);
+router.post('/validate-otp', isAuthenticated, validate(userValidations.validateOtpRules), userController.validateOtp);
 
 export default router;

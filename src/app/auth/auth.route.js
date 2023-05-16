@@ -11,5 +11,6 @@ router.post('/register-agent', validate(authValidations.registerAgentRules), aut
 router.post('/register-customer', validate(authValidations.registerCustomerRules), authController.registerCustomer);
 router.get('/forgot-password', validate(authValidations.forgotPasswordRules), authController.forgotPassword);
 router.post('/reset-password', validate(authValidations.resetPasswordRules), authController.resetPassword);
+router.post('/send-otp', validate(authValidations.sendOtpRules), authController.sendOtp);
 
 export default router;

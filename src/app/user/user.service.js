@@ -26,12 +26,12 @@ export const updateCurrentUser = async (reqBody, req) => {
             user.cityName = reqBody.city;
         }
 
-        if(reqBody?.signupStep) {
-            user.signupStep = reqBody.signupStep;
+        if (reqBody?.otpCode) {
+            user.otpCode = reqBody.otpCode;
         }
 
-        if(reqBody?.otpVerified) {
-            user.otpVerified = reqBody.otpVerified;
+        if (reqBody?.otpExpiry) {
+            user.otpExpiry = reqBody.otpExpiry;
         }
 
         // profile image upload
@@ -155,6 +155,26 @@ export const listCustomerUsers = async (userInfo, query, dbInstance) => {
         
     } catch(err) {
         console.log('listAgentUsersToAllocateServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const validateOtp = async (user, reqBody) => {
+    try {
+        const { otp } = reqBody;
+
+        if (otp != user.otpCode) {
+            return { error: true, message: 'Otp is incorrect!'}
+        }
+
+        user.otpVerified = true;
+        user.otpCode = null;
+        user.signupStep = 2;
+        await user.save();
+
+        return true;
+    } catch(err) {
+        console.log('validateOtpError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
