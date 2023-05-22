@@ -7,6 +7,7 @@ import * as userService from '../user/user.service';
 import { mailHelper, utilsHelper } from '@/helpers';
 const path = require("path")
 const ejs = require("ejs");
+import timezoneJson from "../../../timezones.json";
 
 export const login = async (reqBody, dbInstance) => {
     try {
@@ -85,9 +86,27 @@ export const login = async (reqBody, dbInstance) => {
 export const registerAsAgent = async (req, reqBody, dbInstance) => {
     try {
         const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
-        const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber, jobTitle } = reqBody;
+        const { 
+            firstName, 
+            lastName, 
+            email, 
+            password, 
+            companyName, 
+            companyPosition, 
+            phoneNumber, 
+            jobTitle,
+            timezone
+        } = reqBody;
         
+        let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
         const result = await db.transaction(async (transaction) => {
+            if (timezone) {
+                const findTimezone = timezoneJson.find((tz) => tz.value === timezone);
+                if (findTimezone) {
+                    selectedTimezone = findTimezone.value;
+                }
+            }
+
             // Create user
             const user = await userService.createUserWithPassword({
                 firstName, 
@@ -99,7 +118,8 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 userType: USER_TYPE.AGENT,
                 signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
                 otpCode: reqBody?.otpCode ? reqBody.otpCode : null,
-                otpExpiry: reqBody?.otpExpiry ? reqBody.otpExpiry : null
+                otpExpiry: reqBody?.otpExpiry ? reqBody.otpExpiry : null,
+                timezone: selectedTimezone,
             }, transaction);
 
             let agentPayload = {
@@ -176,7 +196,15 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
 export const registerAsCustomer = async (reqBody, dbInstance) => {
     try {
         const { user: userTable } = dbInstance;
-        const { firstName, lastName, email, phoneNumber, password } = reqBody;
+        const { firstName, lastName, email, phoneNumber, password, timezone } = reqBody;
+
+        let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
+        if (timezone) {
+            const findTimezone = timezoneJson.find((tz) => tz.value === timezone);
+            if (findTimezone) {
+                selectedTimezone = findTimezone.value;
+            }
+        }
 
         // Create user
         const userData = {
@@ -189,7 +217,8 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
             userType: USER_TYPE.CUSTOMER,
             signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
             otpCode: reqBody?.otpCode ? reqBody.otpCode : null,
-            otpExpiry: reqBody?.otpExpiry ? reqBody.otpExpiry : null
+            otpExpiry: reqBody?.otpExpiry ? reqBody.otpExpiry : null,
+            timezone: selectedTimezone,
         }
         const user = await userTable.create(userData);
 

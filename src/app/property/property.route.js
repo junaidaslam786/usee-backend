@@ -18,6 +18,7 @@ router.delete('/document', isAuthenticated, validate(propertyValidations.deleteP
 router.post('/image', isAuthenticated, validate(propertyValidations.uploadPropertyImageRules), propertyController.uploadPropertyImages);
 router.delete('/image', isAuthenticated, validate(propertyValidations.deletePropertyImageRules), propertyController.deletePropertyImage);
 router.post('/removal-request', isAuthenticated, validate(propertyValidations.removalRequestRules), propertyController.removePropertyRequest);
+router.delete('/allocated', isAuthenticated, validate(propertyValidations.deleteAllocatedPropertyRules), propertyController.deleteAllocatedProperty);
 
 // offer
 router.get('/offer/:id', isAuthenticated, propertyController.getPropertyOffer);

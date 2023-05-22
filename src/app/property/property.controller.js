@@ -84,7 +84,7 @@ export const deletePropertyDocument = async (req, res, next) => {
             return next(createError(400, result.message));
         }
 
-        return res.json({ success: true, message: "Product document deleted successfully" });
+        return res.json({ success: true, message: "Property document deleted successfully" });
     } catch (err) {
         console.log('deletePropertyDocumentError', err);
         next(err);
@@ -102,7 +102,7 @@ export const deletePropertyImage = async (req, res, next) => {
             return next(createError(400, result.message));
         }
 
-        return res.json({ success: true, message: "Product image deleted successfully" });
+        return res.json({ success: true, message: "Property image deleted successfully" });
     } catch (err) {
         console.log('deletePropertyImageError', err);
         next(err);
@@ -339,6 +339,24 @@ export const addPropertyLog = async (req, res, next) => {
         return res.json({ success: true, message: "Property log added successfully" });
     } catch (err) {
         console.log('addPropertyLogError', err);
+        next(err);
+    }
+};
+
+/**
+ * DELETE /property/allocated
+ * Delete allocated property of a user
+ */
+export const deleteAllocatedProperty = async (req, res, next) => {
+    try {
+        const result = await propertyService.deleteAllocatedProperty(req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Allocated property deleted successfully" });
+    } catch (err) {
+        console.log('deleteAllocatedPropertyError', err);
         next(err);
     }
 };

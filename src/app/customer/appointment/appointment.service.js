@@ -15,6 +15,7 @@ import {
 } from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
+import timezoneJson from "../../../../timezones.json";
 
 export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
   try {
@@ -90,13 +91,12 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
           ]
         },
         { 
-          model: dbInstance.agentTimeSlot, 
+          model: dbInstance.user, 
+          as: 'allotedAgentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
         },
         { 
-          model: dbInstance.appointmentNote, 
-          where: { customerId: customerInfo.id },
-          attributes: ["id", "notes"],
-          required: false,
+          model: dbInstance.agentTimeSlot, 
         },
       ],
       order: [["appointmentDate", "DESC"]],
@@ -137,7 +137,9 @@ export const createAppointment = async (req, dbInstance) => {
     const { 
       property, 
       appointmentDate, 
-      timeSlotId
+      timeSlotId,
+      allotedAgent,
+      timezone
     } = req.body;
 
     const sessionId = await opentokHelper.getSessionId();
@@ -166,18 +168,18 @@ export const createAppointment = async (req, dbInstance) => {
       return { error: true, message: 'Invalid timeslot selected.' };
     }
 
-    let agentSupervisor = null;
-    if (req.body.isAssignedToSupervisor) {
-      agentSupervisor = await dbInstance.agent.findOne({
-        where: { managerId: propertyDetail.userId },
+    let allotedAgentUser = null;
+    if (allotedAgent) {
+      allotedAgentUser = await dbInstance.agent.findOne({
+        where: { userId: allotedAgent },
         include: [{
           model: dbInstance.user, 
           attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber"]
         }],
       });
 
-      if (!agentSupervisor) {
-        return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} has not added any supervisor yet. Please select another slot for agent.` };
+      if (!allotedAgentUser) {
+        return { error: true, message: 'Invalid user id or user do not exist.' };
       }
     }
 
@@ -185,6 +187,14 @@ export const createAppointment = async (req, dbInstance) => {
     let isNewCustomer = false;
     const tempPassword = utilsHelper.generateRandomString(10);
     if (!customerDetails) {
+      let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
+      if (timezone) {
+        const findTimezone = timezoneJson.find((tz) => tz.value === timezone);
+        if (findTimezone) {
+          selectedTimezone = findTimezone.value;
+        }
+      }
+
       customerDetails = await userService.createUserWithPassword({
         firstName: req.body.customerFirstName,
         lastName: req.body.customerLastName,
@@ -192,6 +202,7 @@ export const createAppointment = async (req, dbInstance) => {
         password: tempPassword,
         status: true,
         userType: USER_TYPE.CUSTOMER,
+        timezone: selectedTimezone,
       });
 
       isNewCustomer = true;
@@ -204,11 +215,11 @@ export const createAppointment = async (req, dbInstance) => {
     // check availability algorithm
     const foundTimeSlots = await checkAvailability({
       dbInstance,
-      user: req.user,
+      user: customerDetails,
       body: {
         date: appointmentDate,
         time: timeSlotId,
-        userId: agentSupervisor?.userId ? agentSupervisor.userId : propertyDetail.userId
+        userId: allotedAgentUser?.userId ? allotedAgentUser.userId : propertyDetail.userId
       }
     });
 
@@ -223,8 +234,8 @@ export const createAppointment = async (req, dbInstance) => {
         timeSlotId,
         agentId: propertyDetail.userId,
         customerId: customerDetails.id,
-        allotedAgent: agentSupervisor?.userId ? agentSupervisor.userId : propertyDetail.userId,
-        appointmentTimeGmt: utilsHelper.convertTimeToGmt(timeSlot.fromTime, req.user.timezone),
+        allotedAgent: allotedAgentUser?.userId ? allotedAgentUser.userId : propertyDetail.userId,
+        appointmentTimeGmt: utilsHelper.convertTimeToGmt(timeSlot.fromTime, customerDetails.timezone),
         sessionId,
       }, { transaction });
 
@@ -232,6 +243,7 @@ export const createAppointment = async (req, dbInstance) => {
       await dbInstance.userAlert.create({
         customerId: customerDetails.id,
         productId: property,
+        agentId: allotedAgentUser?.userId ? allotedAgentUser.userId : propertyDetail.userId,
         keyId: appointment.id,
         alertMode: USER_ALERT_MODE.APPOINTMENT,
         alertType: USER_ALERT_TYPE.APPOINTMENT,
@@ -249,18 +261,18 @@ export const createAppointment = async (req, dbInstance) => {
           interest: false,
         }, { transaction });
 
-        if (agentSupervisor?.userId) {
-          // Fetch the existing allocation for the supervisor
+        if (allotedAgentUser?.userId) {
+          // Fetch the existing allocation for the alloted agent
           const existingAllocations = await dbInstance.productAllocation.findOne({
             where: {
-              userId: agentSupervisor.userId,
+              userId: allotedAgentUser.userId,
               productId: propertyDetail.id,
             },
           });
 
           if (!existingAllocations) {
             await dbInstance.productAllocation.create({
-              userId: agentSupervisor.userId,
+              userId: allotedAgentUser.userId,
               productId: propertyDetail.id,
             }, { transaction });
           }
@@ -283,7 +295,7 @@ export const createAppointment = async (req, dbInstance) => {
 
       const emailData = [];
       emailData.date = appointmentDate;
-      emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, (agentSupervisor?.user?.email ? agentSupervisor.user.timezone : propertyDetail.user.timezone), "HH:mm a");
+      emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, (allotedAgentUser?.user?.email ? allotedAgentUser.user.timezone : propertyDetail.user.timezone), "HH:mm a");
       emailData.products = [propertyDetail];
       emailData.customer = customerDetails.fullName;
       emailData.customerImage = customerDetails.profileImage;
@@ -293,7 +305,7 @@ export const createAppointment = async (req, dbInstance) => {
       emailData.appUrl = process.env.APP_URL;
       const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_JOIN_APPOINTMENT), emailData);
       const payload = {
-        to: agentSupervisor?.user?.email ? agentSupervisor.user.email : propertyDetail.user.email,
+        to: allotedAgentUser?.user?.email ? allotedAgentUser.user.email : propertyDetail.user.email,
         subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
         html: htmlData,
       }
@@ -365,12 +377,6 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
           },
           { 
             model: dbInstance.agentTimeSlot, 
-          },
-          { 
-            model: dbInstance.appointmentNote, 
-            where: { customerId: user.id },
-            attributes: ["id", "notes"],
-            required: false,
           },
         ],
     });

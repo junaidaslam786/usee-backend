@@ -1,6 +1,7 @@
 import createError from 'http-errors';
 import * as iframeService from './iframe.service';
 import * as userService from '../agent/user/user.service';
+import * as appoinmentService from '../customer/appointment/appointment.service';
 
 /**
  * POST /iframe/wishlist
@@ -51,7 +52,7 @@ export const listAvailabilitySlots = async (req, res, next) => {
 
     return res.status(200).json(result);
   } catch (err) {
-    console.log('listAvailabilitySlotsError', err);
+    console.log('iframeListAvailabilitySlotsError', err);
     return next(err);
   }
 };
@@ -62,15 +63,32 @@ export const listAvailabilitySlots = async (req, res, next) => {
  */
 export const checkAvailability = async (req, res, next) => {
   try {
-    const result = await userService.checkAvailability(req.body, req);
+    const result = await iframeService.checkAvailability(req);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
 
     return res.json({ success: result });
   } catch (err) {
-    console.log('checkAvailabilityError', err);
+    console.log('iframeCheckAvailabilityError', err);
     next(err);
   }
 };
   
+/**
+ * GET /iframe/to-allocate
+ * List all users created by given agent to allocate to properties
+ */
+export const listAgentUsersToAllocate = async (req, res, next) => {
+  try {
+    const result = await userService.listAgentUsersToAllocate(req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('iframeListAgentUsersToAllocateError', err);
+    return next(err);
+  }
+};

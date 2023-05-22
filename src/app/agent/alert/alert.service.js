@@ -5,17 +5,24 @@ export const getAgentAlerts = async (userId, dbInstance) => {
     try {
         const alerts = await dbInstance.userAlert.findAll({
             where: {
-              removed: false,
+                agentId: userId,
+                removed: false,
             },
             include: [
               {
                 model: dbInstance.user,
+                as: 'customerAlertUser',
+                where: { deletedAt: null },
+                attributes: ["id", "firstName", "lastName"],
+              },
+              {
+                model: dbInstance.user,
+                as: 'AgentAlertUser',
                 where: { deletedAt: null },
                 attributes: ["id", "firstName", "lastName"],
               },
               {
                 model: dbInstance.product,
-                where: { userId },
                 attributes: ["id", "title"]
               },
             ],
@@ -45,7 +52,7 @@ export const getAgentUnReadAlertCounts = async (userId, dbInstance) => {
         const unReadAlertCounts = await dbInstance.userAlert.count({
             where: { 
                 viewed: false,
-                productId: { [OP.in]: Sequelize.literal(`(select id from products where user_id = '${userId}')`) }
+                agentId: userId
             },
         });
 
@@ -60,6 +67,7 @@ export const createAgentAlert = async (reqBody, req) => {
     try {
         const { user: customerInfo, dbInstance } = req;
         const {
+            agentId,
             productId,
             alertMode,
             alertType
@@ -69,6 +77,7 @@ export const createAgentAlert = async (reqBody, req) => {
         const agentAlert = await dbInstance.userAlert.create({
             customerId: customerInfo.id,
             productId,
+            agentId,
             keyId: reqBody?.keyId ? reqBody?.keyId : null,
             alertMode,
             alertType,
@@ -108,8 +117,15 @@ export const removeAgentAlert = async (alertId, dbInstance) => {
 export const getAgentAlertDetailById = async (id, dbInstance) => {
     const agentAlert = await dbInstance.userAlert.findOne({
         where: { id },
-        include: [{
+        include: [
+        {
             model: dbInstance.user, 
+            as: 'customerAlertUser',
+            attributes: ["id", "firstName", "lastName"],
+        },
+        {
+            model: dbInstance.user, 
+            as: 'AgentAlertUser',
             attributes: ["id", "firstName", "lastName"],
         },
         {

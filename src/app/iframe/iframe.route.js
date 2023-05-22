@@ -10,5 +10,6 @@ router.post('/wishlist', validate(iframeValidations.addToWishlistRules), iframeC
 router.post('/appointment', validate(iframeValidations.addAppointmentRules), iframeController.addAppointment);
 router.get('/list-slots', iframeController.listAvailabilitySlots);
 router.post('/check-availability', validate(iframeValidations.checkAvailabilityRules), iframeController.checkAvailability);
+router.get('/to-allocate', iframeController.listAgentUsersToAllocate);
 
 export default router;

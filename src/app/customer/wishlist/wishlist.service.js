@@ -67,6 +67,7 @@ export const addProductToWishlist = async (productId, req) => {
             await dbInstance.userAlert.create({
                 customerId: customerDetails.id,
                 productId,
+                agentId: product.user.id,
                 alertMode: USER_ALERT_MODE.WISHLIST,
                 alertType: USER_ALERT_TYPE.WISHLIST_ADDED,
                 removed: false,
@@ -135,6 +136,7 @@ export const removeProductFromWishlist = async (productId, req) => {
             await dbInstance.userAlert.create({
                 customerId: customerInfo.id,
                 productId,
+                agentId: product.user.id,
                 alertMode: USER_ALERT_MODE.WISHLIST,
                 alertType: USER_ALERT_TYPE.WISHLIST_REMOVED,
                 removed: false,

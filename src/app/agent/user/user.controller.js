@@ -25,7 +25,7 @@ export const listAgentUsers = async (req, res, next) => {
  */
 export const listAgentUsersToAllocate = async (req, res, next) => {
     try {
-      const result = await userService.listAgentUsersToAllocate(req.user, req.dbInstance);
+      const result = await userService.listAgentUsersToAllocate(req);
       if (result?.error && result?.message) {
           return next(createError(400, result.message));
       }
@@ -123,60 +123,6 @@ export const deleteAgentUser = async (req, res, next) => {
         return res.json({ success: true, message: "User deleted successfully" });
     } catch (err) {
         console.log('deleteAgentUserError', err);
-        next(err);
-    }
-};
-
-/**
- * GET /agent/user/create-supervisor
- * Create user by agent
- */
-export const getAgentSupervisor = async (req, res, next) => {
-    try {
-        const result = await userService.getAgentSupervisor(req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        res.status(200).json(result);
-    } catch (err) {
-        console.log('getAgentSupervisorError', err);
-        next(err);
-    }
-};
-
-/**
- * POST /agent/user/create-supervisor
- * Create user by agent
- */
-export const createAgentSupervisor = async (req, res, next) => {
-    try {
-        const result = await userService.createAgentSupervisor(req.body, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        res.status(201).json(result);
-    } catch (err) {
-        console.log('createAgentSupervisorError', err);
-        next(err);
-    }
-};
-
-/**
- * POST /agent/user/update-supervisor
- * Update supervisor by agent
- */
-export const updateAgentSupervisor = async (req, res, next) => {
-    try {
-        const result = await userService.updateAgentSupervisor(req.body, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        res.status(200).json(result);
-    } catch (err) {
-        console.log('updateAgentSupervisorError', err);
         next(err);
     }
 };
