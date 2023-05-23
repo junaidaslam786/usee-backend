@@ -92,7 +92,23 @@ export const listCustomerUsers = async (req, res, next) => {
 
     return res.json({ success: true });
   } catch (err) {
-    console.log('validateOtpError', err);
+    return next(err);
+  }
+};
+
+/**
+ * PUT /user/update-timezone
+ * Update timezone of current user
+ */
+export const updateTimezone = async (req, res, next) => {
+  try {
+    const result = await userService.updateTimezone(req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
     return next(err);
   }
 };

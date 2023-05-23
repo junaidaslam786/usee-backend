@@ -51,12 +51,14 @@ export const listAgentAvailabilitySlots = async (req) => {
     try {
         const { user: agentInfo, dbInstance } = req;
 
+        const whereClause = req?.query?.all ? {} : { userId: (req?.query?.agent ? req.query.agent : agentInfo.id) };
         return await dbInstance.agentTimeSlot.findAll({
             include: [{
                 model: dbInstance.agentAvailability,
-                where: { userId: (req?.query?.agent ? req.query.agent : agentInfo.id) },
+                where: whereClause,
                 attributes: []
-            }]
+            }],
+            order: [['from_time', 'ASC']],
         });
     } catch(err) {
         console.log('listAgentAvailabilityServiceError', err)

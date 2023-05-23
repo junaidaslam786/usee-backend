@@ -4,6 +4,14 @@ const {
     ADMIN_PANEL_URL,
     HOME_PANEL_URL
 } = process.env;
+import { 
+    USER_TYPE,
+    APPOINTMENT_STATUS
+} from '@/config/constants';
+import moment from 'moment';
+import 'moment-timezone';
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
 
 export const generateRandomString = (length, isApiCode = false) => {
     try {
@@ -116,7 +124,11 @@ export const calculateDistance = (lat1, lon1, lat2, lon2, unit) => {
 	}
 }
 
-export const checkIfTimeIsOld = (date, time) => {
+export const checkIfTimeIsOld = (user, date, time) => {
+    if (user?.timezone) {
+        process.env.TZ = user.timezone;
+    }
+    
     const difdate = date;
     const parts = difdate.split("-");
     const fpdate = parts[0]+'-'+parts[1]+'-'+parts[2];
@@ -129,7 +141,120 @@ export const checkIfTimeIsOld = (date, time) => {
     currentDate.setSeconds(0);
     currentDate.setMilliseconds(0);
 
-    // console.log('givenDateFormat', givenDate.toString());
-    // console.log('currentDateFormat', currentDate.toString());
+    console.log('givenDateFormat', givenDate.toString());
+    console.log('currentDateFormat', currentDate.toString());
     return givenDate < currentDate;
+}
+
+export const getCustomDate = (type) => {
+    let customDate = "";
+    switch(type) {
+        case "today":
+            customDate = moment().startOf('day').format('YYYY-MM-DD');
+            return;
+        case "yesterday":
+            customDate = moment().subtract(1, 'day').startOf('day').format('YYYY-MM-DD');
+            return;
+        case "thisMonthStart":
+            customDate = moment().startOf('month').format('YYYY-MM-DD');
+            return;
+        case "thisMonthEnd":
+            customDate = moment().endOf('month').format('YYYY-MM-DD');
+            return;
+        case "lastMonthStart":
+            customDate = moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
+            return;
+        case "lastMonthEnd":
+            customDate = moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD');
+            return;
+        case "startOfPeriod":
+            customDate = moment().subtract(3, 'month').startOf('day').format('YYYY-MM-DD');
+            return;
+        case "endOfPeriod":
+            customDate = moment().format('YYYY-MM-DD');
+            return;
+    }
+
+    return customDate;
+}
+
+export const convertDateTimeToTimestamp = (appointmentDate, fromTime) => {
+    return (appointmentDate && fromTime) ? moment(`${appointmentDate} ${fromTime}`).valueOf() : "";
+}
+
+export const convertTimeToTimezoneBasedTime = (sourceUserTimezone, targetUserTimezone, time) => {
+    if (!sourceUserTimezone || !targetUserTimezone) {
+        return false;
+    }
+
+    return time ? moment.tz(time, "HH:mm:ss", sourceUserTimezone).tz(targetUserTimezone).format("HH:mm:ss") : "-";
+}
+
+export const convertTimeToGmt = (time, timezone, format) => {
+    return time ? moment.tz(time, "HH:mm:ss", timezone).tz('GMT').format(format ? format : "HH:mm:ss") : "-";
+}
+  
+export const convertGmtToTime = (time, timezone, format) => {
+    return time ? moment.tz(time, "HH:mm:ss", "GMT").tz(timezone).format(format ? format : "HH:mm:ss") : "-";
+}
+
+export const availabilityAlgorithm = async (requstedUser, targetUserId, date, timeSlot, type, dbInstance) => {
+    const user = await dbInstance.user.findOne({ where: { id: targetUserId } });
+    if (!user) {
+      return { error: true, message: 'Invalid user selected.' };
+    }
+
+    if (type === USER_TYPE.AGENT) {
+        // convert the selected slot to selected users timezone
+        const timezoneBasedfromTime = convertTimeToTimezoneBasedTime(requstedUser.timezone, user.timezone, timeSlot.fromTime);
+        if (!timezoneBasedfromTime) {
+            return { error: true, message: `As per ${process.env.AGENT_ENTITY_LABEL} timezone, selected timeslot is not available. Please select another timeslot.` };
+        }
+    
+        // select target user time slot
+        const targetTimeSlot = await dbInstance.agentTimeSlot.findOne({ where: { fromTime: timezoneBasedfromTime } });
+        if (!targetTimeSlot) {
+            return { error: true, message: `As per ${process.env.AGENT_ENTITY_LABEL} timezone, selected timeslot is not available. Please select another timeslot.` };
+        }
+
+        // check if slot is expired or not based on selected users timezone
+        const isTimeExpired = checkIfTimeIsOld(user, date, targetTimeSlot.fromTime);
+        if (isTimeExpired) {
+            return { error: true, message: `As per ${process.env.AGENT_ENTITY_LABEL} timezone, selected timeslot is expired. Please select another timeslot.` };
+        }
+
+        // check if agent has enabled the time slot or not
+        const isAgentSlotAvailable = await dbInstance.agentAvailability.findOne({
+            where: {
+                userId: user.id,
+                dayId: (new Date(date).getDay() + 6) % 7 + 1,
+                timeSlotId: targetTimeSlot.id,
+                status: true
+            }
+        });
+
+        if (!isAgentSlotAvailable) {
+            return { error: true, message: `${process.env.AGENT_ENTITY_LABEL} is not available in this timeslot. Please choose another timeslot.` };
+        }
+    }
+    
+    let whereClause = {
+        appointmentDate: date,
+        appointmentTimeGmt: convertTimeToGmt(timeSlot.fromTime, requstedUser.timezone),
+        status: { [OP.in]: [APPOINTMENT_STATUS.PENDING, APPOINTMENT_STATUS.INPROGRESS] }, 
+    };
+    
+    if (type === USER_TYPE.CUSTOMER) {
+        whereClause.customerId = user.id;
+    } else {
+        whereClause.allotedAgent = user.id;
+    }
+  
+    // Check if there's an existing appointment
+    const existingAppointment = await dbInstance.appointment.findOne({ where: whereClause });
+    if (existingAppointment) {
+      return { error: true, message: `${type === USER_TYPE.CUSTOMER ? process.env.CUSTOMER_ENTITY_LABEL : process.env.AGENT_ENTITY_LABEL} already has an appointment. Please choose another timeslot.` };
+    }
+
+    return true;
 }

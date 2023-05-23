@@ -74,4 +74,7 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json(err);
 });
 
+// process.env.TZ = "Asia/Dubai";
+// console.log(new Date().toString());
+
 export default app;

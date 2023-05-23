@@ -1,9 +1,17 @@
-import { AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE } from '@/config/constants';
+import { 
+    AGENT_TYPE, 
+    EMAIL_SUBJECT, 
+    EMAIL_TEMPLATE_PATH, 
+    USER_TYPE, 
+    APPOINTMENT_STATUS
+} from '@/config/constants';
 import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
 import * as userService from '../../user/user.service';
 const path = require("path")
 const ejs = require("ejs");
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
 
 export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     try {
@@ -182,51 +190,6 @@ export const updateAgentUserSorting = async (reqBody, req) => {
         return true;
     } catch(err) {
         console.log('updateAgentUserSortingServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
-    }
-}
-
-export const checkAvailability = async (reqBody, req) => {
-    try {
-        const { date, time } = reqBody;
-        const { dbInstance } = req;
-        const userId = reqBody?.userId ? reqBody.userId : req.user.id;
-
-        const timeSlot = await dbInstance.agentTimeSlot.findOne({ where: { id: time } });
-        if (!timeSlot) {
-            return { error: true, message: 'Invalid time selected.' };
-        }
-
-        const isTimeExpired = utilsHelper.checkIfTimeIsOld(date, timeSlot.fromTime);
-        if (isTimeExpired) {
-            return { error: true, message: 'Time is expired. Please select another timeslot.' };
-        }
-
-        // Check if there's an existing appointment
-        const existingAppointment = await dbInstance.appointment.findOne({
-            where: {
-                agentId: userId,
-                appointmentDate: date,
-                timeSlotId: time,
-                allotedAgent: userId 
-            }
-        });
-
-        if (existingAppointment) {
-            return false;
-        }
-
-        const result = await dbInstance.agentAvailability.findOne({
-            where: {
-                userId,
-                dayId: (new Date(date).getDay() + 6) % 7 + 1,
-                timeSlotId: time,
-                status: true
-            }
-        });
-        return result ? true : false;
-    } catch(err) {
-        console.log('checkAvailabilityServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }

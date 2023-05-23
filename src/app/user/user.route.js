@@ -12,6 +12,7 @@ router.route('/profile')
   .delete(isAuthenticated, userController.deleteCurrentUser);
 
 router.put('/update-password', isAuthenticated, validate(userValidations.changePasswordRules), userController.updatePassword);
+router.put('/update-timezone', isAuthenticated, userController.updateTimezone);
 router.get('/list-customer', isAuthenticated, userController.listCustomerUsers);
 router.post('/validate-otp', isAuthenticated, validate(userValidations.validateOtpRules), userController.validateOtp);
 

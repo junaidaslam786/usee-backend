@@ -50,11 +50,6 @@ export const updateAgentUserSortingRules = [
   body('sort').exists().notEmpty(),
 ];
 
-export const checkAvailabilityRules = [
-  body('date').exists().withMessage('date is not provided').notEmpty().withMessage('date should not be empty'),
-  body('time').exists().withMessage('time is not provided').notEmpty().withMessage('time should not be empty'),
-];
-
 export const createAgentSupervisorRules = [
   body('firstName').exists().withMessage('Please provide first name').notEmpty().withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty().withMessage('Please provide last name'),
