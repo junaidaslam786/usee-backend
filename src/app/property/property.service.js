@@ -575,6 +575,7 @@ export const addCustomerOffer = async (reqBody, req) => {
             emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;
             emailData.offerAmount = amount;
             emailData.notes = notes;
+            emailData.propertyId = product.id;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER), emailData);
             const payload = {
                 to: product.user.email,
@@ -667,6 +668,7 @@ export const processUpdateOffer = async (offer, dbInstance, status, reason) => {
             emailData.status = status;
             emailData.propertyTitle = product.title;
             emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;
+            emailData.propertyId = product.id;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER_UPDATE), emailData);
             const payload = {
                 to: customer.email,

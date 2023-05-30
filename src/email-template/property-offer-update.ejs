@@ -6,7 +6,7 @@
         <span>
             <%= process.env.AGENT_ENTITY_LABEL %> has <%= status %> your offer to the property.
             <br> <br> 
-            <b style="color:#3e2837;font-weight:700;"> <%= propertyTitle %></b> 
+            <a href="<%= process.env.HOME_PANEL_URL %>/customer/property-details/<%= propertyId %>"><b style="color:#3e2837;font-weight:700;"> <%= propertyTitle %> (click to see details)</b> </a>
         </span>
     </td>
 </tr>

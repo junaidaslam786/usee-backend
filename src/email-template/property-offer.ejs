@@ -3,7 +3,7 @@
 <tr>
     <td valign="top" style="color:#92778a;text-align:center;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px;">
         <span><%= customerName %> had a <b>mortgage</b> request for the below property<br> 
-        <b style="color:#3e2837;font-weight:700;"> <%= propertyTitle %></b> </span>
+        <a href="<%= process.env.HOME_PANEL_URL %>/agent/property-details/<%= propertyId %>"><b style="color:#3e2837;font-weight:700;"> <%= propertyTitle %> (click to see details)</b> </a>
     </td>
 </tr>
 <tr>
