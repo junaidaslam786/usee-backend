@@ -3,7 +3,6 @@ import {
     EMAIL_SUBJECT, 
     EMAIL_TEMPLATE_PATH, 
     USER_TYPE, 
-    APPOINTMENT_STATUS
 } from '@/config/constants';
 import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
@@ -12,19 +11,27 @@ const path = require("path")
 const ejs = require("ejs");
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
+import timezoneJson from "../../../../timezones.json";
 
 export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     try {
         const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
         const page = (reqBody && reqBody.page) ? reqBody.page : 1;
+        const search = (reqBody && reqBody.search) ? reqBody.search : "";
 
         const whereClause = agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { managerId: agentInfo.id };
         const { count, rows } = await dbInstance.agent.findAndCountAll({
             where: whereClause,
             include: [{ 
                 model: dbInstance.user,
+                where: {
+                    [OP.or]: [
+                        { firstName: { [OP.iLike]: `%${search}%` } },
+                        { lastName: { [OP.iLike]: `%${search}%` } },
+                    ],
+                },
                 include: [{
-                    model: dbInstance.productAllocation
+                    model: dbInstance.productAllocation,
                 }]
             }],
             order: [["id", "DESC"]],
@@ -45,11 +52,18 @@ export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     }
 }
 
-export const listAgentUsersToAllocate = async (agentInfo, dbInstance) => {
+export const listAgentUsersToAllocate = async (req) => {
     try {
-        const whereClause = agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { managerId: agentInfo.id };
+        const { user: agentInfo, dbInstance } = req;
+
+        const selectedUser = (req?.query?.user) ? req.query.user : agentInfo.id;
         return await dbInstance.agent.findAll({
-            where: whereClause,
+            where: { 
+                [OP.or]: [
+                    { agentId: selectedUser },
+                    { managerId: selectedUser }
+                ]
+            },
             attributes: ["userId"],
             include: [{ 
                 model: dbInstance.user,
@@ -57,7 +71,6 @@ export const listAgentUsersToAllocate = async (agentInfo, dbInstance) => {
             }],
             order: [["id", "DESC"]],
         });
-        
     } catch(err) {
         console.log('listAgentUsersToAllocateServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
@@ -66,9 +79,13 @@ export const listAgentUsersToAllocate = async (agentInfo, dbInstance) => {
 
 export const createAgentUsers = async (reqBody, req) => {
     try {
-        const { firstName, lastName, email, phoneNumber, role, branch } = reqBody;
+        const { firstName, lastName, email, phoneNumber, role, branch, timezone } = reqBody;
         const { user: agentInfo, dbInstance } = req;
         const { agent, agentTimeSlot, agentAvailability } = dbInstance;
+
+        if (!agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
+            return { error: true, message: 'You do not have permission to add user.'}
+        }
 
         const result = await db.transaction(async (transaction) => {
             const tempPassword = utilsHelper.generateRandomString(10);
@@ -85,16 +102,27 @@ export const createAgentUsers = async (reqBody, req) => {
             });
             const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
 
+            let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
+            if (timezone) {
+                const findTimezone = timezoneJson.find((tz) => tz.value === timezone);
+                if (findTimezone) {
+                    selectedTimezone = findTimezone.value;
+                }
+            }
+
             // create user data
             const newUser = await userService.createUserWithPassword({
                 firstName,
                 lastName,
-                email,
+                email: email.toLowerCase(), 
                 phoneNumber,
                 status: true,
                 userType: USER_TYPE.AGENT,
                 password: tempPassword,
+                signupStep: 2,
+                otpVerified: true,
                 createdBy: agentInfo.id,
+                timezone: selectedTimezone,
             }, transaction);
 
             // create agent user data
@@ -102,15 +130,14 @@ export const createAgentUsers = async (reqBody, req) => {
                 userId: newUser.id,
                 agentId: agentInfo.id,
                 agentType: role,
-                branchId: branch,
-                companyPosition: role == AGENT_TYPE.MANAGER ? "Manager" : "Staff",
+                // branchId: branch,
+                companyPosition: role === AGENT_TYPE.MANAGER ? "Manager" : "Staff",
                 apiCode: utilsHelper.generateRandomString(10, true),
                 sortOrder: sortOrder,
                 createdBy: agentInfo.id,
             };
 
             if (agentInfo.agent.agentType == AGENT_TYPE.MANAGER) {
-                agentUserData.agentId = null;
                 agentUserData.managerId = agentInfo.id;
             }
             await agent.create(agentUserData, { transaction });
@@ -271,114 +298,4 @@ const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
     }
 
     return agentUser;
-}
-
-export const getAgentSupervisor = async (req) => {
-    try {
-        const { user: agentInfo, dbInstance } = req;
-        const agentUser = await dbInstance.agent.findOne({
-            where: { managerId: agentInfo.id },
-            include: [{
-                model: dbInstance.user, 
-                attributes: ["firstName", "lastName", "email", "phoneNumber"]
-            }],
-        });
-
-        return agentUser;
-    } catch(err) {
-        console.log('getAgentSupervisorServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
-    }
-}
-
-export const createAgentSupervisor = async (reqBody, req) => {
-    try {
-        const { firstName, lastName, email } = reqBody;
-        const { user: agentInfo, dbInstance } = req;
-        const { agent, agentTimeSlot, agentAvailability } = dbInstance;
-
-        const result = await db.transaction(async (transaction) => {
-            const tempPassword = utilsHelper.generateRandomString(10);
-
-            // create user data
-            const newUser = await userService.createUserWithPassword({
-                firstName,
-                lastName,
-                email,
-                phoneNumber: reqBody?.phoneNumber ? reqBody.phoneNumber : "",
-                status: true,
-                userType: USER_TYPE.AGENT,
-                password: tempPassword,
-                createdBy: agentInfo.id,
-            }, transaction);
-
-            // create agent user data
-            let agentUserData = {
-                userId: newUser.id,
-                managerId: agentInfo.id,
-                agentType: AGENT_TYPE.MANAGER,
-                companyPosition: "Supervisor",
-                apiCode: utilsHelper.generateRandomString(10, true),
-                createdBy: agentInfo.id,
-            };
-            await agent.create(agentUserData, { transaction });
-
-            const timeslots = await agentTimeSlot.findAll();
-            for (let day = 1; day <= 7; day++) {
-                let agentAvailabilities = [];
-                for (const slot of timeslots) {
-                    agentAvailabilities.push({
-                        userId: newUser.id,
-                        dayId: day,
-                        timeSlotId: slot.id,
-                        status: true,
-                    });
-                }
-                await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
-            }
-
-            const emailData = [];
-            emailData.name = newUser.fullName;
-            emailData.tempPassword = tempPassword;
-            emailData.login = utilsHelper.generateUrl('agent-login', newUser.userType);
-            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_TEMP_PASSWORD), emailData);
-            const payload = {
-                to: newUser.email,
-                subject: `${EMAIL_SUBJECT.AGENT_ADDED_AS} ${agentUserData.companyPosition}`,
-                html: htmlData,
-            }
-            mailHelper.sendMail(payload);
-
-            return newUser;
-        });
-        
-        return (result.id) ? await getAgentUserDetailByUserId(result.id, dbInstance) : result;
-    } catch(err) {
-        console.log('createAgentUsersServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
-    }
-}
-
-export const updateAgentSupervisor = async (reqBody, req) => {
-    try {
-        const { id, firstName, lastName } = reqBody;
-        const { dbInstance } = req;
-
-        const agentUser = await dbInstance.user.findOne({ where: { id }});
-        if (!agentUser) {
-            return { error: true, message: 'Invalid supervisor id or supervisor do not exist.'}
-        }
-
-        agentUser.firstName = firstName;
-        agentUser.lastName = lastName;
-        if (reqBody?.phoneNumber) {
-            agentUser.phoneNumber = reqBody.phoneNumber;
-        }
-        await agentUser.save();
-        
-        return true;
-    } catch(err) {
-        console.log('updateAgentSupervisorServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
-    }
 }

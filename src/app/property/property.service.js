@@ -10,7 +10,8 @@ import {
     OFFER_STATUS, 
     EMAIL_SUBJECT, 
     EMAIL_TEMPLATE_PATH, 
-    PRODUCT_LOG_TYPE
+    PRODUCT_LOG_TYPE,
+    AGENT_TYPE
  } from '../../config/constants';
 import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
@@ -67,7 +68,6 @@ export const createProperty = async (reqBody, req) => {
             }
             await dbInstance.productMetaTag.bulkCreate(metaTags, { transaction });
 
-            /*
             // create allocated users
             const allocatedUsers = [];
             const allocatedUserIds = [];
@@ -86,7 +86,6 @@ export const createProperty = async (reqBody, req) => {
                 return { error: true, message: 'Invalid users added to allocate'}
             }
             await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
-            */
 
             // feature image upload
             if (req.files && req.files.featuredImage) {
@@ -185,33 +184,33 @@ export const updateProperty = async (reqBody, req) => {
             }
             await dbInstance.productMetaTag.bulkCreate(metaTags, { transaction });
 
-            // remove previous allocations
-            await dbInstance.productAllocation.destroy({
-                where: {
-                    productId: product.id
-                }
-            });
+            if (user.agent.agentType !== AGENT_TYPE.STAFF) {
+                // remove previous allocations
+                await dbInstance.productAllocation.destroy({
+                    where: {
+                        productId: product.id
+                    }
+                });
 
-            /*
-            // create allocated users
-            const allocatedUsers = [];
-            const allocatedUserIds = [];
-            for (const [key, value] of Object.entries(reqBody)) {
-                if (key.startsWith('allocatedUser[')) {
-                    allocatedUsers.push({
-                        productId: product.id,
-                        userId: value,
-                    });
-                    allocatedUserIds.push(value);
+                // create allocated users
+                const allocatedUsers = [];
+                const allocatedUserIds = [];
+                for (const [key, value] of Object.entries(reqBody)) {
+                    if (key.startsWith('allocatedUser[')) {
+                        allocatedUsers.push({
+                            productId: product.id,
+                            userId: value,
+                        });
+                        allocatedUserIds.push(value);
+                    }
                 }
-            }
 
-            const allocatedUserExist = await dbInstance.user.findAndCountAll({ where: { id: allocatedUserIds } });
-            if (allocatedUserExist && allocatedUserExist.count != allocatedUserIds.length) {
-                return { error: true, message: 'Invalid users added to allocate'}
+                const allocatedUserExist = await dbInstance.user.findAndCountAll({ where: { id: allocatedUserIds } });
+                if (allocatedUserExist && allocatedUserExist.count != allocatedUserIds.length) {
+                    return { error: true, message: 'Invalid users added to allocate'}
+                }
+                await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
             }
-            await dbInstance.productAllocation.bulkCreate(allocatedUsers, { transaction });
-            */
 
             // feature image upload
             if (req.files && req.files.featuredImage) {
@@ -427,16 +426,18 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
         const status = (reqBody && reqBody.status) ? reqBody.status : {
             [OP.notIn]: [PRODUCT_STATUS.SOLD, PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
         };
+        const searchStr = (reqBody && reqBody.search) ? reqBody.search : "";
+        const selectedUser = (reqBody && reqBody.user) ? reqBody.user : userId;
     
         const { count, rows } = await dbInstance.product.findAndCountAll({
             where: {
                 status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
                 title: {
-                    [OP.iLike]: '%' + reqBody.search + '%'
+                    [OP.iLike]: '%' + searchStr + '%'
                 },
                 [OP.or]: [
-                    { userId },
-                    { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${userId}')`) }}
+                    { userId: selectedUser },
+                    { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${selectedUser}')`) }}
                 ]
             },
             order: [["id", "DESC"]],
@@ -479,8 +480,6 @@ export const listPropertiesToAllocate = async (userId, dbInstance) => {
 
 export const getProperty = async (propertyId, dbInstance) => {
     try {
-        
-
         const property = await getPropertyDetailById(propertyId, dbInstance);
         if (!property) {
             return { error: true, message: 'Invalid property id or Property do not exist.'}
@@ -559,6 +558,7 @@ export const addCustomerOffer = async (reqBody, req) => {
             await dbInstance.userAlert.create({
                 customerId: customerInfo.id,
                 productId,
+                agentId: product.user.id,
                 keyId: productOffer.id,
                 alertMode: USER_ALERT_MODE.OFFER,
                 alertType: USER_ALERT_TYPE.OFFER,
@@ -749,14 +749,14 @@ export const getPropertyDetailById = async (propertyId, dbInstance) => {
                 },
             ],
           },
-        //   {
-        //     model: dbInstance.productAllocation,
-        //     attributes: ['id'],
-        //     include: [{
-        //         model: dbInstance.user,
-        //         attributes: ['id', 'firstName', 'lastName']
-        //     }]
-        //   },
+          {
+            model: dbInstance.productAllocation,
+            attributes: ['id'],
+            include: [{
+                model: dbInstance.user,
+                attributes: ['id', 'firstName', 'lastName']
+            }]
+          },
         ],
     });
 
@@ -928,7 +928,22 @@ export const deleteCustomerOffer = async (offerId, req) => {
     try {
         const { user, dbInstance } = req;
 
-        const offer = await dbInstance.productOffer.findOne({ where: { id: offerId, customerId: user.id } });
+        const offer = await dbInstance.productOffer.findOne({ 
+            where: { 
+                id: offerId, 
+                customerId: user.id 
+            }, 
+            include: [
+                {
+                    model: dbInstance.product, 
+                    include: [{
+                        model: dbInstance.user, 
+                        attributes: ["id", "firstName", "lastName", "email"],
+                    }]
+                },
+            ]
+        });
+
         if (!offer) {
             return { error: true, message: 'Invalid offer id or offer do not exist.'}
         }
@@ -936,6 +951,20 @@ export const deleteCustomerOffer = async (offerId, req) => {
         if (offer.status != OFFER_STATUS.PENDING) {
             return { error: true, message: 'You cannot delete this offer.'}
         }
+
+        // create agent alert
+        await dbInstance.userAlert.create({
+            customerId: offer.customerId,
+            productId: offer.productId,
+            agentId: offer.product.user.id,
+            keyId: offer.id,
+            alertMode: USER_ALERT_MODE.OFFER,
+            alertType: USER_ALERT_TYPE.OFFER_DELETED,
+            removed: false,
+            viewed: false,
+            emailed: false,
+            createdBy: offer.customerId
+        });
 
         await offer.destroy();
 
@@ -953,7 +982,22 @@ export const updateCustomerSnaglist = async (reqBody, req) => {
             return { error: true, message: 'Invalid offer id or offer do not exist.'}
         }
 
-        const offer = await dbInstance.productOffer.findOne({ where: { id: reqBody.offerId, customerId: customerInfo.id } });
+        const offer = await dbInstance.productOffer.findOne({ 
+            where: { 
+                id: reqBody.offerId, 
+                customerId: customerInfo.id 
+            },
+            include: [
+                {
+                    model: dbInstance.product, 
+                    include: [{
+                        model: dbInstance.user, 
+                        attributes: ["id", "firstName", "lastName", "email"],
+                    }]
+                },
+            ]
+        });
+
         if (!offer) {
             return { error: true, message: 'Invalid offer id or offer do not exist.'}
         }
@@ -998,6 +1042,7 @@ export const updateCustomerSnaglist = async (reqBody, req) => {
             await dbInstance.userAlert.create({
                 customerId: customerInfo.id,
                 productId: offer.productId,
+                agentId: offer.product.user.id,
                 keyId: offer.id,
                 alertMode: USER_ALERT_MODE.SNAGLIST,
                 alertType: isApprovedByCustomer ? USER_ALERT_TYPE.SNAGLIST_APPROVED : USER_ALERT_TYPE.SNAGLIST_UPDATED,
@@ -1229,7 +1274,50 @@ export const addLog = async (reqBody, req) => {
       console.log('addLogServiceError', err)
       return { error: true, message: 'Server not responding, please try again later.'}
     }
-  }
+}
+
+export const deleteAllocatedProperty = async (req) => {
+    try {
+        const { productId, userId } = req.body;
+
+        // check if this product is allocated to the user
+        const productAllocated = await req.dbInstance.productAllocation.findOne({
+            where: {
+                productId,
+                userId
+            }
+        });
+
+        // if not allocated then check and remove the property
+        if (!productAllocated) {
+            const product = await req.dbInstance.product.findOne({
+                where: {
+                    id: productId,
+                    userId
+                }
+            });
+
+            if (product) {
+                product.status = PRODUCT_STATUS.REMOVED;
+                await product.save();
+            }
+            
+            return true;
+        }
+
+        await req.dbInstance.productAllocation.destroy({
+            where: {
+                productId,
+                userId
+            }
+        });
+
+        return true;
+    } catch(err) {
+        console.log('deleteAllocatedPropertyServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
 
 // Define the Haversine formula function
 function haversine(lat1, lon1, lat2, lon2) {

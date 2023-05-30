@@ -1,5 +1,5 @@
 import db from '@/database';
-import { Sequelize } from 'sequelize';
+import { Sequelize, where } from 'sequelize';
 const OP = Sequelize.Op;
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
@@ -7,7 +7,6 @@ import {
   EMAIL_TEMPLATE_PATH, 
   EMAIL_SUBJECT, 
   USER_TYPE, 
-  AGENT_TYPE, 
   APPOINTMENT_STATUS, 
   APPOINTMENT_LOG_TYPE,
   APPOINTMENT_TYPES,
@@ -22,7 +21,14 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
     const appointmentType = (reqBody && reqBody.type) ? reqBody.type : APPOINTMENT_TYPES.UPCOMING;
 
-    const whereClause = agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { allotedAgent: agentInfo.id };
+    const selectedUser = (reqBody && reqBody?.selectedUser) ? reqBody.selectedUser : agentInfo.id;
+    const whereClause = { 
+      [OP.or]: [
+        { agentId: selectedUser },
+        { allotedAgent: selectedUser }
+      ]
+    };
+
     whereClause.status = {
       [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.PENDING]
     };
@@ -93,7 +99,6 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
         },
         { 
           model: dbInstance.appointmentNote, 
-          where: { agentId: agentInfo.id },
           attributes: ["id", "notes"],
           required: false,
         },
@@ -136,7 +141,8 @@ export const createAppointment = async (req, dbInstance) => {
       const { 
         properties, 
         appointmentDate, 
-        timeSlotId
+        timeSlotId,
+        allotedAgent
       } = req.body;
 
       const sessionId = await opentokHelper.getSessionId();
@@ -154,18 +160,18 @@ export const createAppointment = async (req, dbInstance) => {
         return customerDetails;
       }
 
-      let agentSupervisor = null;
-      if (req.body.isAssignedToSupervisor) {
-        agentSupervisor = await dbInstance.agent.findOne({
-          where: { managerId: req.user.id },
+      let allotedAgentUser = false;
+      if (allotedAgent) {
+        allotedAgentUser = await dbInstance.agent.findOne({
+          where: { userId: allotedAgent },
           include: [{
             model: dbInstance.user, 
             attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber"]
           }],
         });
 
-        if (!agentSupervisor) {
-          return { error: true, message: 'Please add supervisor in account details.' };
+        if (!allotedAgentUser) {
+          return { error: true, message: 'Invalid user id or user do not exist.' };
         }
       }
 
@@ -176,7 +182,7 @@ export const createAppointment = async (req, dbInstance) => {
         body: {
           date: appointmentDate,
           time: timeSlotId,
-          userId: agentSupervisor?.userId ? agentSupervisor.userId : req.user.id,
+          userId: allotedAgentUser?.userId ? allotedAgentUser.userId : req.user.id,
           customerId: customerDetails.id
         }
       });
@@ -193,7 +199,7 @@ export const createAppointment = async (req, dbInstance) => {
             timeSlotId,
             agentId: req.user.id,
             customerId: customerDetails.id,
-            allotedAgent: agentSupervisor?.userId ? agentSupervisor.userId : req.user.id,
+            allotedAgent: allotedAgentUser?.userId ? allotedAgentUser.userId : req.user.id,
             appointmentTimeGmt: utilsHelper.convertTimeToGmt(timeSlot.fromTime, req.user.timezone),
             sessionId,
           }, { transaction });
@@ -204,25 +210,25 @@ export const createAppointment = async (req, dbInstance) => {
           if (appointment && properties) {
             findProducts = await dbInstance.product.findAll({ where: { id: properties }});
 
-            if (agentSupervisor?.userId) {
-              // Fetch the existing allocations for the supervisor
+            if (allotedAgentUser?.userId) {
+              // Fetch the existing allocations for the alloted agent
               const existingAllocations = await dbInstance.productAllocation.findAll({
                 where: {
-                  userId: agentSupervisor.userId,
+                  userId: allotedAgentUser.userId,
                   productId: properties,
                 },
               });
 
-              // Create a Set of existing productIds allocated to the supervisor
+              // Create a Set of existing productIds allocated to the alloted agent
               const existingProductIds = new Set(existingAllocations.map((allocation) => allocation.productId));
 
-              // Filter the products that are not already allocated to the supervisor
+              // Filter the products that are not already allocated to the alloted agent
               const unAllocatedProducts = findProducts.filter((product) => !existingProductIds.has(product.id));
 
               // Create the new allocations
               allocatedUsers = unAllocatedProducts.map((product) => ({
                 productId: product.id,
-                userId: agentSupervisor.userId,
+                userId: allotedAgentUser.userId,
               }));
             }
 
@@ -249,11 +255,11 @@ export const createAppointment = async (req, dbInstance) => {
           emailData.date = appointmentDate;
           emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm a");
           emailData.products = findProducts;
-          emailData.allotedAgent = agentSupervisor?.user?.lastName ? `${agentSupervisor.user.firstName} ${agentSupervisor.user.lastName}` : req.user.fullName;
+          emailData.allotedAgent = allotedAgentUser?.user?.lastName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
           emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
-          emailData.agentImage = agentSupervisor?.user?.profileImage ? agentSupervisor.user.profileImage : req.user.profileImage;
-          emailData.agentPhoneNumber = agentSupervisor?.user?.phoneNumber ? agentSupervisor.user.phoneNumber : req.user.phoneNumber;
-          emailData.agentEmail = agentSupervisor?.user?.email ? agentSupervisor.user.email : req.user.email
+          emailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
+          emailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;
+          emailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
           emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
           emailData.appUrl = process.env.APP_URL;
           const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.JOIN_APPOINTMENT), emailData);
@@ -264,11 +270,11 @@ export const createAppointment = async (req, dbInstance) => {
           }
           mailHelper.sendMail(payload);
 
-          // supervisor email
-          if (agentSupervisor) {
+          // alloted agent email
+          if (allotedAgentUser) {
             const emailData = [];
             emailData.date = appointmentDate;
-            emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, agentSupervisor.user.timezone, "HH:mm a");
+            emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, allotedAgentUser.user.timezone, "HH:mm a");
             emailData.products = findProducts;
             emailData.primaryAgent = req.user.fullName;
             emailData.customer = customerDetails.fullName;
@@ -277,9 +283,9 @@ export const createAppointment = async (req, dbInstance) => {
             emailData.customerEmail = customerDetails.email;
             emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
             emailData.appUrl = process.env.APP_URL;
-            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.SUPERVISOR_JOIN_APPOINTMENT), emailData);
+            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ALLOTED_AGENT_JOIN_APPOINTMENT), emailData);
             const payload = {
-              to: agentSupervisor.user.email,
+              to: allotedAgentUser.user.email,
               subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
               html: htmlData,
             }
@@ -289,7 +295,7 @@ export const createAppointment = async (req, dbInstance) => {
           return appointment;
       });
 
-      return (result.id) ? await getAppointmentDetailById((agentSupervisor ? agentSupervisor : req.user.agent), result.id, dbInstance) : result;
+      return (result.id) ? await getAppointmentDetailById((allotedAgentUser ? allotedAgentUser : req.user.agent), result.id, dbInstance) : result;
     } catch(err) {
       console.log('createAppointmentServiceError', err)
       return { error: true, message: 'Server not responding, please try again later.'}
@@ -316,9 +322,10 @@ export const deleteAppointment = async (appointmentId, req) => {
 }
 
 const getAppointmentDetailById = async (agent, appointmentId, dbInstance) => {
-  const whereClause = agent.agentType == AGENT_TYPE.AGENT ? { id: appointmentId, agentId: agent.userId } : { id: appointmentId, allotedAgent: agent.userId };
   const appointment = await dbInstance.appointment.findOne({
-      where: whereClause,
+      where: { 
+        id: appointmentId
+      },
       include: [
         {
           model: dbInstance.product,
@@ -351,7 +358,6 @@ const getAppointmentDetailById = async (agent, appointmentId, dbInstance) => {
         },
         { 
           model: dbInstance.appointmentNote, 
-          where: { agentId: agent.userId },
           attributes: ["id", "notes"],
           required: false,
         },
@@ -453,12 +459,12 @@ export const updateStatus = async (req) => {
         { 
           model: dbInstance.user, 
           as: 'customerUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
         { 
           model: dbInstance.user, 
           as: 'allotedAgentUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
         { 
           model: dbInstance.agentTimeSlot, 
@@ -498,7 +504,7 @@ export const updateStatus = async (req) => {
       let htmlData = "";
       let payload = {};
       if (userInfo.userType === USER_TYPE.AGENT) {
-        emailData.time = appointment.customerTimeSlot.textShow;
+        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.customerUser.timezone, "HH:mm a");
         emailData.companyName = userInfo?.agent?.companyName ? userInfo.agent.companyName : "";
         emailData.allotedAgent = appointment.allotedAgentUser.fullName;
         emailData.agentImage = appointment.allotedAgentUser.profileImage;
@@ -511,7 +517,7 @@ export const updateStatus = async (req) => {
           html: htmlData,
         }
       } else {
-        emailData.time = appointment.agentTimeSlot.textShow;
+        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.allotedAgentUser.timezone, "HH:mm a");
         emailData.customer = userInfo.fullName;
         emailData.customerImage = userInfo.profileImage;
         emailData.customerPhoneNumber = userInfo.phoneNumber;

@@ -88,7 +88,7 @@ export default function (sequelize) {
       type: DataTypes.DATEONLY
     },
     soldTime: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
     },
     createdBy: {
         type: DataTypes.UUID,

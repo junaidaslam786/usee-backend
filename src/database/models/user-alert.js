@@ -3,8 +3,9 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class UserAlert extends Model {
     static associate(models) {
-        UserAlert.belongsTo(models.user, { foreignKey: 'customerId' })
-        UserAlert.belongsTo(models.product, { foreignKey: 'productId' })
+      UserAlert.belongsTo(models.product, { foreignKey: 'productId' })
+      UserAlert.belongsTo(models.user, { foreignKey: 'customerId', as: 'customerAlertUser' });
+      UserAlert.belongsTo(models.user, { foreignKey: 'agentId', as: 'AgentAlertUser' });
     }
   }
 
@@ -17,6 +18,13 @@ export default function (sequelize) {
       autoIncrement: true,
     },
     customerId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
+    },
+    agentId: {
       type: DataTypes.UUID,
       references: {
         model: 'users',

@@ -120,3 +120,20 @@ export const addPropertyLogRules = [
     .notEmpty()
     .withMessage('Log type cannot be empty'),
 ];
+
+export const deleteAllocatedPropertyRules = [
+  body('productId').exists().custom(async (value) => {
+    return await db.models.product.findOne({ where: { id: value } }).then(productData => {
+      if (!productData) {
+        return Promise.reject('Invalid property id or property do not exist.');
+      }
+    });
+  }), 
+  body('userId').exists().custom(async (value) => {
+    return await db.models.user.findOne({ where: { id: value } }).then(agentUserData => {
+      if (!agentUserData) {
+        return Promise.reject('Invalid user id or user do not exist.');
+      }
+    });
+  }), 
+];

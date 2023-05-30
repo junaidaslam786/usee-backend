@@ -199,6 +199,8 @@ export const convertGmtToTime = (time, timezone, format) => {
 }
 
 export const availabilityAlgorithm = async (requstedUser, targetUserId, date, timeSlot, type, dbInstance) => {
+    const defaultTimezone = requstedUser?.timezone ? requstedUser.timezone : process.env.APP_DEFAULT_TIMEZONE;
+    
     const user = await dbInstance.user.findOne({ where: { id: targetUserId } });
     if (!user) {
       return { error: true, message: 'Invalid user selected.' };
@@ -206,7 +208,7 @@ export const availabilityAlgorithm = async (requstedUser, targetUserId, date, ti
 
     if (type === USER_TYPE.AGENT) {
         // convert the selected slot to selected users timezone
-        const timezoneBasedfromTime = convertTimeToTimezoneBasedTime(requstedUser.timezone, user.timezone, timeSlot.fromTime);
+        const timezoneBasedfromTime = convertTimeToTimezoneBasedTime(defaultTimezone, user.timezone, timeSlot.fromTime);
         if (!timezoneBasedfromTime) {
             return { error: true, message: `As per ${process.env.AGENT_ENTITY_LABEL} timezone, selected timeslot is not available. Please select another timeslot.` };
         }
@@ -240,7 +242,7 @@ export const availabilityAlgorithm = async (requstedUser, targetUserId, date, ti
     
     let whereClause = {
         appointmentDate: date,
-        appointmentTimeGmt: convertTimeToGmt(timeSlot.fromTime, requstedUser.timezone),
+        appointmentTimeGmt: convertTimeToGmt(timeSlot.fromTime, defaultTimezone),
         status: { [OP.in]: [APPOINTMENT_STATUS.PENDING, APPOINTMENT_STATUS.INPROGRESS] }, 
     };
     
