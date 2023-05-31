@@ -191,15 +191,20 @@ export const singlePost = async (id, dbInstance) => {
 };
 
 export const createPost = async (reqBody, dbInstance) => {
-  
-  const { title, name, email} = reqBody;
+  const { 
+    name,
+    email,
+    title,
+    categoryId,
+  } = reqBody;
 
   try {
     const post = await dbInstance.cmsCommunityPost.create({
-      categoryId: PRODUCT_CATEGORIES.PROPERTY,
+      categoryId,
       title,
       name,
-      email
+      email,
+      status: CMS_STATUS.PUBLISHED
     });
 
     const metaTags = [];

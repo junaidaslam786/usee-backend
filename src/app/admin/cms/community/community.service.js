@@ -8,8 +8,6 @@ export const addCommunityPost = async (req) => {
       title,
       comment,
       categoryId,
-      questionAskedBy,
-      answeredBy,
       status,
       categoryField1,
       categoryField2,
@@ -21,13 +19,11 @@ export const addCommunityPost = async (req) => {
       email,
       title,
       categoryId,
-      questionAskedBy,
-      answeredBy,
       status,
     });
 
     if (comment) {
-      const newPostReply = await db.models.cmsCommunityPostComment.create({
+      await db.models.cmsCommunityPostComment.create({
         name,
         email,
         communityPostId: newCommunityPost.id,

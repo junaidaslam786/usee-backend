@@ -163,31 +163,32 @@ export const checkIfTimeIsOld = (user, date, time) => {
 
 export const getCustomDate = (type) => {
     let customDate = "";
+
     switch(type) {
         case "today":
             customDate = moment().startOf('day').format('YYYY-MM-DD');
-            return;
+            break;
         case "yesterday":
             customDate = moment().subtract(1, 'day').startOf('day').format('YYYY-MM-DD');
-            return;
+            break;
         case "thisMonthStart":
             customDate = moment().startOf('month').format('YYYY-MM-DD');
-            return;
+            break;
         case "thisMonthEnd":
             customDate = moment().endOf('month').format('YYYY-MM-DD');
-            return;
+            break;
         case "lastMonthStart":
             customDate = moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
-            return;
+            break;
         case "lastMonthEnd":
             customDate = moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD');
-            return;
+            break;
         case "startOfPeriod":
             customDate = moment().subtract(3, 'month').startOf('day').format('YYYY-MM-DD');
-            return;
+            break;
         case "endOfPeriod":
             customDate = moment().format('YYYY-MM-DD');
-            return;
+            break;
     }
 
     return customDate;
