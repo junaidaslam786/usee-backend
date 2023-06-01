@@ -4,7 +4,8 @@ import db from '@/database';
 export const createPostRules = [
     body('title').exists().withMessage('Please provide title').notEmpty().withMessage('Please provide title'),
     body('name').exists().withMessage('Please provide name').notEmpty().withMessage('Please provide name'),
-    body('email').isEmail().withMessage('Please provide valid email address').exists().withMessage('Please provide email address')
+    body('email').isEmail().withMessage('Please provide valid email address').exists().withMessage('Please provide email address'),
+    body('category').exists().withMessage('Please provide category').notEmpty().withMessage('Please provide category'),
 ];
 
 export const createCommentRules = [

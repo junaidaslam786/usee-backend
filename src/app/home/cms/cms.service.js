@@ -31,7 +31,7 @@ export const allPages = async (reqBody, dbInstance) => {
       }, {
         model: dbInstance.cmsAsset,
       }],
-      order: [['id', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     let arr = [];
@@ -114,7 +114,7 @@ export const allPosts = async (reqBody, dbInstance) => {
       }, {
         model: dbInstance.cmsCommunityPostComment,
       }],
-      order: [['id', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     let arr = [];
@@ -195,12 +195,12 @@ export const createPost = async (reqBody, dbInstance) => {
     name,
     email,
     title,
-    categoryId,
+    category,
   } = reqBody;
 
   try {
     const post = await dbInstance.cmsCommunityPost.create({
-      categoryId,
+      categoryId: category,
       title,
       name,
       email,
@@ -209,17 +209,20 @@ export const createPost = async (reqBody, dbInstance) => {
 
     const metaTags = [];
     for (const [key, value] of Object.entries(reqBody)) {
-      if (key.startsWith('metaTags')) {
-        const index = Number(key.substring(key.length - 1))
-        metaTags.push({
-          communityPostId: post.id,
-          key: index,
-          value
-        });
+      if (key.startsWith('metaTags[')) {
+          const index = key.match(/\[(\d+)\]/)[1];
+          metaTags.push({
+            communityPostId: post.id,
+            key: index,
+            value
+          });
       }
+  }
+
+    console.log('metaTags', metaTags);
+    if (metaTags.length > 0) {
+      await dbInstance.cmsCommunityCategoryField.bulkCreate(metaTags);
     }
-    
-    await dbInstance.cmsCommunityCategoryField.bulkCreate(metaTags);
     
     return post;
   } catch (err) {
