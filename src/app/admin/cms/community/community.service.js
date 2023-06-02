@@ -53,6 +53,8 @@ export const addCommunityPost = async (req) => {
 export const getCommunityPostById = async (user, reqBody) => {
   const { id } = reqBody;
 
+  console.log(reqBody)
+
   try {
     const oneCommunityPost = await db.models.cmsCommunityPost.findOne({
       where: { id },
@@ -63,7 +65,6 @@ export const getCommunityPostById = async (user, reqBody) => {
 
         {
           model: db.models.cmsCommunityPostComment,
-          where: {email: user.email}
         },
       ],
     });
