@@ -79,7 +79,7 @@ export const getCommunityPostById = async (req, res, next) => {
  */
 export const updatePageStatus = async (req, res, next) => {
   try {
-      const result = await pageService.updatePageStatus(req.user, req.params);
+      const result = await pageService.updatePageStatus(req.user, req.body);
       if (result?.error && result?.message) {
           return next(createError(400, result.message));
       }

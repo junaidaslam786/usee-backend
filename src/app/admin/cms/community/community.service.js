@@ -168,6 +168,7 @@ export const updateCommunityPost = async (req) => {
 };
 
 export const updatePageStatus = async (user, reqBody) => {
+  console.log(reqBody)
   try {
     const oldCmsPost = await getCommunityPostById(user, reqBody);
 
