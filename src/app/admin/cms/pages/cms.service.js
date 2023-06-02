@@ -35,14 +35,14 @@ export const addCmsPage = async (req) => {
 
     const newCategoryField1 = await db.models.cmsPageCategoryField.create({
       pageId: newCmsPage.id,
-      key: categoryField1[0].key,
-      value: categoryField1[0].value,
+      key: 1,
+      value: categoryField1,
     });
 
     const newCategoryField2 = await db.models.cmsPageCategoryField.create({
       pageId: newCmsPage.id,
-      key: categoryField2[0].key,
-      value: categoryField2[0].value,
+      key: 2,
+      value: categoryField2,
     });
 
     // feature image upload
@@ -191,14 +191,14 @@ export const updateCmsPage = async (req) => {
     await oldPage.save();
     
     const updateCategoryField1 = await db.models.cmsPageCategoryField.update(
-      { value: categoryField1[0].value },
+      { value: categoryField1 },
       {
         where: { pageId: id, key: 1 },
       }
     );
 
     const updateCategoryField2 = await db.models.cmsPageCategoryField.update(
-      { value: categoryField2[0].value },
+      { value: categoryField2 },
       {
         where: { pageId: id, key: 2 },
       }
@@ -223,7 +223,7 @@ export const updateCmsPage = async (req) => {
     // file upload
     if (req.files && req.files.file) {
       const file = req.files.file;
-      const removeImg = utilsHelper.removeFile(oldPage.file)
+      oldPage.file ?? utilsHelper.removeFile(oldPage.file)
       const newFileName = `${Date.now()}_${file.name.replace(/ +/g, "")}`;
       const result2 = await utilsHelper.fileUpload(file, CMS_ROOT_PATHS.DOCUMENT, newFileName);
       if (result2?.error) {
@@ -237,6 +237,22 @@ export const updateCmsPage = async (req) => {
     return true;
   } catch (err) {
     console.log('updateCmsPageServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};
+
+export const updatePageStatus = async (reqBody) => {
+  try {
+    const oldPage = await getCmsPageById(reqBody);
+
+    oldPage.status = reqBody.status;
+    oldPage.createdBy = reqBody.email;
+
+    await oldPage.save();
+
+    return true;
+  } catch (err) {
+    console.log('updateAgentUserSortingServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };

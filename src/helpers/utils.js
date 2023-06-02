@@ -44,6 +44,7 @@ export const removeFile = async (file) => {
 }
 
 export const fileUpload = async (file, destPath, fileName) => {
+    console.log(destPath)
     try {
         if (!fs.existsSync(`uploads/${destPath}`)) {
             fs.mkdirSync(`uploads/${destPath}`, { recursive: true });

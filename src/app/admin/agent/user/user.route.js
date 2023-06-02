@@ -9,6 +9,6 @@ router.get('/list', isAuthenticated, userController.listAgentUsers);
 router.get('/blocked', isAuthenticated, userController.listBlockedAgentUsers);
 router.put('/update-status', isAuthenticated, userController.updateAgentUserStatus);
 router.post('/:id', isAuthenticated, userController.getAgentUser);
-router.delete('/:id', userController.deleteAgentUser);
+router.delete('/:id', isAuthenticated, userController.deleteAgentUser);
 
 export default router;

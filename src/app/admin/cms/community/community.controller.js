@@ -12,7 +12,7 @@ export const addCommunityPost = async (req, res, next) => {
       return next(createError(400, newPage.message));
     }
 
-    res.status(200).json({message: 'Page added successfully'});
+    res.status(200).json({message: 'Page added successfully', newPageId: newPage.id});
   } catch (err) {
     next(err);
   }
@@ -61,7 +61,7 @@ export const updateCommunityPost = async (req, res, next) => {
  */
 export const getCommunityPostById = async (req, res, next) => {
     try {
-        const onePage = await pageService.getCommunityPostById(req.body);
+        const onePage = await pageService.getCommunityPostById(req.user, req.params);
         if (onePage?.error && onePage?.message) {
             return next(createError(400, onePage.message));
         }
@@ -71,6 +71,24 @@ export const getCommunityPostById = async (req, res, next) => {
         console.log('onePageError', err);
         next(err);
     }
+};
+
+/**
+ * PUT /admin/cms/community
+ * List all users created by agent
+ */
+export const updatePageStatus = async (req, res, next) => {
+  try {
+      const result = await pageService.updatePageStatus(req.user, req.params);
+      if (result?.error && result?.message) {
+          return next(createError(400, result.message));
+      }
+
+      return res.json({ success: true, message: "Status updated successfully" });
+  } catch (err) {
+      console.log('updatePageStatusError', err);
+      next(err);
+  }
 };
 
 /**

@@ -6,13 +6,14 @@ import * as cmsController from './community.controller';
 const router = Router();
 
 router.put('/update-post', isAuthenticated, cmsController.updateCommunityPost);
+router.put('/update-status', isAuthenticated, cmsController.updatePageStatus);
 router.post('/add-post', isAuthenticated, cmsController.addCommunityPost);
-router.post('/post-by-id', cmsController.getCommunityPostById);
-router.delete('/post/:id', cmsController.deleteCommunityPostById);
-router.delete('/post-reply/:id', cmsController.deletePostReplyById);
+router.get('/post/:id', isAuthenticated, cmsController.getCommunityPostById);
+router.delete('/post/:id', isAuthenticated, cmsController.deleteCommunityPostById);
+router.delete('/post-reply/:id', isAuthenticated, cmsController.deletePostReplyById);
 
-router.post('/all-community-posts', cmsController.allCmsCommunityPosts);
-router.post('/categories-list', cmsController.allCmsCategories);
-router.post('/sub-categories-list', cmsController.allCmsSubCategories);
+router.post('/all-community-posts', isAuthenticated, cmsController.allCmsCommunityPosts);
+router.post('/categories-list', isAuthenticated, cmsController.allCmsCategories);
+router.post('/sub-categories-list', isAuthenticated, cmsController.allCmsSubCategories);
 
 export default router;

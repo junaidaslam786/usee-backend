@@ -12,7 +12,7 @@ export const addCmsPage = async (req, res, next) => {
       return next(createError(400, newPage.message));
     }
 
-    res.status(200).json({message: 'Page added successfully'});
+    res.status(200).json({message: 'Page added successfully', newPageId: newPage.id});
   } catch (err) {
     next(err);
   }
@@ -54,6 +54,24 @@ export const allCmsPages = async (req, res, next) => {
     }
 };
 
+/**
+ * PUT /page/update-status
+ * List all users created by agent
+ */
+export const updatePageStatus = async (req, res, next) => {
+  try {
+      const result = await pageService.updatePageStatus(req.body);
+      if (result?.error && result?.message) {
+          return next(createError(400, result.message));
+      }
+
+      return res.json({ success: true, message: "Status updated successfully" });
+  } catch (err) {
+      console.log('updatePageStatusError', err);
+      next(err);
+  }
+};
+
  /*
  * PUT /admin/cms/update
  * Update current cms page
@@ -77,7 +95,7 @@ export const updateCmsPage = async (req, res, next) => {
  */
 export const getCmsPageById = async (req, res, next) => {
     try {
-        const onePage = await pageService.getCmsPageById(req.body);
+        const onePage = await pageService.getCmsPageById(req.params);
         if (onePage?.error && onePage?.message) {
             return next(createError(400, onePage.message));
         }
