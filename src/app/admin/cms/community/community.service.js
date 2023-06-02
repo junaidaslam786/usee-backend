@@ -23,7 +23,7 @@ export const addCommunityPost = async (req) => {
     });
 
     if (comment) {
-      await db.models.cmsCommunityPostComment.create({
+      const newPostReply = await db.models.cmsCommunityPostComment.create({
         name,
         email,
         communityPostId: newCommunityPost.id,
@@ -34,16 +34,16 @@ export const addCommunityPost = async (req) => {
     const newCategoryField1 = await db.models.cmsCommunityCategoryField.create({
       communityPostId: newCommunityPost.id,
       key: 1,
-      value: categoryField1.value,
+      value: categoryField1,
     });
 
     const newCategoryField2 = await db.models.cmsCommunityCategoryField.create({
       communityPostId: newCommunityPost.id,
       key: 2,
-      value: categoryField2.value,
+      value: categoryField2,
     });
 
-    return [newCommunityPost, newCategoryField1, newCategoryField2];
+    return newCommunityPost;
   } catch (err) {
     console.log("addCmsPageError", err);
     return { error: true, message: "Server not responding, please try again later." };
@@ -52,6 +52,7 @@ export const addCommunityPost = async (req) => {
 
 export const getCommunityPostById = async (user, reqBody) => {
   const { id } = reqBody;
+
   try {
     const oneCommunityPost = await db.models.cmsCommunityPost.findOne({
       where: { id },
@@ -133,12 +134,12 @@ export const updateCommunityPost = async (req) => {
         await db.models.cmsCommunityPostComment.update(
           { comment },
           {
-            where: { communityPostId: id, },
+            where: { communityPostId: id, email: req.user.email},
           }
         );
       } else {
-        await db.models.cmsCommunityPostComment.create({
-          name: postAddedBy,
+        const updatePostComment = await db.models.cmsCommunityPostComment.create({
+          name: name,
           email,
           communityPostId: id,
           comment,
@@ -146,14 +147,14 @@ export const updateCommunityPost = async (req) => {
       }
 
     await db.models.cmsCommunityCategoryField.update(
-      { value: categoryField1.value },
+      { value: categoryField1 },
       {
         where: { communityPostId: id, key: 1 },
       }
     );
 
     await db.models.cmsCommunityCategoryField.update(
-      { value: categoryField2.value },
+      { value: categoryField2 },
       {
         where: { communityPostId: id, key: 2 },
       }
