@@ -13,8 +13,21 @@ export const registerAgentRules = [
   body('companyPosition').exists().withMessage('Please provide company position').notEmpty().withMessage('Please provide company position'),
   body('jobTitle').exists().withMessage('Please provide job title').notEmpty().withMessage('Please provide job title'),
   body('licenseNo').exists().withMessage('Please provide company registration # or deed title').notEmpty().withMessage('Please provide company registration # or deed title'),
-  body('phoneNumber').exists().withMessage('Please provide phone number').notEmpty().withMessage('Please provide phone number'),
-  body('email').isEmail().exists().custom(async (value) => {
+  body('phoneNumber')
+    .exists().withMessage('Please provide phone number')
+    .notEmpty().withMessage('Please provide phone number')
+    .custom(async (value) => {
+    return await db.models.user.findOne({ where: { phoneNumber: value } }).then(userData => {
+      if (userData) {
+        return Promise.reject('Phone number already exist.');
+      }
+    });
+  }),
+  body('email')
+    .isEmail().withMessage('Please provide valid email address')
+    .exists().withMessage('Please provide valid email address')
+    .notEmpty().withMessage('Please provide valid email address')
+    .custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then(userData => {
       if (userData) {
         return Promise.reject('Email address already exist.');
@@ -47,8 +60,21 @@ export const registerAgentRules = [
 export const registerCustomerRules = [
   body('firstName').exists().withMessage('Please provide first name').notEmpty().withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty().withMessage('Please provide last name'),
-  body('phoneNumber').exists().withMessage('Please provide phone number').notEmpty().withMessage('Please provide phone number'),
-  body('email').isEmail().exists().custom(async (value) => {
+  body('phoneNumber')
+    .exists().withMessage('Please provide phone number')
+    .notEmpty().withMessage('Please provide phone number')
+    .custom(async (value) => {
+    return await db.models.user.findOne({ where: { phoneNumber: value } }).then(userData => {
+      if (userData) {
+        return Promise.reject('Phone number already exist.');
+      }
+    });
+  }),
+  body('email')
+    .isEmail().withMessage('Please provide valid email address')
+    .exists().withMessage('Please provide valid email address')
+    .notEmpty().withMessage('Please provide valid email address')
+    .custom(async (value) => {
     return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then(userData => {
       if (userData) {
         return Promise.reject('Email address already exist.');
@@ -108,7 +134,5 @@ export const resetPasswordRules = [
 ];
 
 export const sendOtpRules = [
-  body('name').exists().withMessage('Please provide name').notEmpty().withMessage('Please provide name'),
-  body('email').isEmail().withMessage('Please provide valid email address').exists().withMessage('Please provide email address'),
-  body('otp').exists().withMessage('Please provide otp').notEmpty().withMessage('Please provide otp'),
+  body('userId').notEmpty().withMessage('Please provide user id').exists().withMessage('Please provide user id'),
 ];

@@ -54,7 +54,7 @@ export const registerCustomer = async (req, res, next) => {
 };
 
 /**
- * POST /auth/forgot-password
+ * GET /auth/forgot-password
  * Request to reset user password
  */
 export const forgotPassword = async (req, res, next) => {
@@ -95,7 +95,7 @@ export const resetPassword = async (req, res, next) => {
  */
  export const sendOtp = async (req, res, next) => {
   try {
-    const result = await authService.sendOtp(req.body);
+    const result = await authService.sendOtp(req);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
@@ -103,6 +103,24 @@ export const resetPassword = async (req, res, next) => {
     return res.json({ success: true, message: "Otp sent successfully" });
   } catch (err) {
     console.log('sendOtpError', err);
+    return next(err);
+  }
+};
+
+/**
+ * GET /auth/check-field-exist
+ * Check if provided field already exists
+ */
+export const checkFieldExists = async (req, res, next) => {
+  try {
+    const result = await authService.checkFieldExists(req.query, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.log('checkFieldExistsError', err);
     return next(err);
   }
 };

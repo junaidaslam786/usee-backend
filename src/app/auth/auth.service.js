@@ -44,6 +44,7 @@ export const login = async (reqBody, dbInstance) => {
             ],
             where: { email: email.toLowerCase(), userType } 
         });
+
         if (!user) {
             return { error: true, message: 'There is no user with this email address!'}
         }
@@ -63,6 +64,7 @@ export const login = async (reqBody, dbInstance) => {
         // const refreshToken = user.generateToken('4h');
 
         const userData = {
+            id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
             phoneNumber: user.phoneNumber,
@@ -76,7 +78,8 @@ export const login = async (reqBody, dbInstance) => {
             } : null,
             signupStep: user.signupStep,
             otpVerified: user.otpVerified,
-            timezone: user.timezone 
+            timezone: user.timezone,
+            userType: user.userType 
         };
 
         return { user: userData, token };
@@ -167,6 +170,7 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
             // const refreshToken = user.generateToken('4h');
 
             const returnedUserData = {
+                id: user.id,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 companyName: agent.companyName,
@@ -174,6 +178,7 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 phoneNumber: user.phoneNumber,
                 email: user.email,
                 type: user.userTypeDisplay,
+                userType: user.userType
             };
 
             const emailData = [];
@@ -230,11 +235,13 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
         const refreshToken = user.generateToken('4h');
 
         const returnedUserData = {
+            id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
             phoneNumber: user.phoneNumber,
             email: user.email,
             type: user.userTypeDisplay,
+            userType: user.userType
         };
 
         const emailData = [];
@@ -338,16 +345,26 @@ export const resetPassword = async (reqBody, dbInstance) => {
     }
 }
 
-export const sendOtp = async (reqBody) => {
+export const sendOtp = async (req) => {
     try {
-        const { name, email, otp } = reqBody;
+        const { userId, otpExpiry } = req.body;
+        const { dbInstance } = req;
+
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        const user = await dbInstance.user.findOne({ where: { id: userId }});
+        user.otpCode = otp;
+
+        if (otpExpiry) {
+            user.otpExpiry = otpExpiry;
+        }
+        await user.save();
 
         const emailData = [];
-        emailData.name = name;
+        emailData.name = `${user.firstName} ${user.lastName}`;
         emailData.otp = otp;
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.SEND_OTP), emailData);
         const payload = {
-            to: email,
+            to: user.email,
             subject: EMAIL_SUBJECT.SEND_OTP,
             html: htmlData,
         };
@@ -356,6 +373,34 @@ export const sendOtp = async (reqBody) => {
         return true;
     } catch(err) {
         console.log('sendOtpError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const checkFieldExists = async (reqBody, dbInstance) => {
+    try {
+        const { email, phone } = reqBody;
+        const userModel = dbInstance.user;
+
+        if (email) {
+            // Find user by email address
+            const user = await userModel.findOne({ where: { email } });
+            if (user) {
+                return { error: true, message: 'Email address already exist.'}
+            }
+        }
+
+        if (phone) {
+            // Find user by phone number
+            const user = await userModel.findOne({ where: { phoneNumber: phone } });
+            if (user) {
+                return { error: true, message: 'Phone number already exist.'}
+            }
+        }
+
+        return true;
+    } catch(err) {
+        console.log('checkFieldExistsServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }

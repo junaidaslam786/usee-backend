@@ -1,13 +1,12 @@
 import { Router } from 'express';
 
 import * as availabilityController from './availability.controller';
-import * as availabilityValidations from './availability.request';
-import { isAuthenticated, validate } from '@/middleware';
+import { isAuthenticated } from '@/middleware';
 
 const router = Router();
 
 router.get('/list', isAuthenticated, availabilityController.listAgentAvailability);
-router.put('/update', validate(availabilityValidations.updateAgentAvailabilityRules), isAuthenticated, availabilityController.updateAgentAvailability);
+router.put('/update', isAuthenticated, availabilityController.updateAgentAvailability);
 router.get('/list-slots', isAuthenticated, availabilityController.listAgentAvailabilitySlots);
 
 export default router;

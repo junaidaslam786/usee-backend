@@ -169,9 +169,9 @@ export const listCustomerUsers = async (userInfo, query, dbInstance) => {
 
 export const validateOtp = async (user, reqBody) => {
     try {
-        const { otp } = reqBody;
+        const { otp, type } = reqBody;
 
-        if (otp != user.otpCode) {
+        if (type === "emailAddress" && otp != user.otpCode) {
             return { error: true, message: 'Otp is incorrect!'}
         }
 

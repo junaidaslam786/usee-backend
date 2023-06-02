@@ -883,7 +883,10 @@ export const listHomePageProperties = async (reqBody, req) => {
         const whereClause = req?.query?.agentId ? {
             status: PRODUCT_STATUS.ACTIVE, 
             categoryId: PRODUCT_CATEGORIES.PROPERTY,
-            userId: req.query.agentId
+            [OP.or]: [
+                { userId: req.query.agentId },
+                { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${req.query.agentId}')`) }}
+            ]
         }
         : {
             status: PRODUCT_STATUS.ACTIVE, 
