@@ -24,14 +24,14 @@ export const registerAdminRules = [
   })),
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists()
     .withMessage('Enter password to register'),
-  // body('confirmPassword').custom((value, { req }) => {
-  //   console.log('body')
-  //   if (value !== req.body.password) {
-  //     throw new Error('Password and confirm password should match');
-  //   }
-  //   // Indicates the success of this synchronous custom validator
-  //   return true;
-  // }),
+  body('confirmPassword').custom((value, { req }) => {
+    console.log('body')
+    if (value !== req.body.password) {
+      throw new Error('Password and confirm password should match');
+    }
+    // Indicates the success of this synchronous custom validator
+    return true;
+  }),
 ];
 
 export const registerAgentRules = [
@@ -50,18 +50,6 @@ export const registerAgentRules = [
       return Promise.reject('Email address already exist.');
     }
   })),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists()
-    .withMessage('Please provide phone number')
-    .notEmpty()
-    .withMessage('Please provide phone number'),
-  // body('confirmPassword').custom((value, { req }) => {
-  //   if (value !== req.body.password) {
-  //     throw new Error('Password and Confirm password should match');
-  //   }
-
-  //   // Indicates the success of this synchronous custom validator
-  //   return true;
-  // }),
 ];
 
 export const registerCustomerRules = [
@@ -74,18 +62,6 @@ export const registerCustomerRules = [
       return Promise.reject('Email address already exist.');
     }
   })),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists()
-    .withMessage('Enter password to register'),
-  // body('confirmPassword').custom((value, { req }) => {
-  //   // if (req.body.password !== req.body.password) {
-  //   if (req.body.password !== req.body.password) {
-  //     console.log('cp ', req.body);
-  //     throw new Error('Password and confirm password should match');
-  //   }
-
-  //   // Indicates the success of this synchronous custom validator
-  //   return true;
-  // }),
 ];
 
 export const forgotPasswordRules = [

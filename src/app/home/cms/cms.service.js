@@ -1,16 +1,16 @@
-import { CMS_STATUS, PRODUCT_CATEGORIES } from "@/config/constants";
+import { CMS_STATUS } from "@/config/constants";
 import { Sequelize } from 'sequelize';
 const Op = Sequelize.Op;
 
 export const allPages = async (reqBody, dbInstance) => {
-  
   let whereClause = {}
-  whereClause.status = CMS_STATUS.PUBLISHED
-  if(reqBody?.pageType) {
+  whereClause.status = CMS_STATUS.PUBLISHED;
+
+  if (reqBody?.pageType) {
     whereClause.pageType = reqBody.pageType
   }
 
-  if(reqBody?.keyword) {
+  if (reqBody?.keyword) {
     whereClause.title = {
       [Op.iLike]: '%' + reqBody.keyword + '%'
     }
@@ -36,22 +36,24 @@ export const allPages = async (reqBody, dbInstance) => {
 
     let arr = [];
     rows.map((el) => {
-      if(reqBody?.propertyType) {
+      if (reqBody?.propertyType) {
         const index = el.cmsPageCategoryFields.findIndex(category => category.categoryField.id === 1)
         if(index === -1 || el.cmsPageCategoryFields[index].value !== reqBody.propertyType) {
           return
         }
       }
-      if(reqBody?.propertySubType) {
+
+      if (reqBody?.propertySubType) {
         const id = (reqBody.propertySubType === "commercial") ? 7 : 6
         const index = el.cmsPageCategoryFields.findIndex(category => category.categoryField.id === id)
-        if(index === -1 || el.cmsPageCategoryFields[index].value !== reqBody.propertySubType) {
+        if (index === -1 || el.cmsPageCategoryFields[index].value !== reqBody.propertySubType) {
           return
         }
       }
-      if(reqBody?.propertyCategoryType) {
+
+      if (reqBody?.propertyCategoryType) {
         const index = el.cmsPageCategoryFields.findIndex(category => category.categoryField.id === 2)
-        if(index === -1 || el.cmsPageCategoryFields[index].value !== reqBody.propertyCategoryType) {
+        if (index === -1 || el.cmsPageCategoryFields[index].value !== reqBody.propertyCategoryType) {
           return
         }
       }
@@ -80,7 +82,6 @@ export const allPages = async (reqBody, dbInstance) => {
 };
 
 export const singlePage = async (id, dbInstance) => {
-  
   try {
     const page = await dbInstance.cmsPage.findOne({ where: { id: id } });
     return page; 
@@ -90,18 +91,18 @@ export const singlePage = async (id, dbInstance) => {
   }
 };
 
-export const allPosts = async (reqBody, dbInstance) => {
-  
+export const allCommunity = async (reqBody, dbInstance) => {
   let whereClause = {}
   whereClause.status = CMS_STATUS.PUBLISHED
-  if(reqBody?.keyword) {
+
+  if (reqBody?.keyword) {
     whereClause.title = {
       [Op.iLike]: '%' + reqBody.keyword + '%'
     }
   }
 
   try {
-    const { rows } = await dbInstance.cmsCommunityPost.findAndCountAll({
+    const { rows } = await dbInstance.cmsCommunity.findAndCountAll({
       where: whereClause,
       include: [{
         model: dbInstance.cmsCommunityCategoryField,
@@ -109,35 +110,35 @@ export const allPosts = async (reqBody, dbInstance) => {
         include: [{
           model: dbInstance.categoryField, 
           attributes: ["id", "label", "type", "options", "required"],
-        },
-      ],
-      }, {
-        model: dbInstance.cmsCommunityPostComment,
+        }],
       }],
       order: [['createdAt', 'DESC']]
     });
 
     let arr = [];
     rows.map((el) => {
-      if(reqBody?.propertyType) {
+      if (reqBody?.propertyType) {
         const index = el.cmsCommunityCategoryFields.findIndex(category => category.categoryField.id === 1)
-        if(index === -1 || el.cmsCommunityCategoryFields[index].value !== reqBody.propertyType) {
+        if (index === -1 || el.cmsCommunityCategoryFields[index].value !== reqBody.propertyType) {
           return
         }
       }
-      if(reqBody?.propertySubType) {
+
+      if (reqBody?.propertySubType) {
         const id = (reqBody.propertySubType === "commercial") ? 7 : 6
         const index = el.cmsCommunityCategoryFields.findIndex(category => category.categoryField.id === id)
-        if(index === -1 || el.cmsCommunityCategoryFields[index].value !== reqBody.propertySubType) {
+        if (index === -1 || el.cmsCommunityCategoryFields[index].value !== reqBody.propertySubType) {
           return
         }
       }
-      if(reqBody?.propertyCategoryType) {
+
+      if (reqBody?.propertyCategoryType) {
         const index = el.cmsCommunityCategoryFields.findIndex(category => category.categoryField.id === 2)
-        if(index === -1 || el.cmsCommunityCategoryFields[index].value !== reqBody.propertyCategoryType) {
+        if (index === -1 || el.cmsCommunityCategoryFields[index].value !== reqBody.propertyCategoryType) {
           return
         }
       }
+
       arr.push(el)
     });
 
@@ -157,82 +158,68 @@ export const allPosts = async (reqBody, dbInstance) => {
     };
     
   } catch (err) {
-    console.log('allPostsError', err);
+    console.log('allCommunityError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
 
-export const singlePost = async (id, dbInstance) => {
-  
+export const singleCommunity = async (id, dbInstance) => {
   try {
-    const page = await dbInstance.cmsCommunityPost.findOne({ 
-      where: { 
-        id: id
-      },
+    const community = await dbInstance.cmsCommunity.findOne({ 
+      where: { id: id },
       include: [{
-        model: dbInstance.cmsCommunityCategoryField, 
-        attributes: ["value"],
-        include: [
-          {
-            model: dbInstance.categoryField, 
-            attributes: ["id", "label", "type", "options", "required"]
-          },
-        ],
-      }, {
-        model: dbInstance.cmsCommunityPostComment,
+        model: dbInstance.cmsCommunityPost
       }]
     });
 
-    return page; 
+    return community;
   } catch (err) {
-    console.log('singlePostError', err);
+    console.log('singleCommunityError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
 
-export const createPost = async (reqBody, dbInstance) => {
+export const singleCommunityPost = async (id, dbInstance) => {
+  try {
+    const communityPost = await dbInstance.cmsCommunityPost.findOne({ 
+      where: { id },
+      include: [{
+        model: dbInstance.cmsCommunityPostComment
+      }]
+    });
+
+    return communityPost;
+  } catch (err) {
+    console.log('singleCommunityPostError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};
+
+export const createCommunityPost = async (reqBody, dbInstance) => {
   const { 
     name,
     email,
     title,
-    category,
+    communityId,
   } = reqBody;
 
   try {
-    const post = await dbInstance.cmsCommunityPost.create({
-      categoryId: category,
+    const communityPost = await dbInstance.cmsCommunityPost.create({
+      communityId,
       title,
       name,
       email,
       status: CMS_STATUS.PUBLISHED
     });
-
-    const metaTags = [];
-    for (const [key, value] of Object.entries(reqBody)) {
-      if (key.startsWith('metaTags[')) {
-          const index = key.match(/\[(\d+)\]/)[1];
-          metaTags.push({
-            communityPostId: post.id,
-            key: index,
-            value
-          });
-      }
-  }
-
-    console.log('metaTags', metaTags);
-    if (metaTags.length > 0) {
-      await dbInstance.cmsCommunityCategoryField.bulkCreate(metaTags);
-    }
     
-    return post;
+    return communityPost;
   } catch (err) {
-    console.log('createPostError', err);
+    console.log('createCommunityPostError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
 
-export const createComment = async (reqBody, dbInstance) => {
-  
+export const createCommunityPostComment = async (reqBody, dbInstance) => {
   const { communityPostId, name, email, comment } = reqBody;
 
   try {
@@ -245,7 +232,7 @@ export const createComment = async (reqBody, dbInstance) => {
     
     return postComment;
   } catch (err) {
-    console.log('createCommentError', err);
+    console.log('createCommunityPostCommentError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 }

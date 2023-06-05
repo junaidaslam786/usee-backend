@@ -1,5 +1,149 @@
 import db from "@/database";
 
+export const addCommunity = async (req) => {
+  try {
+    const {
+      title,
+      categoryId,
+      status,
+      questionAskedBy,
+      categoryField1,
+      categoryField2
+    } = req.body;
+
+    // Create a Community Post
+    const newCommunity = await db.models.cmsCommunity.create({
+      title,
+      categoryId,
+      createdBy: questionAskedBy,
+      status,
+    });
+
+    await db.models.cmsCommunityCategoryField.create({
+      communityId: newCommunity.id,
+      key: 1,
+      value: categoryField1,
+    });
+
+    await db.models.cmsCommunityCategoryField.create({
+      communityId: newCommunity.id,
+      key: 2,
+      value: categoryField2,
+    });
+
+    return newCommunity;
+  } catch (err) {
+    console.log("addCmsPageError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const getCommunityById = async (id) => {
+  try {
+    const oneCommunity = await db.models.cmsCommunity.findOne({
+      where: { id },
+      include: [
+        {
+          model: db.models.cmsCommunityCategoryField,
+        },
+      ],
+    });
+
+    if (!oneCommunity) {
+      return false;
+    }
+
+    return oneCommunity;
+  } catch (err) {
+    console.log("getCommunityServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const deleteCommunityById = async (id, dbInstance) => {
+  try {
+    await dbInstance.cmsCommunity.destroy({
+      where: {
+        id,
+      },
+    });
+
+    return true;
+  } catch (err) {
+    console.log("deleteCmsPageServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const updateCommunity = async (req) => {
+  try {
+    const reqBody = req.body;
+    const { id, title, categoryId, status, categoryField1, categoryField2, postUpdatedBy } =
+      reqBody;
+
+    const oldCommunity = await getCommunityById(id);
+
+    oldCommunity.title = title;
+    oldCommunity.updatedBy = postUpdatedBy;
+    oldCommunity.categoryId = categoryId;
+    oldCommunity.status = status;
+    await oldCommunity.save();
+
+    await db.models.cmsCommunityCategoryField.update(
+      { value: categoryField1 },
+      {
+        where: { communityId: id, key: 1 },
+      }
+    );
+
+    await db.models.cmsCommunityCategoryField.update(
+      { value: categoryField2 },
+      {
+        where: { communityId: id, key: 2 },
+      }
+    );
+
+    return { oldCommunity, res: true };
+  } catch (err) {
+    console.log("updateCommunityServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const updateCommunityStatus = async (reqBody) => {
+  try {
+    const oldCommunity = await getCommunityById(reqBody.id);
+
+    oldCommunity.status = reqBody.status;
+    await oldCommunity.save();
+
+    return true;
+  } catch (err) {
+    console.log('updateCommunityStatusServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};
+
+export const listCmsCommunity = async (dbInstance) => {
+  try {
+    const allCmsCommunityPages = await db.models.cmsCommunity.findAll({
+      include: [
+        {
+          model: dbInstance.category,
+          as: "category",
+        },
+      ],
+      order: [["id", "DESC"]],
+    });
+
+    return allCmsCommunityPages;
+  } catch (err) {
+    console.log("allCmsCommunityPagesServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+
 export const addCommunityPost = async (req) => {
   try {
     const {
@@ -50,19 +194,12 @@ export const addCommunityPost = async (req) => {
   }
 };
 
-export const getCommunityPostById = async (user, reqBody) => {
+export const getCommunityPostById = async (reqBody) => {
   const { id } = reqBody;
-
-  console.log(reqBody)
-
   try {
     const oneCommunityPost = await db.models.cmsCommunityPost.findOne({
       where: { id },
       include: [
-        {
-          model: db.models.cmsCommunityCategoryField,
-        },
-
         {
           model: db.models.cmsCommunityPostComment,
         },
@@ -113,10 +250,10 @@ export const deletePostReplyById = async (id, dbInstance) => {
 export const updateCommunityPost = async (req) => {
   try {
     const reqBody = req.body;
-    const { id, title, name, email, comment, categoryId, postAddedBy, status, categoryField1, categoryField2 } =
+    const { id, title, name, email, comment, categoryId, status, } =
       reqBody;
 
-    const oldCommunityPost = await getCommunityPostById(req.user, req.body);
+    const oldCommunityPost = await getCommunityPostById(req.body);
 
     oldCommunityPost.title = title;
     oldCommunityPost.name = name;
@@ -139,27 +276,13 @@ export const updateCommunityPost = async (req) => {
           }
         );
       } else {
-        const updatePostComment = await db.models.cmsCommunityPostComment.create({
+        await db.models.cmsCommunityPostComment.create({
           name: name,
           email,
           communityPostId: id,
           comment,
         });
       }
-
-    await db.models.cmsCommunityCategoryField.update(
-      { value: categoryField1 },
-      {
-        where: { communityPostId: id, key: 1 },
-      }
-    );
-
-    await db.models.cmsCommunityCategoryField.update(
-      { value: categoryField2 },
-      {
-        where: { communityPostId: id, key: 2 },
-      }
-    );
 
     return { oldCommunityPost, res: true };
   } catch (err) {
@@ -168,10 +291,9 @@ export const updateCommunityPost = async (req) => {
   }
 };
 
-export const updatePageStatus = async (user, reqBody) => {
-  console.log(reqBody)
+export const updatePageStatus = async (reqBody) => {
   try {
-    const oldCmsPost = await getCommunityPostById(user, reqBody);
+    const oldCmsPost = await getCommunityPostById(reqBody);
 
     oldCmsPost.status = reqBody.status;
     await oldCmsPost.save();
@@ -183,16 +305,17 @@ export const updatePageStatus = async (user, reqBody) => {
   }
 };
 
-export const allCmsCommunityPosts = async (dbInstance) => {
+export const allCmsCommunityPosts = async (id, dbInstance) => {
   try {
     const allCmsCommunityPages = await db.models.cmsCommunityPost.findAll({
+      where: {communityId: id},
       include: [
         {
           model: dbInstance.cmsCommunityPostComment,
         },
         {
-          model: dbInstance.category,
-          as: "category",
+          model: dbInstance.cmsCommunity,
+          as: "cmsCommunity",
         },
       ],
       order: [["id", "DESC"]],

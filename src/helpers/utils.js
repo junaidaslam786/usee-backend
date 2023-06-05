@@ -76,6 +76,9 @@ export const generateUrl = (type, userType) => {
         case 'admin-update-password':
             url = `${url}/login`;
             break;
+        case 'admin-login':
+            url = `${url}/login`;
+            break;
         case 'agent-login':
             url = `${url}/agent/login`;
             break;

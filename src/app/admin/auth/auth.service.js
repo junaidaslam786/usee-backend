@@ -1,10 +1,3 @@
-/* eslint-disable max-len */
-/* eslint-disable eqeqeq */
-/* eslint-disable no-console */
-/* eslint-disable import/no-unresolved */
-/* eslint-disable no-plusplus */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-restricted-syntax */
 import { Sequelize } from 'sequelize';
 import db from '@/database';
 import {
@@ -216,7 +209,7 @@ export const registerAsAdmin = async (reqBody, dbInstance) => {
         emailData.name = user.fullName;
         emailData.type = user.userType;
         emailData.tempPass = reqBody.password;
-        emailData.login = utilsHelper.generateUrl('agent-login', user.userType);
+        emailData.login = utilsHelper.generateUrl('admin-login', user.userType);
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD), emailData);
         const payload = {
             to: user.email,
@@ -237,23 +230,21 @@ export const registerAsAdmin = async (reqBody, dbInstance) => {
 
 
 export const registerAsAgent = async (reqBody, dbInstance) => {
-  console.log('reqBody', reqBody)
   try {
     const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
-    const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber, jobTitle } = reqBody;
-    
+    const { firstName, lastName, email, companyName, companyPosition, phoneNumber, jobTitle } = reqBody;
+    const tempPassword = utilsHelper.generateRandomString(10);
     const result = await db.transaction(async (transaction) => {
         // Create user
         const user = await userService.createUserWithPassword({
             firstName, 
             lastName, 
             email, 
-            password,
+            password: tempPassword,
             phoneNumber,
             status: 1, 
             userType: USER_TYPE.AGENT,
         }, transaction);
-        console.log('user', user)
 
         // create agent profile
         const agent = await agentTable.create({
@@ -297,7 +288,7 @@ export const registerAsAgent = async (reqBody, dbInstance) => {
         const emailData = [];
         emailData.name = user.fullName;
         emailData.type = user.userType;
-        emailData.tempPass = reqBody.password;
+        emailData.tempPass = tempPassword;
         emailData.login = utilsHelper.generateUrl('agent-login', user.userType);
         const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD), emailData);
         const payload = {
@@ -321,16 +312,17 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
   try {
     const { user: userTable } = dbInstance;
     const {
-      firstName, lastName, email, password, phoneNumber,
+      firstName, lastName, email, phoneNumber,
     } = reqBody;
 
-    console.log(reqBody);
+    const tempPassword = utilsHelper.generateRandomString(8);
+
     // Create user
     const userData = {
       firstName,
       lastName,
       email,
-      password,
+      password: tempPassword,
       status: 1,
       phoneNumber,
       userType: USER_TYPE.CUSTOMER,
@@ -352,7 +344,7 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
     const emailData = [];
     emailData.name = user.fullName;
     emailData.type = user.userType;
-    emailData.tempPass = reqBody.password;
+    emailData.tempPass = tempPassword;
     emailData.login = utilsHelper.generateUrl('customer-login', user.userType);
     const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD), emailData);
     const payload = {

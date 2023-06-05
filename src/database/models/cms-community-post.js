@@ -3,8 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class CmsCommunityPost extends Model {
     static associate(models) {
-      CmsCommunityPost.belongsTo(models.category, { foreignKey: 'categoryId' }),
-      CmsCommunityPost.hasMany(models.cmsCommunityCategoryField, { foreignKey: 'communityPostId' }),
+      CmsCommunityPost.belongsTo(models.cmsCommunity, { foreignKey: 'communityId' })
       CmsCommunityPost.hasMany(models.cmsCommunityPostComment, { foreignKey: 'communityPostId'})
     }
   }
@@ -17,11 +16,11 @@ export default function (sequelize) {
       unique: true,
       defaultValue: DataTypes.UUIDV4
     },
-    categoryId: {
-      type: DataTypes.INTEGER,
-      field: 'category_id',
+    communityId: {
+      type: DataTypes.UUID,
+      field: 'community_id',
       references: {
-        model: 'categories',
+        model: 'cms_community',
         key: 'id',
       }
     },

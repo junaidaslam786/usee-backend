@@ -7,6 +7,7 @@ import agentModel from './models/agent';
 import cmsPages from './models/cms-page';
 import cmsAssets from './models/cms-asset';
 import cmsPageCategoryFields from './models/cms-page-category-field';
+import cmsCommunity from './models/cms-community';
 import cmsCommunityPost from './models/cms-community-post';
 import cmsCommunityPostComment from './models/cms-community-post-comment';
 import cmsCommunityCategoryField from './models/cms-community-category-field';
@@ -55,6 +56,7 @@ const modelDefiners = [
   cmsPages,
   cmsAssets,
   cmsPageCategoryFields,
+  cmsCommunity,
   cmsCommunityPost,
   cmsCommunityPostComment,
   cmsCommunityCategoryField,

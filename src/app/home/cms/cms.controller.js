@@ -21,7 +21,7 @@ import * as cmsService from './cms.service';
 };
 
 /**
- * POST /cms/single-page/:id
+ * GET /cms/single-page/:id
  * single page
  */
  export const singlePage = async (req, res, next) => {
@@ -40,77 +40,113 @@ import * as cmsService from './cms.service';
 };
 
 /**
- * POST /cms/all-posts
- * List all cms posts
+ * POST /cms/community/list
+ * List all community
  */
-export const allPosts = async (req, res, next) => {
-
+export const allCommunity = async (req, res, next) => {
   try {
-    const result = await cmsService.allPosts(req.body, req.dbInstance);
+    const result = await cmsService.allCommunity(req.body, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
   
     return res.status(200).json(result);
   } catch (err) {
-    console.log('allPostsError', err);
+    console.log('allCommunityError', err);
     return next(err);
   }
 };
 
 /**
- * POST /cms/single-post/:id
- * single post
+ * GET /cms/community/:id
+ * single community
  */
- export const singlePost = async (req, res, next) => {
+ export const singleCommunity = async (req, res, next) => {
 
   try {
-    const result = await cmsService.singlePost(req.params.id, req.dbInstance);
+    const result = await cmsService.singleCommunity(req.params.id, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
   
     return res.status(200).json(result);
   } catch (err) {
-    console.log('singlePostError', err);
+    console.log('singleCommunityError', err);
     return next(err);
   }
 };
 
 /**
- * POST /cms/create-post
- * Create post
+ * GET /cms/community/post/:id
+ * single community post
  */
- export const createPost = async (req, res, next) => {
+ export const singleCommunityPost = async (req, res, next) => {
 
   try {
-    const result = await cmsService.createPost(req.body, req.dbInstance);
+    const result = await cmsService.singleCommunityPost(req.params.id, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
   
     return res.status(200).json(result);
   } catch (err) {
-    console.log('createPostError', err);
+    console.log('singleCommunityPostError', err);
     return next(err);
   }
 };
 
 /**
- * POST /cms/create-post-comment
- * Create comment
+ * POST /cms/community/create
+ * Create community
  */
- export const createComment = async (req, res, next) => {
+ export const createCommunity = async (req, res, next) => {
 
   try {
-    const result = await cmsService.createComment(req.body, req.dbInstance);
+    const result = await cmsService.createCommunity(req.body, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
   
     return res.status(200).json(result);
   } catch (err) {
-    console.log('createCommentError', err);
+    console.log('createCommunityError', err);
+    return next(err);
+  }
+};
+
+/**
+ * POST /cms/community/create-post
+ * Create community post
+ */
+ export const createCommunityPost = async (req, res, next) => {
+  try {
+    const result = await cmsService.createCommunityPost(req.body, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+  
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('createCommunityPostError', err);
+    return next(err);
+  }
+};
+
+/**
+ * POST /cms/community/create-post-comment
+ * Create community post comment
+ */
+ export const createCommunityPostComment = async (req, res, next) => {
+
+  try {
+    const result = await cmsService.createCommunityPostComment(req.body, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+  
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('createCommunityPostCommentError', err);
     return next(err);
   }
 };

@@ -6,12 +6,12 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cms
     unique: true,
     defaultValue: Sequelize.UUIDV4
   },
-  categoryId: {
-    field: 'category_id',
-    type: Sequelize.INTEGER,
+  communityId: {
+    field: 'community_id',
+    type: Sequelize.UUID,
     onDelete: 'CASCADE',
     references: {
-      model: 'categories',
+      model: 'cms_community',
       key: 'id'
     }
   },
