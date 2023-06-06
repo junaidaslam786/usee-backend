@@ -32,6 +32,8 @@ export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
                 },
                 include: [{
                     model: dbInstance.productAllocation,
+                },{
+                    model: dbInstance.agentAccessLevel,
                 }]
             }],
             order: [["id", "DESC"]],
@@ -77,13 +79,21 @@ export const listAgentUsersToAllocate = async (req) => {
     }
 }
 
-export const createAgentUsers = async (reqBody, req) => {
+export const createAgentUser = async (reqBody, req) => {
     try {
-        const { firstName, lastName, email, phoneNumber, role, branch, timezone } = reqBody;
+        const { 
+            firstName, 
+            lastName, 
+            email, 
+            phoneNumber, 
+            role, 
+            branch, 
+            timezone,
+        } = reqBody;
         const { user: agentInfo, dbInstance } = req;
         const { agent, agentTimeSlot, agentAvailability } = dbInstance;
 
-        if (!agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
+        if (agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
             return { error: true, message: 'You do not have permission to add user.'}
         }
 
@@ -138,8 +148,10 @@ export const createAgentUsers = async (reqBody, req) => {
             };
 
             if (agentInfo.agent.agentType == AGENT_TYPE.MANAGER) {
+                agentUserData.agentId = agentInfo.agent.agentId;
                 agentUserData.managerId = agentInfo.id;
             }
+            
             await agent.create(agentUserData, { transaction });
 
             const timeslots = await agentTimeSlot.findAll();
@@ -154,6 +166,21 @@ export const createAgentUsers = async (reqBody, req) => {
                     });
                 }
                 await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
+            }
+
+            // create access levels
+            const agentAccessLevels = [];
+            for (const [key, value] of Object.entries(reqBody)) {
+                if (key.startsWith('accessLevels[')) {
+                    agentAccessLevels.push({
+                        userId: newUser.id,
+                        accessLevel: value,
+                    });
+                }
+            }
+
+            if (agentAccessLevels?.length > 0) {
+                await dbInstance.agentAccessLevel.bulkCreate(agentAccessLevels, { transaction });
             }
 
             const emailData = [];
@@ -277,20 +304,23 @@ const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
     const agentUser = await dbInstance.agent.findOne({
         where: { userId: agentUserId },
         include: [
-          {
-            model: dbInstance.user, 
-            include: [{
-                model: dbInstance.productAllocation,
+            {
+                model: dbInstance.user, 
                 include: [{
-                    model: dbInstance.product,
-                    attributes: ["id", "title"]
+                    model: dbInstance.productAllocation,
+                    include: [{
+                        model: dbInstance.product,
+                        attributes: ["id", "title"]
+                    }]
+                },{
+                    model: dbInstance.agentAccessLevel, 
                 }]
-            }]
-        },
-        {
-            model: dbInstance.agentBranch, 
-            attributes: ["id", "name"]
-        }],
+            },
+            {
+                model: dbInstance.agentBranch, 
+                attributes: ["id", "name"]
+            },
+        ],
     });
 
     if (!agentUser) {
@@ -298,4 +328,56 @@ const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
     }
 
     return agentUser;
+}
+
+export const updateAgentUser = async (reqBody, req) => {
+    try {
+        const { 
+            userId,
+            role, 
+        } = reqBody;
+        const { user: agentInfo, dbInstance } = req;
+
+        if (agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
+            return { error: true, message: 'You do not have permission to update user.'}
+        }
+
+        await db.transaction(async (transaction) => {
+            const agentUser = await getAgentUserByUserId(userId, dbInstance);
+
+            agentUser.agentType = role;
+            await agentUser.save({ transaction });
+
+            if (agentInfo.agentType !== AGENT_TYPE.STAFF) {
+                // remove previous access levels
+                await dbInstance.agentAccessLevel.destroy({
+                    where: {
+                        userId: agentUser.userId
+                    }
+                });
+
+                // create access levels
+                const agentAccessLevels = [];
+                for (const [key, value] of Object.entries(reqBody)) {
+                    if (key.startsWith('accessLevels[')) {
+                        agentAccessLevels.push({
+                            userId: agentUser.userId,
+                            accessLevel: value,
+                        });
+                    }
+                }
+
+                if (agentAccessLevels?.length > 0) {
+                    await dbInstance.agentAccessLevel.bulkCreate(agentAccessLevels, { transaction });
+                }
+            }
+
+            return agentUser;
+        });
+        
+        return true;
+    } catch(err) {
+        console.log('createAgentUsersServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
 }

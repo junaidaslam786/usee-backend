@@ -11,7 +11,8 @@ import {
     EMAIL_SUBJECT, 
     EMAIL_TEMPLATE_PATH, 
     PRODUCT_LOG_TYPE,
-    AGENT_TYPE
+    AGENT_TYPE,
+    AGENT_USER_ACCESS_TYPE_VALUE
  } from '../../config/constants';
 import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
@@ -24,11 +25,16 @@ export const createProperty = async (reqBody, req) => {
     try {
         const { title, description, price, address, city, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
         const { user, dbInstance } = req;
+
+        if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.ADD_PROPERTY))) {
+            return { error: true, message: 'You do not have permission to add property. '}
+        }
+
         const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`, 4326);
         const result = await db.transaction(async (transaction) => {
             // create product data
             const productData = {
-                userId: user.id,
+                userId: user.agent.agentType !== AGENT_TYPE.AGENT ? user.agent.agentId : user.id,
                 categoryId: PRODUCT_CATEGORIES.PROPERTY,
                 title, 
                 description, 
@@ -71,8 +77,37 @@ export const createProperty = async (reqBody, req) => {
             // create allocated users
             const allocatedUsers = [];
             const allocatedUserIds = [];
+
+            // allocate this property to this user since it 
+            // is creating property
+            if (user.agent.agentType === AGENT_TYPE.MANAGER) {
+                allocatedUsers.push({
+                    productId: product.id,
+                    userId: user.id,
+                });
+                allocatedUserIds.push(user.id);
+            }
+
+            // allocate this property to the user and its manager since 
+            // it is creating property and manager allowed him
+            if (user.agent.agentType === AGENT_TYPE.STAFF) {
+                allocatedUsers.push({
+                    productId: product.id,
+                    userId: user.id,
+                });
+                allocatedUserIds.push(user.id);
+
+                if (user?.agent?.managerId) {
+                    allocatedUsers.push({
+                        productId: product.id,
+                        userId: user.agent.managerId,
+                    });
+                    allocatedUserIds.push(user.agent.managerId);
+                }
+            }
+
             for (const [key, value] of Object.entries(reqBody)) {
-                if (key.startsWith('allocatedUser[')) {
+                if (key.startsWith('allocatedUser[') && value) {
                     allocatedUsers.push({
                         productId: product.id,
                         userId: value,
@@ -138,8 +173,12 @@ export const updateProperty = async (reqBody, req) => {
         const { productId, title, description, price, address, city, region, latitude, longitude, virtualTourType } = reqBody;
         const { user, dbInstance } = req;
 
+        if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.EDIT_PROPERTY))) {
+            return { error: true, message: 'You do not have permission to update property. '}
+        }
+
         const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`, 4326);
-        const result = await db.transaction(async (transaction) => {
+        await db.transaction(async (transaction) => {
             const product = await getPropertyById(productId, dbInstance);
             
             // update product data
@@ -195,6 +234,15 @@ export const updateProperty = async (reqBody, req) => {
                 // create allocated users
                 const allocatedUsers = [];
                 const allocatedUserIds = [];
+
+                if (user.agent.agentType !== AGENT_TYPE.AGENT) {
+                    allocatedUsers.push({
+                        productId: product.id,
+                        userId: user.id,
+                    });
+                    allocatedUserIds.push(user.id);
+                }
+                
                 for (const [key, value] of Object.entries(reqBody)) {
                     if (key.startsWith('allocatedUser[')) {
                         allocatedUsers.push({
@@ -440,7 +488,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
                     { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${selectedUser}')`) }}
                 ]
             },
-            order: [["id", "DESC"]],
+            order: [["createdAt", "DESC"]],
             offset: (itemPerPage * (page - 1)),
             limit: itemPerPage
         });
@@ -494,6 +542,10 @@ export const getProperty = async (propertyId, dbInstance) => {
 
 export const removePropertyRequest = async (reqUser, reqBody, dbInstance) => {
     try {
+        if (!(reqUser?.agent?.agentType === AGENT_TYPE.AGENT || reqUser?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.DELETE_PROPERTY))) {
+            return { error: true, message: 'You do not have permission to update property. '}
+        }
+
         const { propertyId, reasonId, reason } = reqBody;
 
         const property = await getPropertyById(propertyId, dbInstance);

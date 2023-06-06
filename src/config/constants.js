@@ -175,3 +175,15 @@ export const PRODUCT_LOG_TYPE = {
     SNAGLIST_APPROVED: "snaglist_approved",
     VIEWED: "viewed",
 };
+
+export const AGENT_USER_ACCESS_TYPE_VALUE = {
+    ADD_PROPERTY: "add_property",
+    EDIT_PROPERTY: "edit_property",
+    DELETE_PROPERTY: "delete_property",
+}
+
+export const AGENT_USER_ACCESS_TYPE = [
+    { value: "add_property", label: "Add Property" },
+    { value: "edit_property", label: "Edit Property" },
+    { value: "delete_property", label: "Delete Property" },
+];

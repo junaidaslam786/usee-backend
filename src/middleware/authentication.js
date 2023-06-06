@@ -48,6 +48,9 @@ export default async function authenticate(req, res, next) {
       },
       {
         model: req.dbInstance.agent,
+      },
+      {
+        model: req.dbInstance.agentAccessLevel,
       }
     ],
   });

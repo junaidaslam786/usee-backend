@@ -91,17 +91,17 @@ export const singlePage = async (id, dbInstance) => {
   }
 };
 
-export const allCommunity = async (reqBody, dbInstance) => {
-  let whereClause = {}
-  whereClause.status = CMS_STATUS.PUBLISHED
-
-  if (reqBody?.keyword) {
-    whereClause.title = {
-      [Op.iLike]: '%' + reqBody.keyword + '%'
-    }
-  }
-
+export const listCommunities = async (reqBody, dbInstance) => {
   try {
+    let whereClause = {}
+    whereClause.status = CMS_STATUS.PUBLISHED
+
+    if (reqBody?.keyword) {
+      whereClause.title = {
+        [Op.iLike]: '%' + reqBody.keyword + '%'
+      }
+    }
+    
     const { rows } = await dbInstance.cmsCommunity.findAndCountAll({
       where: whereClause,
       include: [{
@@ -158,28 +158,46 @@ export const allCommunity = async (reqBody, dbInstance) => {
     };
     
   } catch (err) {
-    console.log('allCommunityError', err);
+    console.log('listCommunitiesError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
 
-export const singleCommunity = async (id, dbInstance) => {
+export const listCommunityPosts = async (req) => {
   try {
-    const community = await dbInstance.cmsCommunity.findOne({ 
-      where: { id: id },
-      include: [{
-        model: dbInstance.cmsCommunityPost
-      }]
-    });
+    const { dbInstance, body: reqBody } = req;
+    const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
+    const page = (reqBody && reqBody.page) ? reqBody.page : 1;
 
-    return community;
-  } catch (err) {
-    console.log('singleCommunityError', err);
-    return { error: true, message: 'Server not responding, please try again later.' };
+    const { count, rows } = await dbInstance.cmsCommunityPost.findAndCountAll({
+      where: {
+        communityId: reqBody.communityId,
+        status: CMS_STATUS.PUBLISHED,
+      },
+      include: [
+        { 
+          model: dbInstance.cmsCommunity, 
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      offset: (itemPerPage * (page - 1)),
+      limit: itemPerPage
+    });
+    
+    return {
+      data: rows,
+      page,
+      size: itemPerPage,
+      totalPage: Math.ceil(count / itemPerPage),
+      totalItems: count
+    };
+  } catch(err) {
+    console.log('listCommunityPostsServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.'}
   }
 };
 
-export const singleCommunityPost = async (id, dbInstance) => {
+export const getCommunityPostById = async (id, dbInstance) => {
   try {
     const communityPost = await dbInstance.cmsCommunityPost.findOne({ 
       where: { id },
@@ -190,7 +208,7 @@ export const singleCommunityPost = async (id, dbInstance) => {
 
     return communityPost;
   } catch (err) {
-    console.log('singleCommunityPostError', err);
+    console.log('getCommunityPostByIdError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };

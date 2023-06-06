@@ -43,7 +43,7 @@ export const listAgentUsersToAllocate = async (req, res, next) => {
  */
 export const createAgentUser = async (req, res, next) => {
     try {
-        const result = await userService.createAgentUsers(req.body, req);
+        const result = await userService.createAgentUser(req.body, req);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }
@@ -123,6 +123,24 @@ export const deleteAgentUser = async (req, res, next) => {
         return res.json({ success: true, message: "User deleted successfully" });
     } catch (err) {
         console.log('deleteAgentUserError', err);
+        next(err);
+    }
+};
+
+/**
+ * PUT /agent/user/update
+ * Update user by agent
+ */
+export const updateAgentUser = async (req, res, next) => {
+    try {
+        const result = await userService.updateAgentUser(req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "User updated successfully" });
+    } catch (err) {
+        console.log('createAgentUsersError', err);
         next(err);
     }
 };

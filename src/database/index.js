@@ -42,6 +42,7 @@ import bookDemo from './models/book-demo';
 import productLogModel from './models/product-log';
 import appointmentLogModel from './models/appointment-log';
 import appointmentNoteModel from './models/appointment-note';
+import agentAccessLevelModel from './models/agent-access-level';
 
 // Configuration
 const env = process.env.NODE_ENV;
@@ -91,6 +92,7 @@ const modelDefiners = [
   productLogModel,
   appointmentLogModel,
   appointmentNoteModel,
+  agentAccessLevelModel
 ];
 
 // eslint-disable-next-line no-restricted-syntax

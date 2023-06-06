@@ -22,6 +22,17 @@ export const createAgentUserRules = [
   // }),
 ];
 
+export const updateAgentUserRules = [
+  body('userId').exists().custom(async (value) => {
+    return await db.models.user.findOne({ where: { id: value } }).then(agentUserData => {
+      if (!agentUserData) {
+        return Promise.reject('Invalid user id or user do not exist.');
+      }
+    });
+  }),
+  body('role').exists().withMessage('Please provide user role').notEmpty().withMessage('Please provide user role'),
+];
+
 export const updateAgentUserBranchRules = [
   body('userId').exists().custom(async (value) => {
     return await db.models.user.findOne({ where: { id: value } }).then(agentUserData => {

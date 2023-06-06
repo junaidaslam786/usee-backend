@@ -2,6 +2,7 @@ import { compare, hash } from 'bcrypt';
 import { DataTypes, Model } from 'sequelize';
 
 import { tokenHelper } from '@/helpers';
+import agentAccessLevel from './agent-access-level';
 
 export default function (sequelize) {
   class User extends Model {
@@ -14,7 +15,15 @@ export default function (sequelize) {
     }
 
     generateToken(expiresIn = '4h', agentProfile) {
-      const data = { id: this.id, name: this.fullName, phoneNumber: this.phoneNumber, profileImage: this.profileImage, email: this.email, agent: agentProfile || this.agent };
+      const data = { 
+        id: this.id, 
+        name: this.fullName, 
+        phoneNumber: this.phoneNumber, 
+        profileImage: this.profileImage, 
+        email: this.email, 
+        agent: agentProfile || this.agent,
+        agentAccessLevels: this.agentAccessLevels
+      };
       return tokenHelper.generateToken(data, expiresIn);
     }
 
@@ -32,6 +41,7 @@ export default function (sequelize) {
       User.hasMany(models.customerLog, { foreignKey: 'userId' })
       User.hasMany(models.userAlert, { foreignKey: 'customerId' })
       User.hasMany(models.productAllocation, { foreignKey: 'userId' })
+      User.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
     }
   }
 

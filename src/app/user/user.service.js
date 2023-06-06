@@ -201,3 +201,35 @@ export const updateTimezone = async (req) => {
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
+
+export const getCurrentUser = async (req) => {
+    try {
+        const { user: agentInfo, dbInstance } = req;
+
+        const userDetail = await dbInstance.user.findOne({
+            where: { id: agentInfo.id },
+            include: [
+                {
+                    attributes: ['id', 'name'],
+                    model: dbInstance.role,
+                    as: 'role',
+                    include: [{
+                        model: dbInstance.permission,
+                        attributes: ['id', 'name', 'key'],
+                        through: { attributes: [] },
+                    }],
+                },
+                {
+                    model: dbInstance.agent
+                },
+                {
+                    model: dbInstance.agentAccessLevel
+                }
+            ],
+          });
+        return userDetail;
+    } catch(err) {
+        console.log('getCurrentUserServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}

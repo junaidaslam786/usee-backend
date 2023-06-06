@@ -29,6 +29,9 @@ export const login = async (reqBody, dbInstance) => {
                     model: dbInstance.agent, 
                     attributes: ["jobTitle", "agentType"],
                 },
+                { 
+                    model: dbInstance.agentAccessLevel, 
+                },
                 {
                     attributes: ["id", "name"],
                     model: dbInstance.role, as: 'role',

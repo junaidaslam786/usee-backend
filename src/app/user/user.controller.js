@@ -7,8 +7,12 @@ import * as userService from './user.service';
  */
 export const getCurrentUser = async (req, res, next) => {
   try {
-    delete req.user.dataValues.password;
-    res.json(req.user);
+    const result = await userService.getCurrentUser(req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }

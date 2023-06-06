@@ -4,9 +4,8 @@ import * as cmsService from './cms.service';
 /**
  * POST /cms/all-pages
  * List all cms pages
- */
- export const allPages = async (req, res, next) => {
-
+*/
+export const allPages = async (req, res, next) => {
   try {
     const result = await cmsService.allPages(req.body, req.dbInstance);
     if (result?.error && result?.message) {
@@ -23,9 +22,8 @@ import * as cmsService from './cms.service';
 /**
  * GET /cms/single-page/:id
  * single page
- */
- export const singlePage = async (req, res, next) => {
-
+*/
+export const singlePage = async (req, res, next) => {
   try {
     const result = await cmsService.singlePage(req.params.id, req.dbInstance);
     if (result?.error && result?.message) {
@@ -43,82 +41,62 @@ import * as cmsService from './cms.service';
  * POST /cms/community/list
  * List all community
  */
-export const allCommunity = async (req, res, next) => {
+export const listCommunities = async (req, res, next) => {
   try {
-    const result = await cmsService.allCommunity(req.body, req.dbInstance);
+    const result = await cmsService.listCommunities(req.body, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
   
     return res.status(200).json(result);
   } catch (err) {
-    console.log('allCommunityError', err);
+    console.log('listCommunitiesError', err);
     return next(err);
   }
 };
 
 /**
- * GET /cms/community/:id
- * single community
+ * GET /cms/community/post/list
+ * List all posts by community
  */
- export const singleCommunity = async (req, res, next) => {
-
+ export const listCommunityPosts = async (req, res, next) => {
   try {
-    const result = await cmsService.singleCommunity(req.params.id, req.dbInstance);
+    const result = await cmsService.listCommunityPosts(req);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
   
     return res.status(200).json(result);
   } catch (err) {
-    console.log('singleCommunityError', err);
+    console.log('listCommunityPostsError', err);
     return next(err);
   }
 };
 
 /**
  * GET /cms/community/post/:id
- * single community post
+ * Get community post details
  */
- export const singleCommunityPost = async (req, res, next) => {
-
+export const getCommunityPostById = async (req, res, next) => {
   try {
-    const result = await cmsService.singleCommunityPost(req.params.id, req.dbInstance);
+    const result = await cmsService.getCommunityPostById(req.params.id, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
   
     return res.status(200).json(result);
   } catch (err) {
-    console.log('singleCommunityPostError', err);
+    console.log('getCommunityPostByIdError', err);
     return next(err);
   }
 };
 
-/**
- * POST /cms/community/create
- * Create community
- */
- export const createCommunity = async (req, res, next) => {
-
-  try {
-    const result = await cmsService.createCommunity(req.body, req.dbInstance);
-    if (result?.error && result?.message) {
-      return next(createError(400, result.message));
-    }
-  
-    return res.status(200).json(result);
-  } catch (err) {
-    console.log('createCommunityError', err);
-    return next(err);
-  }
-};
 
 /**
  * POST /cms/community/create-post
  * Create community post
- */
- export const createCommunityPost = async (req, res, next) => {
+*/
+export const createCommunityPost = async (req, res, next) => {
   try {
     const result = await cmsService.createCommunityPost(req.body, req.dbInstance);
     if (result?.error && result?.message) {
@@ -136,8 +114,7 @@ export const allCommunity = async (req, res, next) => {
  * POST /cms/community/create-post-comment
  * Create community post comment
  */
- export const createCommunityPostComment = async (req, res, next) => {
-
+export const createCommunityPostComment = async (req, res, next) => {
   try {
     const result = await cmsService.createCommunityPostComment(req.body, req.dbInstance);
     if (result?.error && result?.message) {
