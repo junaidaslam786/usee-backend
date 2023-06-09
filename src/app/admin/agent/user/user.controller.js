@@ -42,7 +42,6 @@ export const listBlockedAgentUsers = async (req, res, next) => {
  * List all users created by agent
  */
 export const updateAgentUserStatus = async (req, res, next) => {
-    console.log('worrking')
     try {
         const result = await userService.updateAgentUserStatus(req.body, req);
         if (result?.error && result?.message) {

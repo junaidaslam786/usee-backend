@@ -44,7 +44,7 @@ export const forgotPassword = async (req, res, next) => {
  */
 export const updatePassword = async (req, res, next) => {
   try {
-    const result = await authService.updatePassword(req.body, req.dbInstance);
+    const result = await authService.updatePassword(req, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }

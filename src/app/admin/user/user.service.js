@@ -87,7 +87,6 @@ export const listAdminUsers = async (dbInstance) => {
     return await dbInstance.user.findAll({
       where: {
         userType: USER_TYPE.ADMIN,
-        status: true,
       },
 
       order: [['id', 'DESC']],

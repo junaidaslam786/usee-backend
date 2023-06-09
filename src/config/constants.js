@@ -91,6 +91,7 @@ export const APPOINTMENT_TYPES = {
 export const EMAIL_SUBJECT = {
     REGISTER_AGENT: "You have registered as trader at Usee360",
     ADMIN_REGISTER_AGENT: "Usee360 admin added you as a trader",
+    ADMIN_REGISTER_ADMIN: "Usee360 admin added you as a admin",
     REGISTER_CUSTOMER: "You have registered as customer at Usee360",
     ADMIN_REGISTER_CUSTOMER: "Usee360 admin added you as a customer",
     FORGOT_PASSWORD: "Your password change request has been received",

@@ -92,7 +92,7 @@ export const forgotPassword = async (reqBody, dbInstance) => {
 
     const emailData = [];
     emailData.name = user.fullName;
-    emailData.forgotPasswordLink = `${utilsHelper.generateUrl("admin-forgot-password", user.userType)}`;
+    emailData.forgotPasswordLink = `${utilsHelper.generateUrl(`admin-forgot-password`, user.userType)}/${user.rememberToken}`;
     const htmlData = await ejs.renderFile(
       path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_FORGOT_PASSWORD),
       emailData
@@ -104,20 +104,20 @@ export const forgotPassword = async (reqBody, dbInstance) => {
     };
     mailHelper.sendMail(payload);
 
-    return true;
+    return {success: true, token: user.rememberToken};
   } catch (err) {
     console.log("forgotPasswordServiceError", err);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
 
-export const updatePassword = async (reqBody, dbInstance) => {
+export const updatePassword = async (req, dbInstance) => {
   try {
-    const { email, password, type = "admin" } = reqBody;
+    const { email, password, type = "admin", token } = req.body;
     const userModel = dbInstance.user;
 
     // Find user by email address
-    const user = await userModel.findOne({ where: { email, user_type: type } });
+    const user = await userModel.findOne({ where: { rememberToken: token, user_type: type } });
     if (!user) {
       return { error: true, message: "There is no user with this email address!" };
     }
@@ -125,6 +125,7 @@ export const updatePassword = async (reqBody, dbInstance) => {
     if (!user.status) {
       return { error: true, message: "Account is disabled, contact admin!" };
     }
+    
     // Update password against email address
     user.password = password;
     await user.save();
@@ -153,7 +154,6 @@ export const updatePassword = async (reqBody, dbInstance) => {
 
 export const registerAsAdmin = async (reqBody, dbInstance) => {
   try {
-    const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
     const { firstName, lastName, email, password, companyName, companyPosition, phoneNumber, jobTitle } = reqBody;
 
     const result = await db.transaction(async (transaction) => {
@@ -170,36 +170,6 @@ export const registerAsAdmin = async (reqBody, dbInstance) => {
         },
         transaction
       );
-      console.log("user", user);
-
-      // create agent profile
-      const agent = await agentTable.create(
-        {
-          userId: user.id,
-          companyName,
-          companyPosition,
-          jobTitle,
-          licenseNo: reqBody?.licenseNo ? reqBody.licenseNo : "",
-          agentType: AGENT_TYPE.AGENT,
-          apiCode: utilsHelper.generateRandomString(10, true),
-        },
-        { transaction }
-      );
-      console.log("agent", agent);
-
-      const timeslots = await agentTimeSlot.findAll();
-      for (let day = 1; day <= 7; day++) {
-        let agentAvailabilities = [];
-        for (const slot of timeslots) {
-          agentAvailabilities.push({
-            userId: user.id,
-            dayId: day,
-            timeSlotId: slot.id,
-            status: true,
-          });
-        }
-        await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
-      }
 
       // Generate and return tokens
       const token = user.generateToken();
@@ -208,8 +178,6 @@ export const registerAsAdmin = async (reqBody, dbInstance) => {
       const returnedUserData = {
         firstName: user.firstName,
         lastName: user.lastName,
-        companyName: agent.companyName,
-        companyPosition: agent.companyPosition,
         phoneNumber: user.phoneNumber,
         email: user.email,
         type: user.userTypeDisplay,
@@ -219,14 +187,14 @@ export const registerAsAdmin = async (reqBody, dbInstance) => {
       emailData.name = user.fullName;
       emailData.type = user.userType;
       emailData.tempPass = reqBody.password;
-      emailData.login = utilsHelper.generateUrl("agent-login", user.userType);
+      emailData.login = utilsHelper.generateUrl("admin-login", user.userType);
       const htmlData = await ejs.renderFile(
         path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD),
         emailData
       );
       const payload = {
         to: user.email,
-        subject: EMAIL_SUBJECT.ADMIN_REGISTER_AGENT,
+        subject: EMAIL_SUBJECT.ADMIN_REGISTER_ADMIN,
         html: htmlData,
         body: `Please login through ${(user.email, user.password)}`,
       };
@@ -236,7 +204,7 @@ export const registerAsAdmin = async (reqBody, dbInstance) => {
     });
     return result;
   } catch (err) {
-    console.log("registerAsAgentError", err);
+    console.log("registerAsAdminError", err);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
@@ -249,15 +217,14 @@ export const registerAsAgent = async (req, dbInstance) => {
       firstName,
       lastName,
       email,
-      password,
       companyName,
       companyPosition,
       phoneNumber,
       jobTitle,
       licenseNo
     } = reqBody;
-
-    console.log(reqBody)
+    const password = utilsHelper.generateRandomString(10);
+    
     const result = await db.transaction(async (transaction) => {
       // Create user
       const user = await userService.createUserWithPassword(
@@ -332,7 +299,7 @@ export const registerAsAgent = async (req, dbInstance) => {
       const emailData = [];
       emailData.name = user.fullName;
       emailData.type = user.userType;
-      emailData.tempPass = reqBody.password;
+      emailData.tempPass = password;
       emailData.login = utilsHelper.generateUrl("agent-login", user.userType);
       const htmlData = await ejs.renderFile(
         path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD),
@@ -342,7 +309,7 @@ export const registerAsAgent = async (req, dbInstance) => {
         to: user.email,
         subject: EMAIL_SUBJECT.ADMIN_REGISTER_AGENT,
         html: htmlData,
-        body: `Please login through ${(user.email, user.password)}`,
+        body: `Please login through ${(user.email, password)}`,
       };
       mailHelper.sendMail(payload);
 
@@ -358,9 +325,9 @@ export const registerAsAgent = async (req, dbInstance) => {
 export const registerAsCustomer = async (reqBody, dbInstance) => {
   try {
     const { user: userTable } = dbInstance;
-    const { firstName, lastName, email, password, phoneNumber } = reqBody;
+    const { firstName, lastName, email, phoneNumber } = reqBody;
 
-    console.log(reqBody);
+    const password = utilsHelper.generateRandomString(10);
     // Create user
     const userData = {
       firstName,
@@ -388,7 +355,7 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
     const emailData = [];
     emailData.name = user.fullName;
     emailData.type = user.userType;
-    emailData.tempPass = reqBody.password;
+    emailData.tempPass = password;
     emailData.login = utilsHelper.generateUrl("customer-login", user.userType);
     const htmlData = await ejs.renderFile(
       path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ADMIN_REGISTER_TEMP_PASSWORD),
