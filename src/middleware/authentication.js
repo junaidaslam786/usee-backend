@@ -53,23 +53,26 @@ export default async function authenticate(req, res, next) {
         model: req.dbInstance.agentAccessLevel,
       }
     ],
+    paranoid: false
   });
 
-  // Check if user exists
   if (!user) {
-    return next({ status: 401, message: 'There is no user' });
+    return next({ status: 401, message: 'There is no user with this email address!' });
   }
 
+  if (!user.status) {
+    return next({ status: 401, message: 'Account is disabled, please contact admin!' });
+  }
+
+  if (user.deletedAt) {
+    return next({ status: 401, message: 'Account is deleted, please contact admin!' });
+  }
+    
   req.permissions = [];
   if (user?.role?.permissions) {
     user.role.permissions.map((perm) => {
       req.permissions.push(perm.key);
     });
-  }
-
-  // Check if user exists
-  if (!user) {
-    return next({ status: 401, message: 'There is no user' });
   }
 
   // Set request user

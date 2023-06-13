@@ -42,7 +42,8 @@ export const login = async (reqBody, dbInstance) => {
                     }]
                 }
             ],
-            where: { email: email.toLowerCase(), userType } 
+            where: { email: email.toLowerCase(), userType },
+            paranoid: false
         });
 
         if (!user) {
@@ -51,6 +52,10 @@ export const login = async (reqBody, dbInstance) => {
 
         if (!user.status) {
             return { error: true, message: 'Account is disabled, please contact admin!'}
+        }
+
+        if (user.deletedAt) {
+            return { error: true, message: 'Account is deleted, please contact admin!'}
         }
 
         // Check user password
