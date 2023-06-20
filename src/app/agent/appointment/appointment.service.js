@@ -250,10 +250,10 @@ export const createAppointment = async (req, dbInstance) => {
             }
           }
 
-          // customer email
+          // send customer email
           const emailData = [];
           emailData.date = appointmentDate;
-          emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm a");
+          emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm a");
           emailData.products = findProducts;
           emailData.allotedAgent = allotedAgentUser?.user?.lastName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
           emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
@@ -262,7 +262,7 @@ export const createAppointment = async (req, dbInstance) => {
           emailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
           emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
           emailData.appUrl = process.env.APP_URL;
-          const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.JOIN_APPOINTMENT), emailData);
+          const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CUSTOMER_JOIN_AGENT_APPOINTMENT), emailData);
           const payload = {
             to: customerDetails.email,
             subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
@@ -270,27 +270,26 @@ export const createAppointment = async (req, dbInstance) => {
           }
           mailHelper.sendMail(payload);
 
-          // alloted agent email
-          if (allotedAgentUser) {
-            const emailData = [];
-            emailData.date = appointmentDate;
-            emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, allotedAgentUser.user.timezone, "HH:mm a");
-            emailData.products = findProducts;
-            emailData.primaryAgent = req.user.fullName;
-            emailData.customer = customerDetails.fullName;
-            emailData.customerImage = customerDetails.profileImage;
-            emailData.customerPhoneNumber = customerDetails.phoneNumber;
-            emailData.customerEmail = customerDetails.email;
-            emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
-            emailData.appUrl = process.env.APP_URL;
-            const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.ALLOTED_AGENT_JOIN_APPOINTMENT), emailData);
-            const payload = {
-              to: allotedAgentUser.user.email,
-              subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
-              html: htmlData,
-            }
-            mailHelper.sendMail(payload);
+          // send agent email
+          const agentEmailData = [];
+          agentEmailData.date = appointmentDate;
+          agentEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm a");
+          agentEmailData.products = findProducts;
+          agentEmailData.primaryAgent = req.user.fullName;
+          agentEmailData.customer = customerDetails.fullName;
+          agentEmailData.customerImage = customerDetails.profileImage;
+          agentEmailData.customerPhoneNumber = customerDetails.phoneNumber;
+          agentEmailData.customerEmail = customerDetails.email;
+          agentEmailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+          agentEmailData.appUrl = process.env.APP_URL;
+
+          const agentEmailHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, (allotedAgentUser ? EMAIL_TEMPLATE_PATH.ALLOTED_AGENT_JOIN_AGENT_APPOINTMENT : EMAIL_TEMPLATE_PATH.AGENT_JOIN_AGENT_APPOINTMENT)), agentEmailData);
+          const agentEmailPayload = {
+            to: allotedAgentUser ? allotedAgentUser.user.email : req.user.email,
+            subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
+            html: agentEmailHtmlData,
           }
+          mailHelper.sendMail(agentEmailPayload);
 
           return appointment;
       });

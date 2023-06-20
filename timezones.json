@@ -294,6 +294,12 @@
       "value": "Africa/Tripoli"
     },
     {
+      "abbr": "KST",
+      "offset": 2,
+      "label": "(UTC+02:00) Kaliningrad",
+      "value": "Europe/Kaliningrad"
+    },
+    {
       "abbr": "TDT",
       "offset": 3,
       "label": "(UTC+03:00) Istanbul",
@@ -310,12 +316,6 @@
       "offset": 3,
       "label": "(UTC+03:00) Baghdad",
       "value": "Asia/Baghdad"
-    },
-    {
-      "abbr": "KST",
-      "offset": 3,
-      "label": "(UTC+02:00) Kaliningrad",
-      "value": "Europe/Kaliningrad"
     },
     {
       "abbr": "AST",

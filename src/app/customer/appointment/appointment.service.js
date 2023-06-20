@@ -149,7 +149,6 @@ export const createAppointment = async (req, dbInstance) => {
 
     const propertyDetail = await dbInstance.product.findOne({ 
       where: { id: property },
-      attributes: ["id", "userId"],
       include: [
         {
           model: dbInstance.user, 
@@ -293,9 +292,10 @@ export const createAppointment = async (req, dbInstance) => {
         mailHelper.sendMail(newPayload);
       }
 
+      // send agent email
       const emailData = [];
       emailData.date = appointmentDate;
-      emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, (allotedAgentUser?.user?.email ? allotedAgentUser.user.timezone : propertyDetail.user.timezone), "HH:mm a");
+      emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser?.user?.email ? allotedAgentUser.user.timezone : propertyDetail.user.timezone), "HH:mm a");
       emailData.products = [propertyDetail];
       emailData.customer = customerDetails.fullName;
       emailData.customerImage = customerDetails.profileImage;
@@ -303,13 +303,33 @@ export const createAppointment = async (req, dbInstance) => {
       emailData.customerEmail = customerDetails.email;
       emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
       emailData.appUrl = process.env.APP_URL;
-      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_JOIN_APPOINTMENT), emailData);
+      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_JOIN_CUSTOMER_APPOINTMENT), emailData);
       const payload = {
         to: allotedAgentUser?.user?.email ? allotedAgentUser.user.email : propertyDetail.user.email,
         subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
         html: htmlData,
       }
       mailHelper.sendMail(payload);
+
+      // send customer email
+      const customerEmailData = [];
+      customerEmailData.date = appointmentDate;
+      customerEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm a");
+      customerEmailData.products = [propertyDetail];
+      customerEmailData.allotedAgent = allotedAgentUser?.user?.lastName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
+      customerEmailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
+      customerEmailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
+      customerEmailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;
+      customerEmailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
+      customerEmailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
+      customerEmailData.appUrl = process.env.APP_URL;
+      const customerHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CUSTOMER_JOIN_CUSTOMER_APPOINTMENT), customerEmailData);
+      const customerPayload = {
+        to: customerDetails.email,
+        subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
+        html: customerHtmlData,
+      }
+      mailHelper.sendMail(customerPayload);
 
       return appointment;
     });
