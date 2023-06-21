@@ -82,7 +82,7 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
         { 
           model: dbInstance.user, 
           as: 'agentUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
           include: [
             {
               model: dbInstance.agent,
@@ -93,7 +93,7 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
         { 
           model: dbInstance.user, 
           as: 'allotedAgentUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
         { 
           model: dbInstance.agentTimeSlot, 
@@ -173,7 +173,7 @@ export const createAppointment = async (req, dbInstance) => {
         where: { userId: allotedAgent },
         include: [{
           model: dbInstance.user, 
-          attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber"]
+          attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber", "timezone"]
         }],
       });
 
@@ -295,7 +295,7 @@ export const createAppointment = async (req, dbInstance) => {
       // send agent email
       const emailData = [];
       emailData.date = appointmentDate;
-      emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser?.user?.email ? allotedAgentUser.user.timezone : propertyDetail.user.timezone), "HH:mm a");
+      emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser?.user?.email ? allotedAgentUser.user.timezone : propertyDetail.user.timezone), "HH:mm");
       emailData.products = [propertyDetail];
       emailData.customer = customerDetails.fullName;
       emailData.customerImage = customerDetails.profileImage;
@@ -314,7 +314,7 @@ export const createAppointment = async (req, dbInstance) => {
       // send customer email
       const customerEmailData = [];
       customerEmailData.date = appointmentDate;
-      customerEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm a");
+      customerEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
       customerEmailData.products = [propertyDetail];
       customerEmailData.allotedAgent = allotedAgentUser?.user?.lastName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
       customerEmailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
@@ -377,12 +377,12 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
           { 
             model: dbInstance.user, 
             as: 'customerUser',
-            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
           },
           { 
             model: dbInstance.user, 
             as: 'agentUser',
-            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
             include: [
               {
                 model: dbInstance.agent,
@@ -393,7 +393,7 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
           { 
             model: dbInstance.user, 
             as: 'allotedAgentUser',
-            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
           },
           { 
             model: dbInstance.agentTimeSlot, 

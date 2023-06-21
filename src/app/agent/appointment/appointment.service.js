@@ -87,12 +87,12 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
         { 
           model: dbInstance.user, 
           as: 'customerUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
         { 
           model: dbInstance.user, 
           as: 'allotedAgentUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
         { 
           model: dbInstance.agentTimeSlot, 
@@ -166,7 +166,7 @@ export const createAppointment = async (req, dbInstance) => {
           where: { userId: allotedAgent },
           include: [{
             model: dbInstance.user, 
-            attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber"]
+            attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber", "timezone"]
           }],
         });
 
@@ -253,7 +253,7 @@ export const createAppointment = async (req, dbInstance) => {
           // send customer email
           const emailData = [];
           emailData.date = appointmentDate;
-          emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm a");
+          emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
           emailData.products = findProducts;
           emailData.allotedAgent = allotedAgentUser?.user?.lastName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
           emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
@@ -273,7 +273,7 @@ export const createAppointment = async (req, dbInstance) => {
           // send agent email
           const agentEmailData = [];
           agentEmailData.date = appointmentDate;
-          agentEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm a");
+          agentEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
           agentEmailData.products = findProducts;
           agentEmailData.primaryAgent = req.user.fullName;
           agentEmailData.customer = customerDetails.fullName;
@@ -334,12 +334,12 @@ const getAppointmentDetailById = async (agent, appointmentId, dbInstance) => {
         { 
           model: dbInstance.user, 
           as: 'customerUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
         { 
           model: dbInstance.user, 
           as: 'agentUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
           include: [
             {
               model: dbInstance.agent,
@@ -350,7 +350,7 @@ const getAppointmentDetailById = async (agent, appointmentId, dbInstance) => {
         { 
           model: dbInstance.user, 
           as: 'allotedAgentUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
         { 
           model: dbInstance.agentTimeSlot, 
@@ -503,7 +503,7 @@ export const updateStatus = async (req) => {
       let htmlData = "";
       let payload = {};
       if (userInfo.userType === USER_TYPE.AGENT) {
-        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.customerUser.timezone, "HH:mm a");
+        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.customerUser.timezone, "HH:mm");
         emailData.companyName = userInfo?.agent?.companyName ? userInfo.agent.companyName : "";
         emailData.allotedAgent = appointment.allotedAgentUser.fullName;
         emailData.agentImage = appointment.allotedAgentUser.profileImage;
@@ -516,7 +516,7 @@ export const updateStatus = async (req) => {
           html: htmlData,
         }
       } else {
-        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.allotedAgentUser.timezone, "HH:mm a");
+        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.allotedAgentUser.timezone, "HH:mm");
         emailData.customer = userInfo.fullName;
         emailData.customerImage = userInfo.profileImage;
         emailData.customerPhoneNumber = userInfo.phoneNumber;

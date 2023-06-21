@@ -210,11 +210,11 @@ export const convertTimeToTimezoneBasedTime = (sourceUserTimezone, targetUserTim
 }
 
 export const convertTimeToGmt = (time, timezone, format) => {
-    return time ? moment.tz(time, "HH:mm:ss", timezone).tz('GMT').format(format ? format : "HH:mm:ss") : "-";
+    return time ? moment.tz(time, "HH:mm:ss", (timezone ? timezone : process.env.APP_DEFAULT_TIMEZONE)).tz('GMT').format(format ? format : "HH:mm:ss") : "-";
 }
   
 export const convertGmtToTime = (time, timezone, format) => {
-    return time ? moment.tz(time, "HH:mm:ss", "GMT").tz(timezone).format(format ? format : "HH:mm:ss") : "-";
+    return time ? moment.tz(time, "HH:mm:ss", "GMT").tz(timezone ? timezone : process.env.APP_DEFAULT_TIMEZONE).format(format ? format : "HH:mm:ss") : "-";
 }
 
 export const availabilityAlgorithm = async (requstedUser, targetUserId, date, timeSlot, type, dbInstance) => {
