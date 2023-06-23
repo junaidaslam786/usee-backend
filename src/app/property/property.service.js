@@ -849,7 +849,12 @@ export const searchPolygon = async (req) => {
             true
         );
         const results = await req.dbInstance.product.findAll({
-            where: whereClause
+            where: {
+                [OP.and]: [
+                    whereClause,
+                    { status: PRODUCT_STATUS.ACTIVE }
+                ]
+            }
         });
         return results;
     } catch(err) {
