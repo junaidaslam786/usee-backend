@@ -503,7 +503,7 @@ export const updateStatus = async (req) => {
       let htmlData = "";
       let payload = {};
       if (userInfo.userType === USER_TYPE.AGENT) {
-        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.customerUser.timezone, "HH:mm");
+        emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, appointment.customerUser.timezone, "HH:mm");
         emailData.companyName = userInfo?.agent?.companyName ? userInfo.agent.companyName : "";
         emailData.allotedAgent = appointment.allotedAgentUser.fullName;
         emailData.agentImage = appointment.allotedAgentUser.profileImage;
@@ -516,7 +516,7 @@ export const updateStatus = async (req) => {
           html: htmlData,
         }
       } else {
-        emailData.time = utilsHelper.convertTimeToGmt(appointment.appointmentTimeGmt, appointment.allotedAgentUser.timezone, "HH:mm");
+        emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, appointment.allotedAgentUser.timezone, "HH:mm");
         emailData.customer = userInfo.fullName;
         emailData.customerImage = userInfo.profileImage;
         emailData.customerPhoneNumber = userInfo.phoneNumber;
