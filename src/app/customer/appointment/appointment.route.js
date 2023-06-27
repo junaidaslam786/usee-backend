@@ -11,6 +11,6 @@ router.get('/session-token/:id', isAuthenticated, appointmentController.getSessi
 router.post('/create', isAuthenticated, validate(appointmentValidations.createAppointmentRules), appointmentController.createAppointment);
 router.delete('/:id', isAuthenticated, appointmentController.deleteAppointment);
 router.get('/:id', isAuthenticated, appointmentController.getAppointment);
-router.post('/check-availability', validate(appointmentValidations.checkAvailabilityRules), isAuthenticated, appointmentController.checkAvailability);
+router.post('/check-availability', isAuthenticated, validate(appointmentValidations.checkAvailabilityRules), appointmentController.checkAvailability);
 
 export default router;

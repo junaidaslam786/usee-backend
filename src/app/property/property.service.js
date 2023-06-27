@@ -606,11 +606,13 @@ export const addCustomerOffer = async (reqBody, req) => {
                 status: OFFER_STATUS.PENDING
             }, { transaction });
 
+            const productAgentDetail = await getProductAgentDetail(product);
+
             // create agent alert
             await dbInstance.userAlert.create({
                 customerId: customerInfo.id,
                 productId,
-                agentId: product.user.id,
+                agentId: productAgentDetail.id,
                 keyId: productOffer.id,
                 alertMode: USER_ALERT_MODE.OFFER,
                 alertType: USER_ALERT_TYPE.OFFER,
@@ -621,7 +623,7 @@ export const addCustomerOffer = async (reqBody, req) => {
             }, { transaction });
 
             const emailData = [];
-            emailData.name = product.user.fullName;
+            emailData.name = productAgentDetail.fullName;
             emailData.customerName = customerInfo.fullName;
             emailData.propertyTitle = product.title;
             emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;
@@ -630,7 +632,7 @@ export const addCustomerOffer = async (reqBody, req) => {
             emailData.propertyId = product.id;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.OFFER), emailData);
             const payload = {
-                to: product.user.email,
+                to: productAgentDetail.email,
                 subject: EMAIL_SUBJECT.OFFER,
                 html: htmlData,
             }
@@ -1135,9 +1137,6 @@ export const updateAgentSnaglist = async (reqBody, req) => {
             where: { id: reqBody.offerId },
             include: [{
                 model: dbInstance.product,
-                where: {
-                    userId: agentInfo.id
-                },
                 attributes: ["title", "featuredImage"]
             },
             {
@@ -1379,6 +1378,26 @@ export const deleteAllocatedProperty = async (req) => {
         console.log('deleteAllocatedPropertyServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
+}
+
+export const getProductAgentDetail = async (product) => {
+    let productAgentDetail = product.user;
+    
+    // It means owner of the product is agent 
+    // while product is created by its manager or staff
+    if (product.createdBy !== product.user.id) {
+        productAgentDetail = await db.models.user.findOne({
+            where: { id: product.createdBy }
+        });
+
+        // if the person created the product removed or not active
+        // by agent then agent itself will get the details
+        if (!productAgentDetail || (!productAgentDetail?.status)) {
+            productAgentDetail = product.user;
+        }
+    }
+
+    return productAgentDetail;
 }
 
 // Define the Haversine formula function

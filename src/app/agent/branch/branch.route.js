@@ -7,8 +7,8 @@ import { isAuthenticated, validate } from '@/middleware';
 const router = Router();
 
 router.get('/list', isAuthenticated, branchController.listAgentBranches);
-router.post('/create', validate(branchValidations.createAgentBranchRules), isAuthenticated, branchController.createAgentBranch);
-router.put('/update', validate(branchValidations.updateAgentBranchRules), isAuthenticated, branchController.updateAgentBranch);
+router.post('/create', isAuthenticated, validate(branchValidations.createAgentBranchRules), branchController.createAgentBranch);
+router.put('/update', isAuthenticated, validate(branchValidations.updateAgentBranchRules), branchController.updateAgentBranch);
 router.get('/:id', isAuthenticated, branchController.getAgentBranch);
 router.delete('/:id', isAuthenticated, branchController.deleteAgentBranch);
 

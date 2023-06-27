@@ -63,11 +63,13 @@ export const addProductToWishlist = async (productId, req) => {
                 productId
             }, { transaction });
 
+            const productAgentDetail = productService.getProductAgentDetail(product);
+
             // create agent alert
             await dbInstance.userAlert.create({
                 customerId: customerDetails.id,
                 productId,
-                agentId: product.user.id,
+                agentId: productAgentDetail.id, 
                 alertMode: USER_ALERT_MODE.WISHLIST,
                 alertType: USER_ALERT_TYPE.WISHLIST_ADDED,
                 removed: false,
@@ -91,14 +93,14 @@ export const addProductToWishlist = async (productId, req) => {
             }
 
             const emailData = [];
-            emailData.name = product.user.fullName;
+            emailData.name = productAgentDetail.fullName;
             emailData.customerName = customerDetails.fullName;
             emailData.propertyTitle = product.title;
             emailData.propertyImage = product.featuredImage;
             emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.WISHLIST_ADD), emailData);
             const payload = {
-                to: product.user.email,
+                to: productAgentDetail.email,
                 subject: EMAIL_SUBJECT.WISHLIST_ADD,
                 html: htmlData,
             }
@@ -132,11 +134,13 @@ export const removeProductFromWishlist = async (productId, req) => {
                 }
             });
 
+            const productAgentDetail = productService.getProductAgentDetail(product);
+
             // create agent alert
             await dbInstance.userAlert.create({
                 customerId: customerInfo.id,
                 productId,
-                agentId: product.user.id,
+                agentId: productAgentDetail.id,
                 alertMode: USER_ALERT_MODE.WISHLIST,
                 alertType: USER_ALERT_TYPE.WISHLIST_REMOVED,
                 removed: false,
@@ -146,13 +150,13 @@ export const removeProductFromWishlist = async (productId, req) => {
             }, { transaction });
 
             const emailData = [];
-            emailData.name = product.user.fullName;
+            emailData.name = productAgentDetail.fullName;
             emailData.customerName = customerInfo.fullName;
             emailData.propertyTitle = product.title;
             emailData.propertyImage = `${process.env.APP_URL}/${product.featuredImage}`;
             const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.WISHLIST_REMOVE), emailData);
             const payload = {
-                to: product.user.email,
+                to: productAgentDetail.email,
                 subject: EMAIL_SUBJECT.WISHLIST_REMOVE,
                 html: htmlData,
             }
