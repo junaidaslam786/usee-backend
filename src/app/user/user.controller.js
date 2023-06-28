@@ -116,3 +116,39 @@ export const updateTimezone = async (req, res, next) => {
     return next(err);
   }
 };
+
+/**
+ * POST /user/call-background-image
+ * Upload user call background images
+ */
+export const uploadCallBackgroundImages = async (req, res, next) => {
+  try {
+    const result = await userService.uploadCallBackgroundImages(req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.log('uploadCallBackgroundImagesError', err);
+    next(err);
+  }
+};
+
+/**
+ * DELETE /user/call-background-image
+ * Delete user call background images
+ */
+export const deleteCallBackgroundImage = async (req, res, next) => {
+  try {
+    const result = await userService.deleteCallBackgroundImage(req.body, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true, message: "Call Background image deleted successfully" });
+  } catch (err) {
+    console.log('deleteCallBackgroundImageError', err);
+    next(err);
+  }
+};

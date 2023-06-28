@@ -224,12 +224,94 @@ export const getCurrentUser = async (req) => {
                 },
                 {
                     model: dbInstance.agentAccessLevel
+                },
+                {
+                    model: dbInstance.userCallBackgroundImage
                 }
             ],
           });
         return userDetail;
     } catch(err) {
         console.log('getCurrentUserServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const uploadCallBackgroundImages = async (req) => {
+    try {
+        const userCallBackgroundImages = [];
+        const files = req.files.files;
+        if (Array.isArray(files)) {
+            let totalFiles = files.length;
+            for (let i = 0; i < totalFiles; i++) {
+                const singleFile = files[i];
+                const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
+                const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.CALL_BACKGROUND_IMAGES, newFileName);
+                if (result?.error) {
+                    return { error: true, message: result?.error }
+                } 
+    
+                userCallBackgroundImages.push({
+                    userId: req.body.userId,
+                    name: singleFile.name.replace(/ +/g, ""),
+                    url: result,
+                });
+            }
+        } else if (files) {
+            const singleFile = files;
+            const newFileName = `${Date.now()}_${singleFile.name.replace(/ +/g, "")}`;
+            const result = await utilsHelper.fileUpload(singleFile, PROPERTY_ROOT_PATHS.FEATURE_IMAGE, newFileName);
+            if (result?.error) {
+                return { error: true, message: result?.error }
+            } 
+
+            userCallBackgroundImages.push({
+                userId: req.body.userId,
+                name: singleFile.name.replace(/ +/g, ""),
+                url: result,
+            });
+        }
+
+        if (userCallBackgroundImages.length > 0) {
+            await req.dbInstance.userCallBackgroundImage.bulkCreate(userCallBackgroundImages);
+        } else {
+            return { error: true, message: 'Unable to upload images.'}
+        }
+
+        return await req.dbInstance.userCallBackgroundImage.findAll({
+            where: { userId: req.body.userId},
+        });
+    } catch(err) {
+        console.log('uploadCallBackgroundImagesServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const deleteCallBackgroundImage = async (reqBody, dbInstance) => {
+    try {
+        const { userId, imageId } = reqBody;
+
+        const imagePath = dbInstance.userCallBackgroundImage.findOne({
+            where: {
+                userId,
+                id: imageId
+            }
+        });
+
+        await dbInstance.userCallBackgroundImage.destroy({
+            where: {
+                userId,
+                id: imageId
+            }
+        });
+
+        if (imagePath?.url) {
+            utilsHelper.removeFile(imagePath.url);
+        }
+
+        return true;
+    } catch(err) {
+        console.log('deleteCallBackgroundImageServiceError', err)
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }

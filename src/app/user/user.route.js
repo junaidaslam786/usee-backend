@@ -15,5 +15,7 @@ router.put('/update-password', isAuthenticated, validate(userValidations.changeP
 router.put('/update-timezone', isAuthenticated, userController.updateTimezone);
 router.get('/list-customer', isAuthenticated, userController.listCustomerUsers);
 router.post('/validate-otp', isAuthenticated, validate(userValidations.validateOtpRules), userController.validateOtp);
+router.post('/call-background-image', isAuthenticated, validate(userValidations.uploadCallBackgroundImagesRules), userController.uploadCallBackgroundImages);
+router.delete('/call-background-image', isAuthenticated, validate(userValidations.deleteCallBackgroundImageRules), userController.deleteCallBackgroundImage);
 
 export default router;

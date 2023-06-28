@@ -1,4 +1,5 @@
 import { body } from 'express-validator';
+import db from '@/database';
 
 export const updateProfileRules = [
     body('firstName').exists().withMessage('Please provide first name').notEmpty().withMessage('Please provide first name'),
@@ -26,3 +27,30 @@ export const changePasswordRules = [
 export const validateOtpRules = [
     body('otp').exists().withMessage('Please provide otp').notEmpty().withMessage('Please provide otp'),
 ];
+
+export const uploadCallBackgroundImagesRules = [
+    body('userId').exists().custom(async (value) => {
+      return await db.models.user.findOne({ where: { id: value } }).then(usertData => {
+        if (!usertData) {
+          return Promise.reject('Invalid user id or user do not exist.');
+        }
+      });
+    }), 
+  ];
+
+export const deleteCallBackgroundImageRules = [
+    body('userId').exists().custom(async (value) => {
+      return await db.models.user.findOne({ where: { id: value } }).then(usertData => {
+        if (!usertData) {
+          return Promise.reject('Invalid user id or user do not exist.');
+        }
+      });
+    }), 
+    body('imageId').exists().custom(async (value) => {
+      return await db.models.userCallBackgroundImage.findOne({ where: { id: value } }).then(userCallBackgroundImageData => {
+        if (!userCallBackgroundImageData) {
+          return Promise.reject('Invalid image id or image do not exist.');
+        }
+      });
+    }), 
+  ];

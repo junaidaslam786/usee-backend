@@ -33,6 +33,7 @@ export const PROPERTY_ROOT_PATHS = {
     DOCUMENT: "properties/documents",
     PROFILE_LOGO: "user/images",
     PROFILE_DOCUMENT: "user/document",
+    CALL_BACKGROUND_IMAGES: "user/call-background-images",
     CHAT_PATH: "chat"
 }
 

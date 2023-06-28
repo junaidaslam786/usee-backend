@@ -435,12 +435,25 @@ export const deletePropertyDocument = async (reqBody, dbInstance) => {
     try {
         const { productId, documentId } = reqBody;
 
+       
+
+        const documentPath = dbInstance.productDocument.findOne({
+            where: {
+                productId,
+                id: documentId
+            }
+        });
+
         await dbInstance.productDocument.destroy({
             where: {
                 productId,
                 id: documentId
             }
         });
+
+        if (documentPath?.file) {
+            utilsHelper.removeFile(documentPath.file);
+        }
 
         return true;
     } catch(err) {
@@ -453,12 +466,23 @@ export const deletePropertyImage = async (reqBody, dbInstance) => {
     try {
         const { productId, imageId } = reqBody;
 
+        const imagePath = dbInstance.productImage.findOne({
+            where: {
+                productId,
+                id: imageId
+            }
+        });
+
         await dbInstance.productImage.destroy({
             where: {
                 productId,
                 id: imageId
             }
         });
+
+        if (imagePath?.image) {
+            utilsHelper.removeFile(imagePath.image);
+        }
 
         return true;
     } catch(err) {
