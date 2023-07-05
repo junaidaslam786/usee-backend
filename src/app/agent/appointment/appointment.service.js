@@ -255,7 +255,7 @@ export const createAppointment = async (req, dbInstance) => {
           emailData.date = appointmentDate;
           emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
           emailData.products = findProducts;
-          emailData.allotedAgent = allotedAgentUser?.user?.lastName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
+          emailData.allotedAgent = allotedAgentUser?.user?.firstName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
           emailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
           emailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
           emailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;

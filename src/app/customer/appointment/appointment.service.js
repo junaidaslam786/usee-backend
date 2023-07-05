@@ -152,7 +152,12 @@ export const createAppointment = async (req, dbInstance) => {
       include: [
         {
           model: dbInstance.user, 
-          attributes: ["id", "firstName", "lastName", "email", "timezone"],
+          attributes: ["id", "firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
+          include: [
+            {
+              model: dbInstance.agent
+            },
+          ]
         },
       ]
     });
@@ -316,11 +321,11 @@ export const createAppointment = async (req, dbInstance) => {
       customerEmailData.date = appointmentDate;
       customerEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
       customerEmailData.products = [propertyDetail];
-      customerEmailData.allotedAgent = allotedAgentUser?.user?.lastName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : req.user.fullName;
-      customerEmailData.companyName = req.user?.agent?.companyName ? req.user.agent.companyName : "";
-      customerEmailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
-      customerEmailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;
-      customerEmailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
+      customerEmailData.allotedAgent = allotedAgentUser?.user?.firstName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : `${propertyDetail.user.firstName} ${propertyDetail.user.lastName}`;
+      customerEmailData.companyName = propertyDetail?.user?.agent?.companyName ? propertyDetail.user.agent.companyName : "";
+      customerEmailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : propertyDetail.user.profileImage;
+      customerEmailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : propertyDetail.user.phoneNumber;
+      customerEmailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : propertyDetail.user.email
       customerEmailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
       customerEmailData.appUrl = process.env.APP_URL;
       const customerHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CUSTOMER_JOIN_CUSTOMER_APPOINTMENT), customerEmailData);
