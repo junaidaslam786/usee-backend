@@ -2,13 +2,36 @@ import {
   USER_TYPE,
 } from '@/config/constants';
 import db from '@/database';
+import { where } from 'sequelize';
 
-export const listAgentUsers = async (dbInstance) => {
+export const listAgents = async (dbInstance) => {
   try {
     const { count, rows } = await dbInstance.user.findAndCountAll({
       where: { user_type: USER_TYPE.AGENT, status: true },
       include: [{
         model: dbInstance.agent,
+        where: {agent_id: null}
+      }],
+      order: [['id', 'DESC']],
+    });
+
+    return {
+      data: rows,
+      totalItems: count,
+    };
+  } catch (err) {
+    console.log('listAgentUsersServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};
+
+export const listAgentUsers = async (params, dbInstance) => {
+  try {
+    const { count, rows } = await dbInstance.user.findAndCountAll({
+      where: { status: true},
+      include: [{
+        model: dbInstance.agent,
+        where: {agent_id: params.id}
       }],
       order: [['id', 'DESC']],
     });
@@ -62,7 +85,6 @@ export const updateAgentUserStatus = async (reqBody, req) => {
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
-
 
 export const getAgentUser = async (agentUserId, dbInstance) => {
 

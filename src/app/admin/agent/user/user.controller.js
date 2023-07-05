@@ -3,11 +3,29 @@ import * as userService from './user.service';
 
 /**
  * GET /agent/user/list
+ * List all agents
+ */
+export const listAgents = async (req, res, next) => {
+    try {
+      const result = await userService.listAgents(req.dbInstance);
+      if (result?.error && result?.message) {
+          return next(createError(400, result.message));
+      }
+  
+      return res.status(200).json(result);
+    } catch (err) {
+      console.log('listAgentsError', err);
+      return next(err);
+    }
+};
+
+/**
+ * GET /agent/user/list
  * List all users created by agent
  */
 export const listAgentUsers = async (req, res, next) => {
     try {
-      const result = await userService.listAgentUsers(req.dbInstance);
+      const result = await userService.listAgentUsers(req.params, req.dbInstance);
       if (result?.error && result?.message) {
           return next(createError(400, result.message));
       }
