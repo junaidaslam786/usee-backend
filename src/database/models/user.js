@@ -15,12 +15,12 @@ export default function (sequelize) {
     }
 
     generateToken(expiresIn = '4h', agentProfile) {
-      const data = { 
-        id: this.id, 
-        name: this.fullName, 
-        phoneNumber: this.phoneNumber, 
-        profileImage: this.profileImage, 
-        email: this.email, 
+      const data = {
+        id: this.id,
+        name: this.fullName,
+        phoneNumber: this.phoneNumber,
+        profileImage: this.profileImage,
+        email: this.email,
         agent: agentProfile || this.agent,
         agentAccessLevels: this.agentAccessLevels
       };
@@ -74,7 +74,7 @@ export default function (sequelize) {
     },
     userType: {
       type: DataTypes.STRING,
-      enum: ["admin", "agent", "customer"]
+      enum: ['superadmin', 'admin', "agent", "customer"]
     },
     profileImage: {
       type: DataTypes.STRING,

@@ -12,7 +12,7 @@ export const loginRules = [
   body('password').exists().withMessage('Please provide password'),
 ];
 
-export const registerAdminRules = [
+export const registerSuperAdminRules = [
   body('firstName').exists().withMessage('Please provide first name').notEmpty()
     .withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty()
@@ -25,7 +25,7 @@ export const registerAdminRules = [
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 digits').exists()
     .withMessage('Enter password to register'),
   body('confirmPassword').custom((value, { req }) => {
-    console.log('body');
+    console.log('body')
     if (value !== req.body.password) {
       throw new Error('Password and confirm password should match');
     }

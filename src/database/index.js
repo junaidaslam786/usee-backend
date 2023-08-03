@@ -94,7 +94,7 @@ const modelDefiners = [
   appointmentLogModel,
   appointmentNoteModel,
   agentAccessLevelModel,
-  userCallBackgroundImageModel
+  userCallBackgroundImageModel,
 ];
 
 // eslint-disable-next-line no-restricted-syntax

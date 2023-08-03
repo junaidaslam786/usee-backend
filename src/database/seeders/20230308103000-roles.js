@@ -6,8 +6,8 @@ module.exports = {
     const role = [
       {
         id: 1,
-        name: "Admin",
-        description: "This will have all permissions"
+        name: 'SuperAdmin',
+        description: 'This will have all permissions'
       },
     ];
     await queryInterface.bulkInsert('roles', role);

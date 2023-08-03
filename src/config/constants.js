@@ -11,6 +11,7 @@ export const PRODUCT_STATUS = {
 };
 
 export const USER_TYPE = {
+    SUPERADMIN: "superadmin",
     ADMIN: "admin",
     AGENT: "agent",
     CUSTOMER: "customer",

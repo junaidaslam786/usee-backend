@@ -40,7 +40,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     field: 'user_type',
     type: Sequelize.ENUM,
     defaultValue: "agent",
-    values: ["admin", "agent", "customer"]
+    values: ["superadmin", "admin", "agent", "customer"]
   },
   profileImage:{
     type:Sequelize.STRING,
