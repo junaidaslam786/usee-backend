@@ -124,3 +124,30 @@ export const registerCustomer = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * POST /superadmin/auth/refresh
+ * Endpoint to handle token refresh for superadmins.
+ *
+ * @param {Object} req - Express request object. Expects a 'refreshToken' in the request body.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ *
+ * @returns {Object} - If successful, returns a new access token. Otherwise, returns an error message.
+ */
+export const refreshToken = async (req, res, next) => {
+  // Extract the refreshToken from the request body
+  const { refreshToken } = req.body;
+
+  // Call the refreshTokenService from authService to validate the refreshToken 
+  // and generate a new access token
+  const result = await authService.refreshTokenService(refreshToken);
+
+  // If there's an error in the result, pass it to the error handling middleware
+  if (result.error) {
+    return next(createError(400, result.message));
+  }
+
+  // If successful, return the new token with a 200 status
+  return res.status(200).json(result);
+};

@@ -7,6 +7,7 @@ import * as authValidations from './auth.request';
 const router = Router();
 
 router.post('/login', validate(authValidations.loginRules), authController.login);
+router.post('/refresh', isAuthenticated, authController.refreshToken);
 router.post('/forgot-password', validate(authValidations.forgotPasswordRules), authController.forgotPassword);
 router.put('/update-password', authController.updatePassword);
 router.post('/register-admin', isAuthenticated, validate(authValidations.registerSuperAdminRules), authController.registerAdmin);

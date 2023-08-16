@@ -106,3 +106,20 @@ export const totalCustomers = async (req, res, next) => {
     return next(err);
   }
 };
+
+/** 
+ * GET /user/superadmin-details
+ * Retrieve super admin details 
+ */
+export const getSuperAdminDetails = async (req, res, next) => {
+  try {
+    const result = await userService.getSuperAdminDetails(req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('getSuperAdminDetailsError', err);
+    next(err);
+  }
+};

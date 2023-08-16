@@ -6,6 +6,7 @@ import * as userController from './user.controller';
 import * as userValidations from './user.request';
 
 const router = Router();
+router.get('/superadmin-details', userController.getSuperAdminDetails);
 router.put('/user/update', isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser);
 router.get('/list-all', isAuthenticated, userController.listAdminUsers);
 router.get('/customer/list-customer', isAuthenticated, userController.listCustomerUsers);

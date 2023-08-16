@@ -374,3 +374,32 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
+
+export const refreshTokenService = async (refreshToken) => {
+  try {
+    // Verify the refresh token
+    const tokenData = await tokenHelper.verifyToken(refreshToken);
+    if (!tokenData) {
+      return { error: true, message: "Invalid refresh token" };
+    }
+
+    // Fetch user by ID from the tokenData
+    const user = await dbInstance.user.findOne({
+      where: { id: tokenData.id }
+    });
+
+    if (!user) {
+      return { error: true, message: "User not found" };
+    }
+
+    // Generate a new access token
+    const newToken = user.generateToken(); // Assuming you have this method
+
+    return { token: newToken };
+
+  } catch (err) {
+    console.log("refreshTokenServiceError", err);
+    return { error: true, message: "Token refresh failed" };
+  }
+};
+

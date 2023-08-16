@@ -42,6 +42,10 @@ export const ADMIN_PROFILE_PATHS = {
     PROFILE_IMAGE: "admin/profile",
 }
 
+export const SUPERADMIN_PROFILE_PATHS = {
+    PROFILE_IMAGE: "superadmin/profile",
+}
+
 export const CMS_ROOT_PATHS = {
     FEATURE_IMAGE: "cms/images",
     DOCUMENT: "cms/documents",

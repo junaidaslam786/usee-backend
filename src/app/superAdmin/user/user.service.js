@@ -1,4 +1,4 @@
-import { ADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from "@/config/constants";
+import { SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from "@/config/constants";
 
 import { utilsHelper } from "@/helpers";
 import db from "@/database";
@@ -23,7 +23,7 @@ export const updateCurrentUser = async (reqBody, req) => {
       const featuredImageFile = req.files.image;
       const removeImg = utilsHelper.removeFile(user.profileImage);
       const newImageName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
-      const result = await utilsHelper.fileUpload(featuredImageFile, ADMIN_PROFILE_PATHS.PROFILE_IMAGE, newImageName);
+      const result = await utilsHelper.fileUpload(featuredImageFile, SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE, newImageName);
       if (result?.error) {
         return { error: true, message: result?.error };
       }
@@ -162,3 +162,18 @@ export const deleteCustomer = async (appointmentId, req) => {
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
+
+export const getSuperAdminDetails = async (dbInstance) => {
+  try {
+    return await dbInstance.user.findAll({
+      where: {
+        userType: USER_TYPE.SUPERADMIN,
+      },
+      order: [["id", "DESC"]],
+    });
+  } catch (err) {
+    console.log("getSuperAdminDetailsServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+

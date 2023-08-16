@@ -1,6 +1,7 @@
 import indexRouter from '../app/home/home.route';
 import authRouter from '../app/auth/auth.route';
 import superAdminAuthRouter from '../app/superAdmin/auth/auth.route';
+import superAdminUserRouter from '../app/superAdmin/user/user.route'
 import adminAuthRouter from '../app/admin/auth/auth.route';
 import userRouter from '../app/user/user.route';
 import adminUserRouter from '../app/admin/user/user.route';
@@ -60,5 +61,7 @@ export default function (app) {
   app.use('/admin/appointment', adminAppointmentRouter);
 
   // Super Admin Routes
+  
   app.use('/superadmin/auth', superAdminAuthRouter);
+  app.use('/superadmin/user', superAdminUserRouter);
 }
