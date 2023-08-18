@@ -164,9 +164,10 @@ export const uploadUserProfileImage = async (req, res, next) => {
       return next(createError(400, "Only JPEG or PNG images are allowed"));
     }
 
+    const userId = req.body.id;
     // 4. Store the image
     // (For the sake of simplicity, we'll assume you have a service function to handle this.)
-    const imageUrl = await userService.storeUserProfileImage(imageFile);
+    const imageUrl = await userService.storeUserProfileImage(imageFile, userId);
 
     // 5. Respond with relevant information
     return res.status(200).json({ success: true, message: "Image uploaded successfully", imageUrl });
