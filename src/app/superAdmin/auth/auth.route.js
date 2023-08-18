@@ -14,4 +14,7 @@ router.post('/register-admin', isAuthenticated, validate(authValidations.registe
 router.post('/register-agent', isAuthenticated, validate(authValidations.registerAgentRules), authController.registerAgent);
 router.post('/register-customer', isAuthenticated, validate(authValidations.registerCustomerRules), authController.registerCustomer);
 
+router.put('/change-password', isAuthenticated, validate(authValidations.changeSuperAdminPasswordRules), authController.changeSuperAdminPassword);
+
+
 export default router;

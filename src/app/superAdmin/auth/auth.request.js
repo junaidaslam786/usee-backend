@@ -85,3 +85,18 @@ export const resetPasswordRules = [
     return true;
   }),
 ];
+
+
+export const changeSuperAdminPasswordRules = [
+  body('oldPassword').exists().withMessage('Please provide the old password').notEmpty()
+    .withMessage('Old password cannot be empty'),
+  body('newPassword').isLength({ min: 8 }).withMessage('New password must be at least 8 characters long').exists()
+    .withMessage('Please provide the new password'),
+  body('confirmNewPassword').custom((value, { req }) => {
+    if (value !== req.body.newPassword) {
+      throw new Error('New password and confirm new password should match');
+    }
+    // Indicates the success of this synchronous custom validator
+    return true;
+  }),
+];

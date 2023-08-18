@@ -403,3 +403,45 @@ export const refreshTokenService = async (refreshToken) => {
   }
 };
 
+export const changeSuperAdminPasswordService = async (email, oldPassword, newPassword, token) => {
+  try {
+    // Validate the token
+    if (!token) {
+      return { error: true, message: "Invalid or missing token" };
+    }
+
+    // Fetch user by email and user type (assuming superadmin type)
+    const user = await db.models.user.findOne({
+      where: { email: email, userType: 'superadmin' }
+    });
+
+    if (!user) {
+      return { error: true, message: "There is no user with this email address!" };
+    }
+
+    // Further validate the token
+    // if (user.rememberToken !== token) {
+    //   return { error: true, message: "Invalid token for the provided email" };
+    // }
+
+    // Validate old password
+    const isValidOldPassword = await user.validatePassword(oldPassword);
+    if (!isValidOldPassword) {
+      return { error: true, message: "Old password is incorrect" };
+    }
+
+    // Update password
+    user.password = newPassword;  // Assuming you have a method to hash and set the new password
+    await user.save();
+
+    return { success: true, message: "Password updated successfully" };
+
+  } catch (err) {
+    console.log("changeSuperAdminPasswordServiceError", err);
+    return { error: true, message: "Password update failed" };
+  }
+};
+
+
+
+

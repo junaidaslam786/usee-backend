@@ -151,3 +151,40 @@ export const refreshToken = async (req, res, next) => {
   // If successful, return the new token with a 200 status
   return res.status(200).json(result);
 };
+
+/**
+ * PUT /superadmin/auth/change-password
+ * Change password specifically for superadmin
+ */
+export const changeSuperAdminPassword = async (req, res, next) => {
+  try {
+    // Check if the logged-in user is a superadmin
+    // console.log(req.user);
+    if (req.user.userType !== 'superadmin') {
+      return next(createError(403, 'Permission Denied: Only superadmin can change their password here.'));
+    }
+
+    const { email, oldPassword, newPassword, confirmNewPassword, token } = req.body;
+
+    // Validate if newPassword and confirmNewPassword are the same (assuming this is a desired check)
+    if (newPassword !== confirmNewPassword) {
+      return next(createError(400, 'New password and confirmation password do not match.'));
+    }
+
+    // Call the modified service function
+    const result = await authService.changeSuperAdminPasswordService(email, oldPassword, newPassword, token);
+
+    if (result?.error) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json({ message: "Superadmin password has been updated successfully" });
+
+  } catch (err) {
+    console.log('changeSuperAdminPasswordError', err.message);
+    return next(err);
+  }
+};
+
+
+
