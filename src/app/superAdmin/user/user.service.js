@@ -14,7 +14,7 @@ export const updateCurrentUser = async (reqBody, req) => {
 
     (user.firstName = reqBody.firstName),
       (user.lastName = reqBody.lastName),
-      (user.email = reqBody.email),
+      // (user.email = reqBody.email),
       (user.phoneNumber = reqBody.phoneNumber),
       await user.save();
 
@@ -176,4 +176,80 @@ export const getSuperAdminDetails = async (dbInstance) => {
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
+
+export const updateSuperAdminDetails = async (reqBody, req) => {
+  try {
+    // Fetch the superadmin user from the database
+    const superAdmin = await db.models.user.findOne({
+      where: { id: reqBody.id, userType: USER_TYPE.SUPERADMIN },
+    });
+
+    if (!superAdmin) {
+      return { error: true, message: "Superadmin not found." };
+    }
+
+    // Update the superadmin details
+    superAdmin.firstName = reqBody.firstName;
+    superAdmin.lastName = reqBody.lastName;
+    superAdmin.email = reqBody.email;
+    superAdmin.phoneNumber = reqBody.phoneNumber;
+    await superAdmin.save();
+
+    // Handle image upload if provided
+    if (req.files && req.files.image) {
+      const featuredImageFile = req.files.image;
+      const removeImg = utilsHelper.removeFile(superAdmin.profileImage);
+      const newImageName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
+      const result = await utilsHelper.fileUpload(featuredImageFile, SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE, newImageName);
+      
+      if (result?.error) {
+        return { error: true, message: result?.error };
+      }
+      
+      superAdmin.profileImage = result;
+      await superAdmin.save();
+    }
+
+    return { superAdmin };
+
+  } catch (err) {
+    console.log('updateSuperAdminDetailsServiceError', err.message);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const storeUserProfileImage = async (imageFile, userId) => {
+  try {
+    // Check if the image is provided
+    if (!imageFile) {
+      return { error: true, message: "Image file is required" };
+    }
+
+    // Remove the existing image (if any)
+    const user = await db.models.user.findOne({ where: { id: userId } });
+    if (user && user.profileImage) {
+      utilsHelper.removeFile(user.profileImage);
+    }
+
+    // Upload the new image
+    const newImageName = `${Date.now()}_${imageFile.name.replace(/ +/g, "")}`;
+    const result = await utilsHelper.fileUpload(imageFile, SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE, newImageName);
+
+    if (result?.error) {
+      return { error: true, message: result?.error };
+    }
+
+    // Update the user's profileImage in the database
+    user.profileImage = result;
+    await user.save();
+
+    return { success: true, imageUrl: result };
+
+  } catch (err) {
+    console.log('storeUserProfileImageError', err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+
 

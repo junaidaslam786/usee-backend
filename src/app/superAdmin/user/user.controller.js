@@ -123,3 +123,58 @@ export const getSuperAdminDetails = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * PUT /superadmin/user/update
+ * Update superadmin user details
+ */
+export const updateSuperAdminDetails = async (req, res, next) => {
+  try {
+    // Ensure that the user performing the action has superadmin privileges.
+    if (!req.user || req.user.role !== 'superadmin') {
+      return next(createError(403, "Unauthorized to update superadmin details."));
+    }
+
+    const result = await userService.updateSuperAdminDetails(req.body, req);
+    
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json({ success: true, message: "Superadmin details updated successfully", result });
+  } catch (err) {
+    console.log('updateSuperAdminDetailsError', err);
+    next(err);
+  }
+};
+
+export const uploadUserProfileImage = async (req, res, next) => {
+  try {
+    // 1. Check if the image is present in the request
+    if (!req.files || !req.files.image) {
+      return next(createError(400, "Image file is required"));
+    }
+
+    // 2. Extract the image file
+    const imageFile = req.files.image;
+
+    // 3. Handle any processing or validation (like checking file type, size, etc.)
+    // (This is a basic example; you can expand on it based on your needs.)
+    if (imageFile.mimetype !== "image/jpeg" && imageFile.mimetype !== "image/png") {
+      return next(createError(400, "Only JPEG or PNG images are allowed"));
+    }
+
+    // 4. Store the image
+    // (For the sake of simplicity, we'll assume you have a service function to handle this.)
+    const imageUrl = await userService.storeUserProfileImage(imageFile);
+
+    // 5. Respond with relevant information
+    return res.status(200).json({ success: true, message: "Image uploaded successfully", imageUrl });
+
+  } catch (err) {
+    console.log('uploadUserProfileImageError', err);
+    next(err);
+  }
+};
+
+
