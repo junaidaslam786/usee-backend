@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import path from 'path'
 
 const {
   DB_HOST, DB_PORT = 5432, DB_NAME, DB_USER, DB_PASSWORD,
@@ -20,6 +21,8 @@ const defaultConfig = {
   migrationStorage: 'sequelize',
   seederStorageTableName: 'system_seeds',
   migrationStorageTableName: 'system_migrations',
+
+  seedersPath: path.resolve(__dirname, '../database/seeders'),
 };
 
 export const development = {

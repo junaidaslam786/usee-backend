@@ -13,17 +13,22 @@ export const updateCurrentUser = async (reqBody, req) => {
     });
 
     (user.firstName = reqBody.firstName),
-      (user.lastName = reqBody.lastName),
-      // (user.email = reqBody.email),
-      (user.phoneNumber = reqBody.phoneNumber),
-      await user.save();
+    (user.lastName = reqBody.lastName),
+    (user.phoneNumber = reqBody.phoneNumber),
+    (user.email = reqBody.email),
+    // (user.city = reqBody.city);
+    await user.save();
 
     // feature image upload
     if (req.files && req.files.image) {
       const featuredImageFile = req.files.image;
       const removeImg = utilsHelper.removeFile(user.profileImage);
       const newImageName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
-      const result = await utilsHelper.fileUpload(featuredImageFile, SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE, newImageName);
+      const result = await utilsHelper.fileUpload(
+        featuredImageFile,
+        SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE,
+        newImageName
+      );
       if (result?.error) {
         return { error: true, message: result?.error };
       }
@@ -200,20 +205,23 @@ export const updateSuperAdminDetails = async (reqBody, req) => {
       const featuredImageFile = req.files.image;
       const removeImg = utilsHelper.removeFile(superAdmin.profileImage);
       const newImageName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
-      const result = await utilsHelper.fileUpload(featuredImageFile, SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE, newImageName);
-      
+      const result = await utilsHelper.fileUpload(
+        featuredImageFile,
+        SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE,
+        newImageName
+      );
+
       if (result?.error) {
         return { error: true, message: result?.error };
       }
-      
+
       superAdmin.profileImage = result;
       await superAdmin.save();
     }
 
     return { superAdmin };
-
   } catch (err) {
-    console.log('updateSuperAdminDetailsServiceError', err.message);
+    console.log("updateSuperAdminDetailsServiceError", err.message);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
@@ -244,12 +252,8 @@ export const storeUserProfileImage = async (imageFile, userId) => {
     await user.save();
 
     return { success: true, imageUrl: result };
-
   } catch (err) {
-    console.log('storeUserProfileImageError', err);
+    console.log("storeUserProfileImageError", err);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
-
-
-

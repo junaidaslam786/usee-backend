@@ -403,7 +403,7 @@ export const refreshTokenService = async (refreshToken) => {
   }
 };
 
-export const changeSuperAdminPasswordService = async (email, oldPassword, newPassword, token) => {
+export const changeSuperAdminPasswordService = async (id, oldPassword, newPassword, token) => {
   try {
     // Validate the token
     if (!token) {
@@ -411,8 +411,13 @@ export const changeSuperAdminPasswordService = async (email, oldPassword, newPas
     }
 
     // Fetch user by email and user type (assuming superadmin type)
+    // const user = await db.models.user.findOne({
+    //   where: { email: email, userType: 'superadmin' }
+    // });
+
+    // Fetch user by id and user type (assuming superadmin type)
     const user = await db.models.user.findOne({
-      where: { email: email, userType: 'superadmin' }
+      where: { id: id, userType: 'superadmin' }
     });
 
     if (!user) {

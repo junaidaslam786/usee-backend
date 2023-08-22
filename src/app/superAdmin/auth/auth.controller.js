@@ -164,7 +164,7 @@ export const changeSuperAdminPassword = async (req, res, next) => {
       return next(createError(403, 'Permission Denied: Only superadmin can change their password here.'));
     }
 
-    const { email, oldPassword, newPassword, confirmNewPassword, token } = req.body;
+    const { id, oldPassword, newPassword, confirmNewPassword, token } = req.body;
 
     // Validate if newPassword and confirmNewPassword are the same (assuming this is a desired check)
     if (newPassword !== confirmNewPassword) {
@@ -172,7 +172,7 @@ export const changeSuperAdminPassword = async (req, res, next) => {
     }
 
     // Call the modified service function
-    const result = await authService.changeSuperAdminPasswordService(email, oldPassword, newPassword, token);
+    const result = await authService.changeSuperAdminPasswordService(id, oldPassword, newPassword, token);
 
     if (result?.error) {
       return next(createError(400, result.message));
