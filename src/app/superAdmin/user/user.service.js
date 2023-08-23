@@ -12,10 +12,11 @@ export const updateCurrentUser = async (reqBody, req) => {
       where: { id: reqBody.id },
     });
 
-    (user.firstName = reqBody.firstName),
-    (user.lastName = reqBody.lastName),
-    (user.phoneNumber = reqBody.phoneNumber),
-    (user.email = reqBody.email),
+   // Update only provided fields
+   if (reqBody.firstName) user.firstName = reqBody.firstName;
+   if (reqBody.lastName) user.lastName = reqBody.lastName;
+   if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
+   if (reqBody.email) user.email = reqBody.email;
     // (user.city = reqBody.city);
     await user.save();
 
