@@ -10,6 +10,7 @@ import adminCommunityRouter from '../app/admin/cms/community/community.route';
 import roleRouter from '../app/role/role.route';
 import propertyRouter from '../app/property/property.route';
 import adminPropertyRouter from '../app/admin/property/property.route';
+import superAdminPropertyRouter from '../app/superAdmin/property/property.route';
 import agentAlertRouter from '../app/agent/alert/alert.route';
 import agentBranchRouter from '../app/agent/branch/branch.route';
 import agentUserRouter from '../app/agent/user/user.route';
@@ -56,12 +57,12 @@ export default function (app) {
   app.use('/admin/agent', adminagentRouter);
   app.use('/admin/cms/page', adminNewsRouter);
   app.use('/admin/cms/community', adminCommunityRouter);
-
   app.use('/admin/property', adminPropertyRouter);
   app.use('/admin/appointment', adminAppointmentRouter);
 
   // Super Admin Routes
-  
+  app.use('/superadmin', superAdminUserRouter);
   app.use('/superadmin/auth', superAdminAuthRouter);
   app.use('/superadmin/user', superAdminUserRouter);
+  app.use('/superadmin/property', superAdminPropertyRouter);
 }
