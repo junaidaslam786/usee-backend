@@ -12,7 +12,8 @@ import {
   EMAIL_TEMPLATE_PATH,
   PRODUCT_LOG_TYPE,
   AGENT_TYPE,
-  AGENT_USER_ACCESS_TYPE_VALUE
+  AGENT_USER_ACCESS_TYPE_VALUE,
+  USER_TYPE
 } from '@/config/constants';
 import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
@@ -26,7 +27,7 @@ export const createProperty = async (reqBody, req) => {
     const { title, description, price, address, city, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
     const { user, dbInstance } = req;
 
-    if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.ADD_PROPERTY))) {
+    if (!(user?.userType === USER_TYPE.SUPERADMIN || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.ADD_PROPERTY))) {
       return { error: true, message: 'You do not have permission to add property. ' }
     }
 
@@ -34,7 +35,7 @@ export const createProperty = async (reqBody, req) => {
     const result = await db.transaction(async (transaction) => {
       // create product data
       const productData = {
-        userId: user.agent.agentType !== AGENT_TYPE.AGENT ? user.agent.agentId : user.id,
+        userId: user?.agent?.agentType !== AGENT_TYPE.AGENT ? user?.agent?.agentId : user.id,
         categoryId: PRODUCT_CATEGORIES.PROPERTY,
         title,
         description,
@@ -80,7 +81,7 @@ export const createProperty = async (reqBody, req) => {
 
       // allocate this property to this user since it 
       // is creating property
-      if (user.agent.agentType === AGENT_TYPE.MANAGER) {
+      if (user?.agent?.agentType === AGENT_TYPE.MANAGER) {
         allocatedUsers.push({
           productId: product.id,
           userId: user.id,
@@ -90,7 +91,7 @@ export const createProperty = async (reqBody, req) => {
 
       // allocate this property to the user and its manager since 
       // it is creating property and manager allowed him
-      if (user.agent.agentType === AGENT_TYPE.STAFF) {
+      if (user?.agent?.agentType === AGENT_TYPE.STAFF) {
         allocatedUsers.push({
           productId: product.id,
           userId: user.id,
@@ -1467,7 +1468,7 @@ export const approvePropertyRemovalRequest = async (reqBody, dbInstance) => {
       return { error: true, message: 'Invalid property id or Property do not exist.' };
     }
     property.status = true;
-    property.product.status = PRODUCT_STATUS.REMOVED;
+    property.status = PRODUCT_STATUS.REMOVED;
 
     await property.save();
     return true;
