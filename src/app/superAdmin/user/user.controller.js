@@ -72,6 +72,24 @@ export const listAdminUsers = async (req, res, next) => {
   }
 };
 
+/** (For Super Admins)
+ * GET /user/list-all
+ * List all customers in the system
+ */
+export const listUsersExceptSuperAdmin = async (req, res, next) => {
+  try {
+    const result = await userService.listUsersExceptSuperAdmin(req.dbInstance);
+    if (result?.error && result?.message) {
+        return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('listCustomerUsersError', err);
+    return next(err);
+  }
+};
+
 /**
  * GET /user/list-customer
  * List all customers in the system

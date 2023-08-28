@@ -118,6 +118,23 @@ export const listAdminUsers = async (dbInstance) => {
   }
 };
 
+export const listUsersExceptSuperAdmin = async (dbInstance) => {
+  try {
+    return await dbInstance.user.findAll({
+      where: {
+        userType: {
+          [OP.not]: USER_TYPE.SUPERADMIN
+        }
+      },
+
+      order: [["id", "DESC"]],
+    });
+  } catch (err) {
+    console.log("listCustomerUsersServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
 export const listCustomerUsers = async (dbInstance) => {
   try {
     return await dbInstance.user.findAll({
