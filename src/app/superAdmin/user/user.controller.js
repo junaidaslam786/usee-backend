@@ -19,6 +19,23 @@ export const updateCurrentUser = async (req, res, next) => {
 };
 
 /**
+ * PUT /user/update/:id
+ * Update user by id
+ */
+export const updateUserById = async (req, res, next) => {
+  try {
+    const result = await userService.updateCurrentUser(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json({ success: true, message: "User updated successfully", result });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * POST /user/:id
  * Get current user
  */

@@ -12,10 +12,11 @@ router.get("/superadmin-details", isAuthenticated, userController.getSuperAdminD
 // router.put('/update',isAuthenticated, userController.updateSuperAdminDetails)
 // router.put('/update', isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser);
 router.put("/update", isAuthenticated, userController.updateCurrentUser);
+router.put("/update/:id", isAuthenticated, userController.updateUserById);
 router.get("/list-all", isAuthenticated, userController.listUsersExceptSuperAdmin);
 router.get("/customer/list-customer", isAuthenticated, userController.listCustomerUsers);
 router.get("/total-customer", isAuthenticated, userController.totalCustomers);
-router.post("/user/:id", isAuthenticated, userController.getUserById);
+router.get("/:id", isAuthenticated, userController.getUserById);
 router.delete("/user/:id", isAuthenticated, userController.deleteCurrentUser);
 
 export default router;

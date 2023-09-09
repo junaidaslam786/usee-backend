@@ -69,6 +69,69 @@ export const updateCurrentUser = async (reqBody, req) => {
   }
 };
 
+export const updateUserById = async (reqBody, req) => {
+  try {
+    const user = await db.models.user.findOne({
+      where: { id: reqBody.id },
+    });
+
+   // Update only provided fields
+   if (reqBody.firstName) user.firstName = reqBody.firstName;
+   if (reqBody.lastName) user.lastName = reqBody.lastName;
+   if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
+   if (reqBody.email) user.email = reqBody.email;
+    // (user.city = reqBody.city);
+    await user.save();
+
+    // feature image upload
+    if (req.files && req.files.image) {
+      const featuredImageFile = req.files.image;
+      const removeImg = utilsHelper.removeFile(user.profileImage);
+      const newImageName = `${Date.now()}_${featuredImageFile.name.replace(/ +/g, "")}`;
+      const result = await utilsHelper.fileUpload(
+        featuredImageFile,
+        SUPERADMIN_PROFILE_PATHS.PROFILE_IMAGE,
+        newImageName
+      );
+      if (result?.error) {
+        return { error: true, message: result?.error };
+      }
+      user.profileImage = result;
+      await user.save();
+    }
+
+    let url;
+    if (req.files && req.files.file) {
+      const doc = req.files.file;
+      const documentName = `${Date.now()}_${doc.name.replace(/ +/g, "")}`;
+      utilsHelper.removeFile(user.documentUrl);
+      const docUrl = await utilsHelper.fileUpload(doc, PROPERTY_ROOT_PATHS.PROFILE_DOCUMENT, documentName);
+      if (docUrl?.error) {
+        return { error: true, message: docUrl?.error };
+      }
+      url = docUrl;
+
+      // Update the user.documentUrl
+      await db.models.agent.update({ documentUrl: url }, { where: { userId: reqBody.id } });
+    }
+
+    const agent = await db.models.agent.update(
+      {
+        companyName: reqBody.companyName,
+        companyPosition: reqBody.companyPosition,
+        jobTitle: reqBody.jobTitle,
+      },
+      {
+        where: { user_id: reqBody.id },
+      }
+    );
+    return { user };
+  } catch (err) {
+    console.log("updateUserByIdServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
 export const updatePassword = async (user, reqBody) => {
   try {
     const { current, password } = reqBody;

@@ -500,18 +500,14 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
       [OP.notIn]: [PRODUCT_STATUS.SOLD, PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
     };
     const searchStr = (reqBody && reqBody.search) ? reqBody.search : "";
-    const selectedUser = (reqBody && reqBody.user) ? reqBody.user : userId;
+    // const selectedUser = (reqBody && reqBody.user) ? reqBody.user : userId;
 
     const { count, rows } = await dbInstance.product.findAndCountAll({
       where: {
         status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
         title: {
           [OP.iLike]: '%' + searchStr + '%'
-        },
-        [OP.or]: [
-          { userId: selectedUser },
-          { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${selectedUser}')`) } }
-        ]
+        }
       },
       order: [["createdAt", "DESC"]],
       offset: (itemPerPage * (page - 1)),
