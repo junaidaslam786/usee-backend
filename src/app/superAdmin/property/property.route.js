@@ -32,5 +32,6 @@ router.post('/log', isAuthenticated, validate(propertyValidations.addPropertyLog
 // router.get('/property-list', isAuthenticated, propertyController.listProperties);
 router.get('/removal-requests', isAuthenticated, propertyController.listPropertyRemovalRequest);
 router.put('/removal-request/approved', isAuthenticated, validate(propertyValidations.removalRequestRules), propertyController.approvePropertyRemovalRequest);
+router.delete('/:id', isAuthenticated, propertyController.deleteProperty);
 
 export default router;

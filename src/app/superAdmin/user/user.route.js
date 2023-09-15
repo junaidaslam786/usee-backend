@@ -17,6 +17,6 @@ router.get("/list-all", isAuthenticated, userController.listUsersExceptSuperAdmi
 router.get("/customer/list-customer", isAuthenticated, userController.listCustomerUsers);
 router.get("/total-customer", isAuthenticated, userController.totalCustomers);
 router.get("/:id", isAuthenticated, userController.getUserById);
-router.delete("/user/:id", isAuthenticated, userController.deleteCurrentUser);
+router.delete("/user/:id", isAuthenticated, userController.deleteUser);
 
 export default router;

@@ -344,6 +344,24 @@ export const deleteAllocatedProperty = async (req, res, next) => {
 };
 
 /**
+ * DELETE /property/:id
+ * Delete property
+ */
+export const deleteProperty = async (req, res, next) => {
+    try {
+        const result = await propertyService.deleteProperty(req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "Property deleted successfully" });
+    } catch (err) {
+        console.log('deletePropertyError', err);
+        next(err);
+    }
+};
+
+/**
  * GET /admin/property/list
  * List all properties
  */

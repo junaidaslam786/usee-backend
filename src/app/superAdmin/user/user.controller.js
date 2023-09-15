@@ -72,6 +72,24 @@ export const deleteCurrentUser = async (req, res, next) => {
 }
 
 /**
+ * DELETE /user/:id
+ * Delete user
+ */
+export const deleteUser = async (req, res, next) => {
+  try {
+    const result = await userService.deleteUser(req);
+    if (result?.error && result?.message) {
+        return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true, message: "User deleted successfully" });
+} catch (err) {
+    console.log('deleteUserError', err);
+    next(err);
+};
+}
+
+/**
  * GET /user/list-all
  * List all customers in the system
  */

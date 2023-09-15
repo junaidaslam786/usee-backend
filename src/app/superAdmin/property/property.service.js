@@ -1401,6 +1401,31 @@ export const deleteAllocatedProperty = async (req) => {
   }
 }
 
+export const deleteProperty = async (req) => {
+  try {
+    const { propertyId } = req.body;
+    const idToDelete = req.params.id || propertyId;
+
+    // remove the property
+    const product = await req.dbInstance.product.findOne({
+      where: {
+        id: idToDelete
+      }
+    });
+
+    if (product) {
+      product.status = PRODUCT_STATUS.REMOVED;
+      product.deleted_at = Date.now();
+      await product.save();
+    }
+
+    return true;
+  } catch (err) {
+    console.log('deletePropertyServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
 export const getProductAgentDetail = async (product) => {
   let productAgentDetail = product.user;
 

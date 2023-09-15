@@ -249,6 +249,27 @@ export const deleteCustomer = async (appointmentId, req) => {
   }
 };
 
+export const deleteUser = async (req) => {
+  try {
+    const { id } = req.params;
+    const appointment = await getUserById(id);
+    if (!appointment) {
+      return { error: true, message: "Invalid user id or user does not exist." };
+    }
+
+    await req.dbInstance.user.destroy({
+      where: {
+        id: id,
+      },
+    });
+
+    return true;
+  } catch (err) {
+    console.log("deleteUserServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
 export const getSuperAdminDetails = async (dbInstance) => {
   try {
     return await dbInstance.user.findAll({

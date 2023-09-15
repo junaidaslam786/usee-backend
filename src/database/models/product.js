@@ -5,14 +5,14 @@ export default function (sequelize) {
     static associate(models) {
       Product.belongsTo(models.user, { foreignKey: 'userId' })
       Product.belongsTo(models.category, { foreignKey: 'categoryId' })
-      Product.hasMany(models.productDocument, { foreignKey: 'productId'})
-      Product.hasMany(models.productImage, { foreignKey: 'productId'})
-      Product.hasMany(models.productMetaTag, { foreignKey: 'productId'})
-      Product.hasMany(models.productAllocation, { foreignKey: 'productId'})
+      Product.hasMany(models.productDocument, { foreignKey: 'productId' })
+      Product.hasMany(models.productImage, { foreignKey: 'productId' })
+      Product.hasMany(models.productMetaTag, { foreignKey: 'productId' })
+      Product.hasMany(models.productAllocation, { foreignKey: 'productId' })
       Product.belongsToMany(models.appointment, { through: 'appointment_products', updatedAt: false, unique: false });
-      Product.hasMany(models.productOffer, { foreignKey: 'productId'})
-      Product.hasMany(models.productLog, { foreignKey: 'productId'})
-      Product.hasOne(models.productRemoveRequest, { foreignKey: 'productId', as: 'removeRequest'})
+      Product.hasMany(models.productOffer, { foreignKey: 'productId' })
+      Product.hasMany(models.productLog, { foreignKey: 'productId' })
+      Product.hasOne(models.productRemoveRequest, { foreignKey: 'productId', as: 'removeRequest' })
     }
   }
 
@@ -92,13 +92,17 @@ export default function (sequelize) {
       type: DataTypes.TEXT,
     },
     createdBy: {
-        type: DataTypes.UUID,
-        field: "created_by",
+      type: DataTypes.UUID,
+      field: "created_by",
     },
     updatedBy: {
-        type: DataTypes.UUID,
-        field: "updated_by",
+      type: DataTypes.UUID,
+      field: "updated_by",
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      field: "deleted_at",
+    }
   }, {
     modelName: 'product',
     tableName: 'products',
