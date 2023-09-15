@@ -100,3 +100,33 @@ export const changeSuperAdminPasswordRules = [
     return true;
   }),
 ];
+
+export const registerUserRules = [
+  // Common rules for all user types
+  body('firstName').exists().withMessage('Please provide first name').notEmpty(),
+  body('lastName').exists().withMessage('Please provide last name').notEmpty(),
+  body('email').isEmail().exists().custom(async (value) => {
+    return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then((userData) => {
+      if (userData) {
+        return Promise.reject('Email address already exists.');
+      }
+    });
+  }),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters').exists(),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error('Password and confirm password should match.');
+    }
+    return true;
+  }),
+  body('userType').exists().withMessage('Please provide user type').isIn(['admin', 'agent', 'customer']),
+
+  // Specific rules for agent
+  body('companyName').if(body('userType').equals('agent')).exists().withMessage('Please provide company name for agent').notEmpty(),
+  body('companyPosition').if(body('userType').equals('agent')).exists().withMessage('Please provide company position for agent').notEmpty(),
+
+  // Add any other specific rules for other user types as needed
+  // For example, if 'admin' had a specific field 'adminCode', you would do:
+  // body('adminCode').if(body('userType').equals('admin')).exists().withMessage('Please provide admin code for admin').notEmpty(),
+];
+

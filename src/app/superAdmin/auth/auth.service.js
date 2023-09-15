@@ -447,6 +447,38 @@ export const changeSuperAdminPasswordService = async (id, oldPassword, newPasswo
   }
 };
 
+export const registerUser = async (userData) => {
+  const { userType, ...restData } = userData;
+  let newUser;
+  
+  switch (userType) {
+    case 'admin':
+      // Logic to register admin (can be expanded as needed)
+      newUser = await db.models.user.create({ userType: 'admin', ...restData });
+      break;
+      
+    case 'agent':
+      // Logic to register agent (can be expanded as needed)
+      newUser = await db.models.user.create({ userType: 'agent', ...restData });
+      break;
+      
+    case 'customer':
+      // Logic to register customer (can be expanded as needed)
+      newUser = await db.models.user.create({ userType: 'customer', ...restData });
+      break;
+      
+    default:
+      return { error: true, message: "Invalid user type provided." };
+  }
+
+  if (!newUser) {
+    return { error: true, message: "User registration failed." };
+  }
+  
+  return { success: true, message: "User registered successfully.", user: newUser };
+};
+
+
 
 
 

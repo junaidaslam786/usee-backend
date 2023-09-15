@@ -186,5 +186,19 @@ export const changeSuperAdminPassword = async (req, res, next) => {
   }
 };
 
+export const registerUser = async (req, res, next) => {
+  try {
+    const result = await authService.registerUser(req.body);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('registerUserError', err);
+    return next(err);
+  }
+};
+
+
 
 
