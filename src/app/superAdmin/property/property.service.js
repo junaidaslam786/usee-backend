@@ -224,7 +224,7 @@ export const updateProperty = async (reqBody, req) => {
       }
       await dbInstance.productMetaTag.bulkCreate(metaTags, { transaction });
 
-      if (user.agent.agentType !== AGENT_TYPE.STAFF) {
+      if (user?.agent?.agentType !== AGENT_TYPE.STAFF) {
         // remove previous allocations
         await dbInstance.productAllocation.destroy({
           where: {
@@ -236,7 +236,7 @@ export const updateProperty = async (reqBody, req) => {
         const allocatedUsers = [];
         const allocatedUserIds = [];
 
-        if (user.agent.agentType !== AGENT_TYPE.AGENT) {
+        if (user?.agent?.agentType !== AGENT_TYPE.AGENT) {
           allocatedUsers.push({
             productId: product.id,
             userId: user.id,
