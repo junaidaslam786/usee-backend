@@ -174,7 +174,7 @@ export const updateProperty = async (reqBody, req) => {
     const { productId, title, description, price, address, city, region, latitude, longitude, virtualTourType } = reqBody;
     const { user, dbInstance } = req;
 
-    if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.EDIT_PROPERTY))) {
+    if (!(user?.userType === USER_TYPE.SUPERADMIN || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.EDIT_PROPERTY))) {
       return { error: true, message: 'You do not have permission to update property. ' }
     }
 
