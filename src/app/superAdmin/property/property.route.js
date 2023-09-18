@@ -6,7 +6,7 @@ import * as propertyValidations from './property.request';
 
 const router = Router();
 
-
+router.get('/list-all', isAuthenticated, propertyController.listAllPropertiesHandler);
 router.get('/list', isAuthenticated, propertyController.listProperties);
 router.get('/to-allocate', isAuthenticated, propertyController.listPropertiesToAllocate);
 router.get('/to-allocate-customer', isAuthenticated, propertyController.listPropertiesAllocateToCustomer);

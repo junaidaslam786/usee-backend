@@ -526,6 +526,29 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
     return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
+export const listAllProperties = async (userId, reqBody, dbInstance) => {
+  try {
+    const status = (reqBody && reqBody.status) ? reqBody.status : {
+      [OP.notIn]: [PRODUCT_STATUS.SOLD, PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
+    };
+    const searchStr = (reqBody && reqBody.search) ? reqBody.search : "";
+
+    const rows = await dbInstance.product.findAll({
+      where: {
+        status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
+        title: {
+          [OP.iLike]: '%' + searchStr + '%'
+        }
+      },
+      order: [["createdAt", "DESC"]]
+    });
+
+    return rows;
+  } catch (err) {
+    console.log('listAllPropertiesServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
 
 export const listPropertiesToAllocate = async (userId, dbInstance) => {
   try {

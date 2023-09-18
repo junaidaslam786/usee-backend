@@ -378,6 +378,19 @@ export const listProperties = async (req, res, next) => {
     return next(err);
   }
 };
+export const listAllPropertiesHandler = async (req, res, next) => {
+    try {
+      const properties = await propertyService.listAllProperties(req.user.id, req.query, req.dbInstance);
+      if (properties?.error && properties?.message) {
+          return next(createError(400, properties.message));
+      }
+  
+      return res.status(200).json(properties);
+    } catch (err) {
+      console.log('listAllPropertiesError', err);
+      return next(err);
+    }
+  };
 
 /**
  * GET /admin/property/list
