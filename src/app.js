@@ -36,12 +36,12 @@ app.use(express.urlencoded({ extended: false }));
 //   origin: '*'
 // }));
 
-
-if (NODE_ENV === "development") {
-  app.use(cors(configs.corsConfig));
-} else {
-  app.use(cors({ origin: "*" }));
-}
+app.use(cors(configs.corsConfig));
+// if (NODE_ENV === "development") {
+//   app.use(cors(configs.corsConfig));
+// } else {
+//   app.use(cors({ origin: "*" }));
+// }
 
 app.use(express.static("assets"));
 app.use(express.static("uploads"));

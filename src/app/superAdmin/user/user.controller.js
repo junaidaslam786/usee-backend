@@ -24,7 +24,7 @@ export const updateCurrentUser = async (req, res, next) => {
  */
 export const updateUserById = async (req, res, next) => {
   try {
-    const result = await userService.updateCurrentUser(req.body, req);
+    const result = await userService.updateUserById(req.body, req);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }

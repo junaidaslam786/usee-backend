@@ -12,12 +12,14 @@ export const updateCurrentUser = async (reqBody, req) => {
       where: { id: reqBody.id },
     });
 
-   // Update only provided fields
-   if (reqBody.firstName) user.firstName = reqBody.firstName;
-   if (reqBody.lastName) user.lastName = reqBody.lastName;
-   if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
-   if (reqBody.email) user.email = reqBody.email;
-    // (user.city = reqBody.city);
+    // Update only provided fields
+    if (reqBody.firstName) user.firstName = reqBody.firstName;
+    if (reqBody.lastName) user.lastName = reqBody.lastName;
+    if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
+    if (reqBody.email) user.email = reqBody.email;
+    if (reqBody.status) user.status = reqBody.status;
+    if (reqBody.cityName) user.cityName = reqBody.cityName;
+    if (reqBody.timezone) user.timezone = reqBody.timezone;
     await user.save();
 
     // feature image upload
@@ -75,12 +77,14 @@ export const updateUserById = async (reqBody, req) => {
       where: { id: reqBody.id },
     });
 
-   // Update only provided fields
-   if (reqBody.firstName) user.firstName = reqBody.firstName;
-   if (reqBody.lastName) user.lastName = reqBody.lastName;
-   if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
-   if (reqBody.email) user.email = reqBody.email;
-    // (user.city = reqBody.city);
+    // Update only provided fields
+    if (reqBody.firstName) user.firstName = reqBody.firstName;
+    if (reqBody.lastName) user.lastName = reqBody.lastName;
+    if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
+    if (reqBody.email) user.email = reqBody.email;
+    if (reqBody.status) user.status = reqBody.status;
+    if (reqBody.cityName) user.cityName = reqBody.cityName;
+    if (reqBody.timezone) user.timezone = reqBody.timezone;
     await user.save();
 
     // feature image upload
