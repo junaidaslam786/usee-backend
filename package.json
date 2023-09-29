@@ -16,7 +16,8 @@
     "test": "NODE_ENV=test mocha --require @babel/register --exit",
     "db:migrate": "npx sequelize-cli db:migrate",
     "db:seed": "npx sequelize-cli db:seed:all",
-    "db:create-migration": "npx sequelize-cli migration:create --name $1"
+    "db:create-migration": "npx sequelize-cli migration:create --name $1",
+    "db:rollback": "npx sequelize-cli db:migrate:undo"
   },
   "dependencies": {
     "@sentry/node": "^6.7.2",

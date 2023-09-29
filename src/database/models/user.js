@@ -82,6 +82,9 @@ export default function (sequelize) {
     status: {
       type: DataTypes.BOOLEAN,
     },
+    active: {
+      type: DataTypes.BOOLEAN,
+    },
     rememberToken: {
       type: DataTypes.STRING,
     },

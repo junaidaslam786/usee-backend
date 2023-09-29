@@ -43,14 +43,50 @@ export const getUserById = async (req, res, next) => {
   try {
     const result = await userService.getUserById((req.params?.id ? req.params?.id : 0), req);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
 
     return res.json(result);
-} catch (err) {
+  } catch (err) {
     console.log('deleteUserError', err);
     next(err);
-};
+  };
+}
+
+/**
+ * PUT /:id/activate
+ * Activate user by id
+ */
+export const activateUserById = async (req, res, next) => {
+  try {
+    const result = await userService.getUserById(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json(result);
+  } catch (err) {
+    console.log('deleteUserError', err);
+    next(err);
+  };
+}
+
+/**
+ * PUT /:id/deactivate
+ * Deactivate user by id
+ */
+export const deactivateUserById = async (req, res, next) => {
+  try {
+    const result = await userService.getUserById(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json(result);
+  } catch (err) {
+    console.log('deleteUserError', err);
+    next(err);
+  };
 }
 
 /**
@@ -61,14 +97,14 @@ export const deleteCurrentUser = async (req, res, next) => {
   try {
     const result = await userService.deleteCustomer((req.params?.id ? req.params?.id : 0), req);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
 
     return res.json({ success: true, message: "User deleted successfully" });
-} catch (err) {
+  } catch (err) {
     console.log('deleteUserError', err);
     next(err);
-};
+  };
 }
 
 /**
@@ -79,14 +115,14 @@ export const deleteUser = async (req, res, next) => {
   try {
     const result = await userService.deleteUser(req);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
 
     return res.json({ success: true, message: "User deleted successfully" });
-} catch (err) {
+  } catch (err) {
     console.log('deleteUserError', err);
     next(err);
-};
+  };
 }
 
 /**
@@ -97,7 +133,7 @@ export const listAdminUsers = async (req, res, next) => {
   try {
     const result = await userService.listAdminUsers(req.dbInstance);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
 
     return res.status(200).json(result);
@@ -115,7 +151,7 @@ export const listUsersExceptSuperAdmin = async (req, res, next) => {
   try {
     const result = await userService.listUsersExceptSuperAdmin(req.dbInstance);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
 
     return res.status(200).json(result);
@@ -133,7 +169,7 @@ export const listCustomerUsers = async (req, res, next) => {
   try {
     const result = await userService.listCustomerUsers(req.dbInstance);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
 
     return res.status(200).json(result);
@@ -151,7 +187,7 @@ export const totalCustomers = async (req, res, next) => {
   try {
     const result = await userService.totalCustomers(req.dbInstance);
     if (result?.error && result?.message) {
-        return next(createError(400, result.message));
+      return next(createError(400, result.message));
     }
     return res.status(200).json(result);
   } catch (err) {
@@ -189,7 +225,7 @@ export const updateSuperAdminDetails = async (req, res, next) => {
     }
 
     const result = await userService.updateSuperAdminDetails(req.body, req);
-    
+
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }

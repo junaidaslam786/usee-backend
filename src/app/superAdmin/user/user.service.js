@@ -18,6 +18,7 @@ export const updateCurrentUser = async (reqBody, req) => {
     if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
     if (reqBody.email) user.email = reqBody.email;
     if (reqBody.status) user.status = reqBody.status;
+    if (reqBody.active) user.active = reqBody.active;
     if (reqBody.cityName) user.cityName = reqBody.cityName;
     if (reqBody.timezone) user.timezone = reqBody.timezone;
     await user.save();
@@ -83,6 +84,7 @@ export const updateUserById = async (reqBody, req) => {
     if (reqBody.phoneNumber) user.phoneNumber = reqBody.phoneNumber;
     if (reqBody.email) user.email = reqBody.email;
     if (reqBody.status) user.status = reqBody.status;
+    if (reqBody.active) user.active = reqBody.active;
     if (reqBody.cityName) user.cityName = reqBody.cityName;
     if (reqBody.timezone) user.timezone = reqBody.timezone;
     await user.save();
@@ -162,6 +164,53 @@ export const createUserWithPassword = async (userData, transaction) => {
     return transaction ? await db.models.user.create(userData, { transaction }) : await db.models.user.create(userData);
   } catch (err) {
     console.log("createUserWithPasswordServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const activateUserById = async (reqBody, req) => {
+  try {
+    console.log("|||----|||");
+    console.log(reqBody);
+    console.log("|||----|||");
+    // Fetch the user from the database
+    const user = await db.models.user.findOne({
+      where: { id: reqBody.id },
+    });
+
+    if (!user) {
+      return { error: true, message: "User not found." };
+    }
+
+    // Update the user active status
+    user.active = reqBody.active || true;
+    await user.save();
+
+    return { user };
+  } catch (err) {
+    console.log("activateUserByIdServiceError", err.message);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const deactivateUserById = async (reqBody, req) => {
+  try {
+    // Fetch the user from the database
+    const user = await db.models.user.findOne({
+      where: { id: reqBody.id },
+    });
+
+    if (!user) {
+      return { error: true, message: "User not found." };
+    }
+
+    // Update the user active status
+    user.active = reqBody.active || false;
+    await user.save();
+
+    return { user };
+  } catch (err) {
+    console.log("deactivateUserByIdServiceError", err.message);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };

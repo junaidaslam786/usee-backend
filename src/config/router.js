@@ -17,6 +17,7 @@ import agentUserRouter from '../app/agent/user/user.route';
 import appointmentRouter from '../app/agent/appointment/appointment.route';
 import adminAppointmentRouter from '../app/admin/agent/appointment/appointment.route';
 import adminagentRouter from '../app/admin/agent/user/user.route';
+import superAdminAgentRouter from '../app/superAdmin/agent/user/user.route';
 import agentAvailabilityRouter from '../app/agent/availability/availability.route';
 import agentDashboardRouter from '../app/agent/dashboard/dashboard.route';
 import categoryRouter from '../app/category/category.route';
@@ -62,7 +63,9 @@ export default function (app) {
 
   // Super Admin Routes
   app.use('/superadmin', superAdminUserRouter);
+
   app.use('/superadmin/auth', superAdminAuthRouter);
+  app.use('/superadmin/agent', superAdminAgentRouter);
   app.use('/superadmin/user', superAdminUserRouter);
   app.use('/superadmin/property', superAdminPropertyRouter);
 }
