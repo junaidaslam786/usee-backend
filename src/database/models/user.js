@@ -43,6 +43,7 @@ export default function (sequelize) {
       User.hasMany(models.productAllocation, { foreignKey: 'userId' })
       User.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
       User.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' })
+      // User.hasMany(models.userSubscription, { foreignKey: 'userId' })
     }
   }
 

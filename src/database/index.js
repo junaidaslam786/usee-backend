@@ -44,6 +44,8 @@ import appointmentLogModel from './models/appointment-log';
 import appointmentNoteModel from './models/appointment-note';
 import agentAccessLevelModel from './models/agent-access-level';
 import userCallBackgroundImageModel from './models/user-call-background-image';
+import subscription from './models/subscription';
+import userSubscription from './models/user-subscription';
 
 // Configuration
 const env = process.env.NODE_ENV;
@@ -95,6 +97,8 @@ const modelDefiners = [
   appointmentNoteModel,
   agentAccessLevelModel,
   userCallBackgroundImageModel,
+  subscription,
+  userSubscription,
 ];
 
 // eslint-disable-next-line no-restricted-syntax

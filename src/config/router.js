@@ -6,6 +6,7 @@ import adminAuthRouter from '../app/admin/auth/auth.route';
 import userRouter from '../app/user/user.route';
 import adminUserRouter from '../app/admin/user/user.route';
 import adminNewsRouter from '../app/admin/cms/pages/cms.route';
+import superAdminNewsRouter from '../app/superAdmin/cms/pages/cms.route';
 import adminCommunityRouter from '../app/admin/cms/community/community.route';
 import roleRouter from '../app/role/role.route';
 import propertyRouter from '../app/property/property.route';
@@ -27,6 +28,7 @@ import customerDashboardRouter from '../app/customer/dashboard/dashboard.route';
 import homePropertyRouter from '../app/home/property/property.route';
 import iframeRouter from '../app/iframe/iframe.route';
 import cmsRouter from '../app/home/cms/cms.route';
+import subscriptionRoutes from '../app/subscription/subscription.route';
 
 export default function (app) {
   app.use('/', indexRouter);
@@ -49,7 +51,8 @@ export default function (app) {
   app.use('/iframe', iframeRouter);
   app.use('/cms', cmsRouter);
 
-  // Admin Routes
+  // Subscription Routes
+  app.use('/api/subscription', subscriptionRoutes);
 
   // Login and Register
   app.use('/admin', adminUserRouter);
@@ -66,6 +69,7 @@ export default function (app) {
 
   app.use('/superadmin/auth', superAdminAuthRouter);
   app.use('/superadmin/agent', superAdminAgentRouter);
+  app.use('/superadmin/cms/page', superAdminNewsRouter);
   app.use('/superadmin/user', superAdminUserRouter);
   app.use('/superadmin/property', superAdminPropertyRouter);
 }

@@ -11,7 +11,7 @@ import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 
 import * as configs from "@/config";
-import { authenticationMiddleware, sentryMiddleware } from "@/middleware";
+import { authenticationMiddleware, stripeSubscriptionMiddleware, sentryMiddleware } from "@/middleware";
 
 const { NODE_ENV } = process.env;
 
@@ -54,6 +54,7 @@ app.set("view engine", "ejs");
 
 // Custom middleware list
 app.use(authenticationMiddleware);
+// app.use(stripeSubscriptionMiddleware);
 if (NODE_ENV !== "development") {
   app.use(sentryMiddleware); // This should be loaded after authentication middleware.
 }
