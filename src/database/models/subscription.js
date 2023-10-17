@@ -28,6 +28,10 @@ export default function (sequelize) {
     // }
 
     static associate(models) {
+      // Subscription.belongsToMany(models.Feature, {
+      //   through: 'SubscriptionFeatures',
+      //   foreignKey: 'subscriptionId'
+      // })
       Subscription.hasMany(models.userSubscription, { foreignKey: 'subscriptionId' })
       // User.belongsTo(models.role, { foreignKey: 'roleId' })
       // User.hasOne(models.agent, { foreignKey: 'userId' })

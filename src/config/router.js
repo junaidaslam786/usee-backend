@@ -52,7 +52,7 @@ export default function (app) {
   app.use('/cms', cmsRouter);
 
   // Subscription Routes
-  app.use('/api/subscription', subscriptionRoutes);
+  // app.use('/api/subscription', subscriptionRoutes);
 
   // Login and Register
   app.use('/admin', adminUserRouter);
