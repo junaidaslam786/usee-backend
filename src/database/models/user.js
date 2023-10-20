@@ -2,7 +2,7 @@ import { compare, hash } from 'bcrypt';
 import { DataTypes, Model } from 'sequelize';
 
 import { tokenHelper } from '@/helpers';
-import agentAccessLevel from './agent-access-level';
+// import agentAccessLevel from './agent-access-level';
 
 export default function (sequelize) {
   class User extends Model {
@@ -43,7 +43,9 @@ export default function (sequelize) {
       User.hasMany(models.productAllocation, { foreignKey: 'userId' })
       User.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
       User.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' })
-      // User.hasMany(models.userSubscription, { foreignKey: 'userId' })
+      User.hasMany(models.token, { foreignKey: 'userId' })
+      User.hasMany(models.tokenTransaction, { foreignKey: 'userId' })
+      User.hasMany(models.userSubscription, { foreignKey: 'userId' })
     }
   }
 

@@ -4,10 +4,10 @@ import { createFeatureValidationRules } from './feature.request';
 
 const router = Router();
 
-router.get('/feature/list-all', FeatureController.getAllFeatures);
-router.get('/feature/:id', FeatureController.getFeatureById);
-router.post('/feature/create', createFeatureValidationRules(), FeatureController.createFeature);
-router.put('/feature/:id', FeatureController.updateFeature);
-router.delete('/feature/:id', FeatureController.deleteFeature);
+router.get('/list-all', FeatureController.getAllFeatures);
+router.get('/:id', FeatureController.getFeatureById);
+router.post('/create', createFeatureValidationRules(), FeatureController.createFeature);
+router.put('/:id', FeatureController.updateFeature);
+router.delete('/:id', FeatureController.deleteFeature);
 
 export default router;
