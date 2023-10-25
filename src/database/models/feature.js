@@ -24,12 +24,23 @@ export default function (sequelize) {
     description: {
       type: DataTypes.STRING,
     },
-    price: {
+    tokensPerUnit: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    dailyTokenLimit: {
+      type: DataTypes.INTEGER
+    },
+    totalUnits: {
       type: DataTypes.FLOAT,
       allowNull: false,
     },
-    quantity: {
-      type: DataTypes.INTEGER,
+    maxPurchaseLimit: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    featureType: {
+      type: DataTypes.FLOAT,
       allowNull: false,
     }
   }, {

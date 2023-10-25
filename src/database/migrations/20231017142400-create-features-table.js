@@ -18,12 +18,20 @@ module.exports = {
       description: {
         type: Sequelize.STRING,
       },
-      price: {
+      pricePerUnit: {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
-      quantity: {
-        type: Sequelize.INTEGER,
+      totalUnits: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      maxPurchaseLimit: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      featureType: {
+        type: Sequelize.FLOAT,
         allowNull: false,
       },
       createdAt: {

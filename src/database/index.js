@@ -44,6 +44,7 @@ import appointmentLogModel from './models/appointment-log';
 import appointmentNoteModel from './models/appointment-note';
 import agentAccessLevelModel from './models/agent-access-level';
 import userCallBackgroundImageModel from './models/user-call-background-image';
+import appConfigurationModel from './models/app-configuration';
 import subscriptionModel from './models/subscription';
 import userSubscriptionModel from './models/user-subscription';
 import featureModel from './models/feature';
@@ -105,6 +106,7 @@ const modelDefiners = [
   featureModel,
   tokenModel,
   tokenTransactionModel,
+  appConfigurationModel,
 ];
 
 // eslint-disable-next-line no-restricted-syntax

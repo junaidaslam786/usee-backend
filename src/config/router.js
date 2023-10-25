@@ -30,6 +30,7 @@ import iframeRouter from '../app/iframe/iframe.route';
 import cmsRouter from '../app/home/cms/cms.route';
 import subscriptionRoutes from '../app/superAdmin/subscription/subscription.route';
 import superAdminFeatureRouter from '../app/superAdmin/feature/feature.route';
+import superAdminAppConfigurationRouter from '../app/superAdmin/appConfiguration/appConfiguration.route';
 
 export default function (app) {
   app.use('/', indexRouter);
@@ -68,6 +69,7 @@ export default function (app) {
   // Super Admin Routes
   app.use('/superadmin', superAdminUserRouter);
 
+  app.use('/superadmin/config', superAdminAppConfigurationRouter);
   app.use('/superadmin/auth', superAdminAuthRouter);
   app.use('/superadmin/agent', superAdminAgentRouter);
   app.use('/superadmin/feature', superAdminFeatureRouter);
