@@ -18,28 +18,38 @@ module.exports = {
       description: {
         type: Sequelize.STRING,
       },
-      pricePerUnit: {
+      tokensPerUnit: {
+        field: 'tokens_per_unit',
         type: Sequelize.FLOAT,
         allowNull: false,
       },
+      dailyTokenLimit: {
+        field: 'daily_token_limit',
+        type: Sequelize.INTEGER
+      },
       totalUnits: {
+        field: 'total_units',
         type: Sequelize.FLOAT,
         allowNull: false,
       },
       maxPurchaseLimit: {
+        field: 'max_purchase_limit',
         type: Sequelize.FLOAT,
         allowNull: false,
       },
       featureType: {
+        field: 'feature_type',
         type: Sequelize.FLOAT,
         allowNull: false,
       },
       createdAt: {
+        field: 'created_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
+        field: 'updated_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')

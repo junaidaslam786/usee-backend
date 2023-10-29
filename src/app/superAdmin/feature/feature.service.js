@@ -4,8 +4,8 @@ import { utilsHelper } from "@/helpers";
 import db from "@/database";
 import { Sequelize } from "sequelize";
 
-export const listAllFeatures = async () => {
-  const features = await db.feature.findAll();
+export const listAllFeatures = async (dbInstance) => {
+  const features = await dbInstance.feature.findAll();
   return features;
 };
 

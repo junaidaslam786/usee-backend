@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import * as FeatureController from './feature.controller';
+import * as featureController from './feature.controller';
 import { createFeatureValidationRules } from './feature.request';
 
 const router = Router();
 
-router.get('/list-all', FeatureController.getAllFeatures);
-router.get('/:id', FeatureController.getFeatureById);
-router.post('/create', createFeatureValidationRules(), FeatureController.createFeature);
-router.put('/:id', FeatureController.updateFeature);
-router.delete('/:id', FeatureController.deleteFeature);
+router.get('/list-all', featureController.getAllFeatures);
+router.get('/:id', featureController.getFeatureById);
+router.post('/create', createFeatureValidationRules(), featureController.createFeature);
+router.put('/:id', featureController.updateFeature);
+router.delete('/:id', featureController.deleteFeature);
 
 export default router;

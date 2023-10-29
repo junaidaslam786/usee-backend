@@ -1,10 +1,11 @@
-import * as FeatureService from './feature.service';
+import * as featureService from './feature.service';
 
 export const getAllFeatures = async (req, res) => {
     try {
-        const features = await FeatureService.getAllFeatures();
+        const features = await featureService.listAllFeatures(req.dbInstance);
         res.json(features);
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: 'Server error', error });
     }
 };

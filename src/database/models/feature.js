@@ -49,5 +49,29 @@ export default function (sequelize) {
     sequelize,
   });
 
+  // Add an afterSave hook to create a Stripe product
+  Feature.afterCreate(async (feature, options) => {
+    try {
+      // Check if the Stripe product has already been created
+      if (feature.stripeProductId) {
+        return;
+      }
+
+      // Create a Stripe product
+      const product = await stripeClient.products.create({
+        name: feature.name,
+        type: 'good',
+        description: feature.description,
+        attributes: ['color', 'size'],
+      });
+
+      // Associate the Stripe product with the feature instance
+      feature.stripeProductId = product.id;
+      await feature.save();
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
   return Feature;
 }

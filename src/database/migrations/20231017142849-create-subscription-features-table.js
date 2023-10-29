@@ -3,8 +3,9 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('SubscriptionFeatures', {
+    await queryInterface.createTable('subscription_features', {
       featureId: {
+        field: 'feature_id',
         type: Sequelize.UUID,
         allowNull: false,
         references: {
@@ -15,6 +16,7 @@ module.exports = {
         onUpdate: 'CASCADE'
       },
       subscriptionId: {
+        field: 'subscription_id',
         type: Sequelize.UUID,
         allowNull: false,
         references: {
@@ -25,11 +27,13 @@ module.exports = {
         onUpdate: 'CASCADE'
       },
       createdAt: {
+        field: 'created_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
+        field: 'updated_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
@@ -38,6 +42,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('SubscriptionFeatures');
+    await queryInterface.dropTable('subscription_features');
   }
 };

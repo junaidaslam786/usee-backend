@@ -26,15 +26,18 @@ module.exports = {
         type: Sequelize.STRING,
       },
       stripePlanId: {
+        field: 'stripe_plan_id',
         type: Sequelize.STRING,
         unique: true,
       },
       createdAt: {
+        field: 'created_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
+        field: 'updated_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')

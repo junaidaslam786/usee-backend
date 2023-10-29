@@ -9,6 +9,7 @@ import compression from "compression";
 import createError from "http-errors";
 import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
+import Stripe from 'stripe';
 
 import * as configs from "@/config";
 import { authenticationMiddleware, stripeSubscriptionMiddleware, sentryMiddleware } from "@/middleware";
@@ -16,6 +17,11 @@ import { authenticationMiddleware, stripeSubscriptionMiddleware, sentryMiddlewar
 const { NODE_ENV } = process.env;
 
 const app = express();
+
+// Initialize stripe
+const stripe = Stripe(configs.stripeConfig.stripe.apiKey, {
+  apiVersion: configs.stripeConfig.stripe.apiVersion
+});
 
 // Initialize sentry
 if (NODE_ENV !== "development") {
@@ -61,6 +67,38 @@ if (NODE_ENV !== "development") {
 
 // Load router paths
 configs.routerConfig(app);
+
+// Routes that interact with the Stripe API
+app.post('/create-payment-intent', async (req, res) => {
+  const { amount, currency } = req.body;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency,
+    });
+
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create payment intent' });
+  }
+});
+
+app.post('/charge', async (req, res) => {
+  try {
+      // const token = req.body.stripeToken; // Get the Stripe token from the request
+      const charge = await stripe.charges.create({ // Create a new charge
+          amount: req.body.amount, // Amount to charge in cents
+          currency: 'usd', // Currency
+          description: 'Package of 50 tokens', // Description of the charge
+          source: stripe.token.create(), // Source token
+      });
+      res.status(200).json(charge); // Send the charge data as a response
+  } catch (err) {
+      res.status(500).json(err); // Send any errors as a response
+  }
+});
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

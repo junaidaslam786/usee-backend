@@ -6,7 +6,7 @@ import { Sequelize } from "sequelize";
 
 export const getAllConfigs = async (req) => {
     try {
-        // console.log(db);
+        console.log(db);
         return await req.dbInstance.appConfiguration.findAll();
     } catch (error) {
         throw new Error(`Fetching configurations failed: ${error.message}`);

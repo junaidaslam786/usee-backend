@@ -10,11 +10,13 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
       },
       configKey: {
+        field: 'config_key',
         type: Sequelize.STRING,
         allowNull: false,
         unique: true,
       },
       configValue: {
+        field: 'config_value',
         type: Sequelize.STRING,
         allowNull: false,
       },
@@ -22,10 +24,12 @@ module.exports = {
         type: Sequelize.TEXT,
       },
       createdAt: {
+        field: 'created_at',
         type: Sequelize.DATE,
         allowNull: false,
       },
       updatedAt: {
+        field: 'updated_at',
         type: Sequelize.DATE,
         allowNull: false,
       },

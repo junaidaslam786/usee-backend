@@ -11,6 +11,7 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4
       },
       userId: {
+        field: 'user_id',
         type: Sequelize.UUID,
         allowNull: false,
         references: {
@@ -20,6 +21,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       subscriptionId: {
+        field: 'subscription_id',
         type: Sequelize.UUID,
         allowNull: false,
         references: {
@@ -29,10 +31,12 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       startDate: {
+        field: 'start_date',
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
       endDate: {
+        field: 'end_date',
         type: Sequelize.DATE,
       },
       status: {
@@ -40,16 +44,19 @@ module.exports = {
         allowNull: false,
       },
       stripeSubscriptionId: {
+        field: 'stripe_subscription_id',
         type: Sequelize.STRING,
         allowNull: true,
         unique: true,
       },
       createdAt: {
+        field: 'created_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
+        field: 'updated_at',
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
