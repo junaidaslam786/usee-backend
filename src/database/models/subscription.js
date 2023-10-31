@@ -2,49 +2,12 @@ import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
   class Subscription extends Model {
-    // get fullName() {
-    //   return `${this.firstName} ${this.lastName}`;
-    // }
-
-    // get userTypeDisplay() {
-    //   return this.userType.charAt(0).toUpperCase() + this.userType.slice(1);
-    // }
-
-    // generateToken(expiresIn = '4h', agentProfile) {
-    //   const data = {
-    //     id: this.id,
-    //     name: this.fullName,
-    //     phoneNumber: this.phoneNumber,
-    //     profileImage: this.profileImage,
-    //     email: this.email,
-    //     agent: agentProfile || this.agent,
-    //     agentAccessLevels: this.agentAccessLevels
-    //   };
-    //   return tokenHelper.generateToken(data, expiresIn);
-    // }
-
-    // validatePassword(plainPassword) {
-    //   return compare(plainPassword, this.password);
-    // }
-
     static associate(models) {
-      // Subscription.belongsToMany(models.Feature, {
-      //   through: 'SubscriptionFeatures',
-      //   foreignKey: 'subscriptionId'
-      // })
+      Subscription.belongsToMany(models.feature, {
+        through: 'SubscriptionFeatures',
+        foreignKey: 'subscriptionId'
+      })
       Subscription.hasMany(models.userSubscription, { foreignKey: 'subscriptionId' })
-      // User.belongsTo(models.role, { foreignKey: 'roleId' })
-      // User.hasOne(models.agent, { foreignKey: 'userId' })
-      // User.hasMany(models.agentBranch, { foreignKey: 'userId' })
-      // User.hasMany(models.agentAvailability, { foreignKey: 'userId' })
-      // User.hasMany(models.product, { foreignKey: 'userId' })
-      // User.hasMany(models.customerWishlist, { foreignKey: 'customerId' })
-      // User.hasMany(models.customerLog, { foreignKey: 'userId' })
-      // User.hasMany(models.userAlert, { foreignKey: 'customerId' })
-      // User.hasMany(models.productAllocation, { foreignKey: 'userId' })
-      // User.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
-      // User.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' })
-      // User.hasMany(models.userSubscription, { foreignKey: 'userId' });
     }
   }
 

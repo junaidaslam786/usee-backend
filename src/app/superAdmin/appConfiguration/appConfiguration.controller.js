@@ -11,7 +11,7 @@ export const getAllConfigs = async (req, res) => {
 
 export const getConfigByKey = async (req, res) => {
     try {
-        const config = await AppConfigService.getConfigByKey(req.params.configKey);
+        const config = await AppConfigService.getConfigByKey(req, req.params.configKey);
         if (!config) return res.status(404).json({ message: 'Configuration not found' });
         res.json(config);
     } catch (error) {
@@ -21,8 +21,8 @@ export const getConfigByKey = async (req, res) => {
 
 export const createConfig = async (req, res) => {
     try {
-        const config = await AppConfigService.createConfig(req.body);
-        res.status(201).json(config);
+        const configNew = await AppConfigService.createConfig(req, req.body);
+        res.status(201).json(configNew);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
@@ -30,7 +30,7 @@ export const createConfig = async (req, res) => {
 
 export const updateConfig = async (req, res) => {
     try {
-        const config = await AppConfigService.updateConfig(req.params.configKey, req.body);
+        const config = await AppConfigService.updateConfig(req, req.params.configKey, req.body);
         if (!config) return res.status(404).json({ message: 'Configuration not found' });
         res.json(config);
     } catch (error) {

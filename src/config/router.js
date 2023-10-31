@@ -28,7 +28,7 @@ import customerDashboardRouter from '../app/customer/dashboard/dashboard.route';
 import homePropertyRouter from '../app/home/property/property.route';
 import iframeRouter from '../app/iframe/iframe.route';
 import cmsRouter from '../app/home/cms/cms.route';
-import subscriptionRoutes from '../app/superAdmin/subscription/subscription.route';
+import superAdminSubscriptionRouter from '../app/superAdmin/subscription/subscription.route';
 import superAdminFeatureRouter from '../app/superAdmin/feature/feature.route';
 import superAdminAppConfigurationRouter from '../app/superAdmin/appConfiguration/appConfiguration.route';
 
@@ -76,4 +76,5 @@ export default function (app) {
   app.use('/superadmin/cms/page', superAdminNewsRouter);
   app.use('/superadmin/user', superAdminUserRouter);
   app.use('/superadmin/property', superAdminPropertyRouter);
+  app.use('/superadmin/subscription', superAdminSubscriptionRouter);
 }

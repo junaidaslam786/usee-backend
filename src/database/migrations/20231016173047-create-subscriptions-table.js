@@ -31,16 +31,20 @@ module.exports = {
         unique: true,
       },
       createdAt: {
-        field: 'created_at',
-        allowNull: false,
         type: Sequelize.DATE,
+        field: 'created_at',
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
-        field: 'updated_at',
-        allowNull: false,
         type: Sequelize.DATE,
+        field: 'updated_at',
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      },
+      deletedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+        field: 'deleted_at',
+        defaultValue: null
       },
     });
   },

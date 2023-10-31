@@ -24,14 +24,20 @@ module.exports = {
         type: Sequelize.TEXT,
       },
       createdAt: {
-        field: 'created_at',
         type: Sequelize.DATE,
-        allowNull: false,
+        field: 'created_at',
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
-        field: 'updated_at',
         type: Sequelize.DATE,
-        allowNull: false,
+        field: 'updated_at',
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      },
+      deletedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+        field: 'deleted_at',
+        defaultValue: null
       },
     });
   },

@@ -12,11 +12,13 @@ export default function (sequelize) {
     configKey: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
+      unique: true,
+      field: "config_key",
     },
     configValue: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      field: "config_value",
     },
     description: {
       type: DataTypes.TEXT
@@ -25,5 +27,6 @@ export default function (sequelize) {
     modelName: 'appConfiguration',
     tableName: 'app_configurations',
     sequelize,
+    paranoid: true
   });
 }

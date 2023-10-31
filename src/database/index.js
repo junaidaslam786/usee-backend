@@ -46,6 +46,7 @@ import agentAccessLevelModel from './models/agent-access-level';
 import userCallBackgroundImageModel from './models/user-call-background-image';
 import appConfigurationModel from './models/app-configuration';
 import subscriptionModel from './models/subscription';
+import subscriptionFeatureModel from './models/subscription-feature';
 import userSubscriptionModel from './models/user-subscription';
 import featureModel from './models/feature';
 import tokenModel from './models/token';
@@ -102,8 +103,9 @@ const modelDefiners = [
   agentAccessLevelModel,
   userCallBackgroundImageModel,
   subscriptionModel,
-  userSubscriptionModel,
   featureModel,
+  subscriptionFeatureModel,
+  userSubscriptionModel,
   tokenModel,
   tokenTransactionModel,
   appConfigurationModel,

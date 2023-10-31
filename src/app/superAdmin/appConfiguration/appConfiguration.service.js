@@ -6,32 +6,31 @@ import { Sequelize } from "sequelize";
 
 export const getAllConfigs = async (req) => {
     try {
-        console.log(db);
         return await req.dbInstance.appConfiguration.findAll();
     } catch (error) {
         throw new Error(`Fetching configurations failed: ${error.message}`);
     }
 };
 
-export const getConfigByKey = async (configKey) => {
+export const getConfigByKey = async (req, configKey) => {
     try {
-        return await db.appConfig.findOne({ where: { configKey } });
+        return await req.dbInstance.appConfiguration.findOne({ where: { configKey } });
     } catch (error) {
         throw new Error(`Fetching configuration by key failed: ${error.message}`);
     }
 };
 
-export const createConfig = async (data) => {
+export const createConfig = async (req, data) => {
     try {
-        return await db.appConfig.create(data);
+        return await req.dbInstance.appConfiguration.create(data);
     } catch (error) {
         throw new Error(`Creating configuration failed: ${error.message}`);
     }
 };
 
-export const updateConfig = async (configKey, data) => {
+export const updateConfig = async (req, configKey, data) => {
     try {
-        await db.appConfig.update(data, {
+        await req.dbInstance.appConfiguration.update(data, {
             where: {
                 configKey,
             },

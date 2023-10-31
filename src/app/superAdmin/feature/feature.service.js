@@ -4,14 +4,35 @@ import { utilsHelper } from "@/helpers";
 import db from "@/database";
 import { Sequelize } from "sequelize";
 
-export const listAllFeatures = async (dbInstance) => {
-  const features = await dbInstance.feature.findAll();
+export const listAllFeatures = async (req) => {
+  const features = await req.dbInstance.feature.findAll();
   return features;
 };
 
-export const addFeature = async (featureData) => {
-  const newFeature = await db.feature.create(featureData);
+export const getFeatureById = async (req, featureId) => {
+  try {
+      return await req.dbInstance.feature.findOne({ where: { id: featureId } });
+  } catch (error) {
+      throw new Error(`Fetching configuration by key failed: ${error.message}`);
+  }
+};
+
+export const addFeature = async (dbInstance, featureData) => {
+  const newFeature = await dbInstance.feature.create(featureData);
   return newFeature;
+};
+
+export const updateFeature = async (dbInstance, featureId, featureData) => {
+  try {
+    await dbInstance.feature.update(featureData, {
+      where: {
+        id: featureId,
+      },
+    });
+    return featureData;
+  } catch (error) {
+    throw new Error(`Updating feature failed: ${error.message}`);
+  }
 };
 
 export const editFeature = async (id, featureData) => {
@@ -24,7 +45,7 @@ export const editFeature = async (id, featureData) => {
 };
 
 export const deleteFeature = async (id) => {
-  await db.feature.destroy({
+  await db.models.feature.destroy({
     where: {
       id,
     },
