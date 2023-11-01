@@ -21,7 +21,7 @@ module.exports = {
       tokensPerUnit: {
         field: 'tokens_per_unit',
         type: Sequelize.FLOAT,
-        allowNull: false,
+        // allowNull: false,
       },
       dailyTokenLimit: {
         field: 'daily_token_limit',
@@ -30,17 +30,17 @@ module.exports = {
       totalUnits: {
         field: 'total_units',
         type: Sequelize.FLOAT,
-        allowNull: false,
+        // allowNull: false,
       },
       maxPurchaseLimit: {
         field: 'max_purchase_limit',
         type: Sequelize.FLOAT,
-        allowNull: false,
+        // allowNull: false,
       },
       featureType: {
         field: 'feature_type',
         type: Sequelize.FLOAT,
-        allowNull: false,
+        // allowNull: false,
       },
       createdAt: {
         type: Sequelize.DATE,

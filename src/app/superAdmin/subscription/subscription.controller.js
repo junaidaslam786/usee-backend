@@ -1,13 +1,17 @@
+import { Sequelize } from 'sequelize';
+const OP = Sequelize.Op;
+import db from "@/database";
 import feature from '@/database/models/feature';
+import subscriptionFeature from '@/database/models/subscription-feature';
 import * as subscriptionPlanService from './subscription.service';
 
 export const listSubscriptionPlans = async (req, res) => {
-  // try {
+  try {
     const plans = await subscriptionPlanService.listSubscriptionPlans(req.dbInstance);
     res.json(plans);
-  // } catch (error) {
-  //   res.status(500).json({ message: 'Server Error' });
-  // }
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
 };
 
 export const addSubscriptionPlan = async (req, res) => {
@@ -38,7 +42,7 @@ export const deleteSubscriptionPlan = async (req, res) => {
 };
 
 export const viewSubscriptionPlanDetail = async (req, res) => {
-  try {    
+  try {
     const planDetail = await subscriptionPlanService.getSubscriptionPlanDetail(req.dbInstance, req.params.id);
     if (!planDetail) return res.status(404).json({ message: 'Subscription not found' });
     res.json(planDetail);
@@ -50,7 +54,17 @@ export const viewSubscriptionPlanDetail = async (req, res) => {
 export const associateFeaturesToPlan = async (req, res) => {
   try {
     const feature = await subscriptionPlanService.associateFeatures(req.dbInstance, req.params.id, req.body.features);
-    res.json({ message: 'Feature associated successfully', data: feature });
+    if (!feature) return res.status(404).json({ message: 'Feature not found' });
+    res.json({ message: 'Feature(s) added successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const listFeaturesBySubscription = async (req, res) => {
+  try {
+    const subscriptionFeatures = await subscriptionPlanService.listFeaturesBySubscription(req.dbInstance, req.params.id, req.body.features);
+    res.json(subscriptionFeatures);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }

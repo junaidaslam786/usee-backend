@@ -30,8 +30,8 @@ export default function (sequelize) {
     defaultValue: DataTypes.NOW
   }
   }, {
-  modelName: 'serviceUsage',
-  tableName: 'service_usages',
+  modelName: 'featureUsage',
+  tableName: 'feature_usages',
   sequelize,
   });
 }

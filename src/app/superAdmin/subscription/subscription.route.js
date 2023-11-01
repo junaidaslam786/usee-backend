@@ -8,5 +8,6 @@ router.put('/:id', subscriptionPlanController.editSubscriptionPlan);
 router.delete('/:id', subscriptionPlanController.deleteSubscriptionPlan);
 router.get('/:id', subscriptionPlanController.viewSubscriptionPlanDetail);
 router.post('/:id/features', subscriptionPlanController.associateFeaturesToPlan);
+router.get('/:id/features', subscriptionPlanController.listFeaturesBySubscription);
 
 export default router;

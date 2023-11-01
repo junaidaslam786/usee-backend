@@ -4,10 +4,10 @@ export default function (sequelize) {
   class SubscriptionFeature extends Model {
     static associate(models) {
       SubscriptionFeature.belongsTo(models.subscription, {
-        foreignKey: 'subscriptionId'
+        foreignKey: 'subscription_id'
       });
       SubscriptionFeature.belongsTo(models.feature, {
-        foreignKey: 'featureId'
+        foreignKey: 'feature_id'
       });
     }
   }
@@ -16,6 +16,7 @@ export default function (sequelize) {
     featureId: {
       type: DataTypes.UUID,
       primaryKey: true,
+      field: "feature_id",
       references: {
         model: 'features',
         key: 'id'
@@ -24,14 +25,15 @@ export default function (sequelize) {
     subscriptionId: {
       type: DataTypes.UUID,
       primaryKey: true,
+      field: "subscription_id",
       references: {
         model: 'subscriptions',  // Assuming your Subscription model's table name is 'subscriptions'
         key: 'id'
       },
     }
   }, {
-    modelName: 'SubscriptionFeature',
-    tableName: 'SubscriptionFeatures',
+    modelName: 'subscriptionFeature',
+    tableName: 'subscription_features',
     sequelize,
   });
 

@@ -5,8 +5,9 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('subscription_features', {
       featureId: {
-        field: 'feature_id',
         type: Sequelize.UUID,
+        primaryKey: true,
+        field: 'feature_id',
         allowNull: false,
         references: {
           model: 'features',
@@ -16,8 +17,9 @@ module.exports = {
         onUpdate: 'CASCADE'
       },
       subscriptionId: {
-        field: 'subscription_id',
         type: Sequelize.UUID,
+        primaryKey: true,
+        field: 'subscription_id',
         allowNull: false,
         references: {
           model: 'subscriptions',  // Assuming your subscription table is named 'subscriptions'
@@ -38,6 +40,13 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
+    });
+
+    // Add unique constraint to featureId and subscriptionId columns
+    await queryInterface.addConstraint('subscription_features', {
+      fields: ['feature_id', 'subscription_id'],
+      type: 'unique',
+      name: 'unique_feature_subscription'
     });
   },
 

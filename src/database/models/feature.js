@@ -26,22 +26,22 @@ export default function (sequelize) {
     },
     tokensPerUnit: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      // allowNull: false
     },
     dailyTokenLimit: {
       type: DataTypes.INTEGER
     },
     totalUnits: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      // allowNull: false,
     },
     maxPurchaseLimit: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      // allowNull: false,
     },
     featureType: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      // allowNull: false,
     }
   }, {
     modelName: 'feature',

@@ -70,7 +70,7 @@ export const getSubscriptionPlanDetail = async (dbInstance, id) => {
 export const associateFeatures = async (dbInstance, planId, features) => {
   try {
     const plan = await dbInstance.subscription.findByPk(planId);
-    console.log("PLAN: ", plan);
+    if (!plan) return false;
     const feature = await addFeatureToSubscription(plan.id, features);  // Assuming many-to-many relation with features.
     console.log("FEATURE: ", feature);
     return feature;
@@ -81,19 +81,74 @@ export const associateFeatures = async (dbInstance, planId, features) => {
 };
 
 async function addFeatureToSubscription(subscriptionId, featureIds) {
-  const t = await dbInstance.sequelize.transaction();
+  const t = await db.transaction();
   try {
     for (const featureId of featureIds) {
-      await db.models.subscriptionFeature.create({
-        subscriptionId: subscriptionId,
-        featureId: featureId
-      }, { transaction: t });
+      // await db.models.subscriptionFeature.create({
+      //   subscriptionId: subscriptionId,
+      //   featureId: featureId
+      // }, { transaction: t });
+      await db.models.subscriptionFeature.findOrCreate({
+        where: {
+          subscriptionId: subscriptionId,
+          featureId: featureId
+        },
+        defaults: {
+          subscriptionId: subscriptionId,
+          featureId: featureId
+        },
+        transaction: t
+      });
     }
     await t.commit();
     console.log('Features added to the subscription successfully.');
+    return true;
   } catch (error) {
     await t.rollback();
     console.error('Error adding features to the subscription:', error);
     throw error;
   }
 }
+
+export const listFeaturesBySubscription = async (dbInstance, subscriptionId, res) => {
+  try {
+    const features = await dbInstance.subscriptionFeature.findAll({
+      where: {
+        subscription_id: subscriptionId
+      },
+      include: [{
+        model: dbInstance.subscription, // Include the Subscription model
+        attributes: ['id', 'name', 'price', 'duration', 'description', 'stripePlanId'], // Specify the attributes you want to include
+      }, {
+        model: dbInstance.feature, // Include the Feature model
+        attributes: ['id', 'name', 'description'], // Specify the attributes you want to include
+      }]
+    });
+    const subscription = await dbInstance.subscription.findByPk(subscriptionId);
+    const output = {
+      subscription: {
+        id: subscription.id,
+        name: subscription.name,
+        price: subscription.price,
+        duration: subscription.duration,
+        description: subscription.description,
+        stripePlanId: subscription.stripePlanId,
+      },
+      features: features.map(feature => ({
+        id: feature.feature.id,
+        name: feature.feature.name,
+        description: feature.feature.description,
+        tokensPerUnit: feature.feature.tokensPerUnit,
+        dailyTokenLimit: feature.feature.dailyTokenLimit,
+        totalUnits: feature.feature.totalUnits,
+        maxPurchaseLimit: feature.feature.maxPurchaseLimit,
+        featureType: feature.feature.featureType,
+      })),
+    };
+    return output;
+  } catch (error) {
+    console.error('Error listing features by subscription:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
