@@ -39,8 +39,13 @@ module.exports = {
       },
       featureType: {
         field: 'feature_type',
-        type: Sequelize.FLOAT,
-        // allowNull: false,
+        type: Sequelize.ENUM,
+        defaultValue: "feature",
+        values: ["feature", "addon"]
+      },
+      stripeProductId: {
+        field: 'stripe_product_id',
+        type: Sequelize.STRING,
       },
       createdAt: {
         type: Sequelize.DATE,

@@ -25,7 +25,7 @@ export default function (sequelize) {
       type: DataTypes.STRING,
     },
     tokensPerUnit: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
       // allowNull: false
     },
     dailyTokenLimit: {
@@ -40,13 +40,30 @@ export default function (sequelize) {
       // allowNull: false,
     },
     featureType: {
-      type: DataTypes.FLOAT,
-      // allowNull: false,
-    }
+      type: DataTypes.STRING,
+      enum: ["feature", "addon"]
+    },
+    stripeProductId: {
+      type: DataTypes.STRING,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: 'created_at',
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: 'updated_at',
+    },
+    deletedAt: {
+      type: DataTypes.DATE,
+      field: 'deleted_at',
+      allowNull: true
+    } 
   }, {
     modelName: 'feature',
     tableName: 'features',
     sequelize,
+    paranoid: true
   });
 
   // Add an afterSave hook to create a Stripe product
@@ -58,7 +75,7 @@ export default function (sequelize) {
       }
 
       // Create a Stripe product
-      const product = await stripeClient.products.create({
+      const product = await stripe.products.create({
         name: feature.name,
         type: 'good',
         description: feature.description,
