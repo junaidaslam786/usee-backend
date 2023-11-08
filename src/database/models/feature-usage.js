@@ -1,7 +1,12 @@
 import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
-  class FeatureUsage extends Model {}
+  class FeatureUsage extends Model {
+    static associate(models) {
+      FeatureUsage.belongsTo(models.user, { foreignKey: 'userId' })
+      FeatureUsage.belongsTo(models.feature, { foreignKey: 'featureId' })
+    }
+  }
   
   FeatureUsage.init({
   id: {

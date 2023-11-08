@@ -120,6 +120,10 @@ export default function (sequelize) {
       type: DataTypes.INTEGER,
       defaultValue: 0
     },
+    stripeCustomerId: {
+      type: DataTypes.STRING,
+      field: "stripe_customer_id",
+    },
     timezone: {
       type: DataTypes.STRING,
     },
