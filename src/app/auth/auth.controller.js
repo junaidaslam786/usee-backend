@@ -124,3 +124,21 @@ export const checkFieldExists = async (req, res, next) => {
     return next(err);
   }
 };
+
+/**
+ * GET /auth/check-field-exist
+ * Check if provided field already exists
+ */
+export const fetchTokenPrice = async (req, res, next) => {
+  try {
+    const result = await authService.fetchTokenPrice(req, req.body.configKey);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json(result);
+  } catch (err) {
+    console.log('checkFieldExistsError', err);
+    return next(err);
+  }
+};

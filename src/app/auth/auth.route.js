@@ -13,5 +13,6 @@ router.get('/forgot-password', validate(authValidations.forgotPasswordRules), au
 router.post('/reset-password', validate(authValidations.resetPasswordRules), authController.resetPassword);
 router.post('/send-otp', validate(authValidations.sendOtpRules), authController.sendOtp);
 router.get('/check-field-exist', authController.checkFieldExists);
+router.get('/fetch-token-price', authController.fetchTokenPrice);
 
 export default router;
