@@ -43,10 +43,6 @@ module.exports = {
         defaultValue: "feature",
         values: ["feature", "addon"]
       },
-      stripeProductId: {
-        field: 'stripe_product_id',
-        type: Sequelize.STRING,
-      },
       createdAt: {
         type: Sequelize.DATE,
         field: 'created_at',

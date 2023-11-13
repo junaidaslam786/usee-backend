@@ -27,6 +27,14 @@ export default function (sequelize) {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    price: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    totalAmount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     acquiredDate: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -37,7 +45,15 @@ export default function (sequelize) {
         model: 'features',
         key: 'id'
       }
-    }
+    },
+    stripeInvoiceId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    stripeInvoiceStatus: {
+      type: DataTypes.ENUM('draft', 'open', 'void', 'paid', 'uncollectible'),
+      allowNull: true,
+    },
   }, {
     modelName: 'token',
     tableName: 'tokens',

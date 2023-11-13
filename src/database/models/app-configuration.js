@@ -32,6 +32,10 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       field: "stripe_product_id",
     },
+    stripePriceId: {
+      type: DataTypes.STRING,
+      field: "stripe_price_id",
+    },
   }, {
     modelName: 'appConfiguration',
     tableName: 'app_configurations',
@@ -39,11 +43,12 @@ export default function (sequelize) {
     paranoid: true
   });
 
-  // update handler method to change price of a stripe product using api
   AppConfiguration.addHook('beforeBulkUpdate', async (appConfiguration, options) => {
-
     if (appConfiguration.attributes.configKey === 'tokenPrice') {
+      console.log("Updating token price on stripe");
       const product = await stripe.products.retrieve("prod_OxkEHqzEUtR6P5");
+
+      // create a new price for the product
       const price = await stripe.prices.create({
         unit_amount: appConfiguration.attributes.configValue * 100,
         currency: 'aed',
@@ -59,6 +64,10 @@ export default function (sequelize) {
           default_price: price.id,
         }
       );
+
+      if (productUpdate) {
+        appConfiguration.attributes.stripePriceId = price.id;
+      }
     }
   });
 }

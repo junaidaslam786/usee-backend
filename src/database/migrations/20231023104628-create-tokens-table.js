@@ -24,6 +24,15 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false
       },
+      price: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
+      totalAmount: {
+        field: 'total_amount',
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
       acquiredDate: {
         field: 'acquired_date',
         type: Sequelize.DATE,
@@ -36,6 +45,15 @@ module.exports = {
           model: 'features',
           key: 'id'
         }
+      },
+      stripeInvoiceId: {
+        field: 'stripe_invoice_id',
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      stripeInvoiceStatus: {
+        field: 'stripe_invoice_status',
+        type: Sequelize.ENUM('draft', 'open', 'void', 'paid', 'uncollectible')
       },
       createdAt: {
         type: Sequelize.DATE,

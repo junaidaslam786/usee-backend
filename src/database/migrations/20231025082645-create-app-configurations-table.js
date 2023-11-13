@@ -27,6 +27,10 @@ module.exports = {
         field: 'stripe_product_id',
         type: Sequelize.STRING,
       },
+      stripePriceId: {
+        field: 'stripe_price_id',
+        type: Sequelize.STRING,
+      },
       createdAt: {
         type: Sequelize.DATE,
         field: 'created_at',

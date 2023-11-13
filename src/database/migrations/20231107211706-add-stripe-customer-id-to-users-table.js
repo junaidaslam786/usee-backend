@@ -4,8 +4,9 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.addColumn('users', 'stripe_customer_id', {
-      type: Sequelize.BOOLEAN,
-      defaultValue: true
+      type: Sequelize.STRING,
+      allowNull: true,
+      unique: true,
     });
   },
 

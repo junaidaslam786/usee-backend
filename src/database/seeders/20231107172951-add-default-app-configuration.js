@@ -1,16 +1,19 @@
+import { v4 } from 'uuid';
+
 'use strict';
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     return queryInterface.bulkInsert('app_configurations', [{
-      id: Sequelize.UUIDV4(),
-      configKey: 'tokenPrice',
-      configValue: '10',
+      id: v4(),
+      config_key: 'tokenPrice',
+      config_value: '10',
       description: 'This is the price for a single token in USEE360. These tokens will be used to purchase services in the app.',
-      stripeProductId: 'prod_OxkEHqzEUtR6P5',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      stripe_product_id: 'prod_OxkEHqzEUtR6P5',
+      stripe_price_id: '',
+      created_at: new Date(),
+      updated_at: new Date()
     }], {});
   },
 

@@ -10,6 +10,7 @@ import createError from "http-errors";
 import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 import Stripe from 'stripe';
+import db from "@/database";
 
 import * as configs from "@/config";
 import { authenticationMiddleware, stripeSubscriptionMiddleware, sentryMiddleware } from "@/middleware";
@@ -113,14 +114,14 @@ app.post('/charge', async (req, res) => {
 
 // Route to handle customer creation and save to the database
 app.post('/create-customer', async (req, res) => {
-  const { email, paymentMethodId, userId } = req.body;
+  const { email, token, userId } = req.body;
 
   try {
     // Create a PaymentMethod using the provided card details
     const paymentMethod = await stripe.paymentMethods.create({
       type: 'card',
       card: {
-        token: paymentMethodId,
+        token: token,
       },
     });
 
@@ -148,36 +149,50 @@ app.post('/create-customer', async (req, res) => {
 });
 
 // Route to create an invoice for a customer with a specific product
+// 
 app.post('/create-invoice', async (req, res) => {
-  const { customerId, productId, quantity, amount } = req.body;
+  const { customerId, productId, priceId, quantity, amount } = req.body;
 
   try {
     // Retrieve customer's Stripe ID from your database
-    const customer = await db.oneOrNone('SELECT stripe_customer_id FROM users WHERE id = $1', [customerId]);
+    const customer = await db.models.user.findOne({ where: { stripe_customer_id: customerId } })
 
     if (!customer) {
       return res.status(404).json({ error: 'Customer not found' });
     }
-
-    // Create an invoice item for the product
-    await stripe.invoiceItems.create({
-      customer: customer.stripe_customer_id,
-      price_data: {
-        currency: 'aed', // Change this to your desired currency
-        product: productId,
-        unit_amount: amount, // Replace this with the actual price in cents
-      },
-      quantity: quantity,
-    });
-
+    
     // Create an invoice for the customer
     const invoice = await stripe.invoices.create({
-      customer: customer.stripe_customer_id,
+      customer: customerId,
       collection_method: 'charge_automatically',
-      days_until_due: 15, // Set the number of days until the invoice is due
+    });
+    // console.log("INVOICE: ", invoice);
+
+    // Create an invoice item for the product
+    const invoiceItem = await stripe.invoiceItems.create({
+      customer: customerId,
+      invoice: invoice.id,
+      price: priceId,
+      quantity: quantity,
+    });
+    // console.log("INVOICE ITEM: ", invoiceItem);
+
+    // Finalize the invoice
+    const finalizedInvoice = await stripe.invoices.finalizeInvoice(
+      invoice.id
+    );
+
+    // Add the tokens to the user's account in your database
+    const token = await db.models.token.create({
+      userId: customer.id,
+      quantity: quantity,
+      price: amount,
+      totalAmount: quantity * amount,
+      stripeInvoiceId: invoice.id,
+      stripeInvoiceStatus: invoice.status
     });
 
-    res.status(200).json({ invoiceId: invoice.id, message: 'Invoice created successfully!' });
+    res.status(200).json({ token: token, message: 'Invoice created successfully!' });
   } catch (error) {
     console.error('Error creating invoice:', error.message);
     res.status(500).json({ error: 'Failed to create invoice' });

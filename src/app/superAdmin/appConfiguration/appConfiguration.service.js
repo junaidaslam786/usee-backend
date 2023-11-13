@@ -35,7 +35,8 @@ export const updateConfig = async (req, configKey, data) => {
                 configKey,
             },
         });
-        return data;
+        const config = getConfigByKey(req, configKey);
+        return config;
     } catch (error) {
         throw new Error(`Updating configuration failed: ${error.message}`);
     }

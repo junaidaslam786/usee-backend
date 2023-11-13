@@ -14,17 +14,7 @@ module.exports = {
         description: 'Basic Subscription Plan',
         createdAt: new Date(),
         updatedAt: new Date()
-      },
-      {
-        id: v4(),
-        name: 'Premium',
-        price: 20.00,
-        duration: 30,
-        description: 'Premium Subscription Plan',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      // ... any other plans
+      }
     ], {});
   },
 
