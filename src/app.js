@@ -79,6 +79,19 @@ if (NODE_ENV !== "development") {
 // Load router paths
 configs.routerConfig(app);
 
+// TRADER ROUTES
+// Get app configuration by key 
+app.get('/config/:configKey', async (req, res) => {
+  try {
+    const { configKey } = req.params;
+
+    const config = await db.models.appConfiguration.findOne({ where: { configKey } });
+    res.status(200).json(config);
+  } catch (error) {
+    throw new Error(`Fetching configuration by key failed: ${error.message}`);
+  }
+});
+
 // ROUTES THAT INTERACT WITH THE STRIPE API
 // Create a PaymentIntent
 app.post('/create-payment-intent', async (req, res) => {
@@ -160,7 +173,7 @@ app.post('/create-invoice', async (req, res) => {
     if (!customer) {
       return res.status(404).json({ error: 'Customer not found' });
     }
-    
+
     // Create an invoice for the customer
     const invoice = await stripe.invoices.create({
       customer: customerId,
