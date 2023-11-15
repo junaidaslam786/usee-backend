@@ -9,6 +9,12 @@ const path = require("path")
 const ejs = require("ejs");
 import timezoneJson from "../../../timezones.json";
 
+// Import stripe and initialize with specific api version
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16'
+})
+
 export const login = async (reqBody, dbInstance) => {
     try {
         const { email, password, type } = reqBody;
@@ -84,7 +90,9 @@ export const login = async (reqBody, dbInstance) => {
             signupStep: user.signupStep,
             otpVerified: user.otpVerified,
             timezone: user.timezone,
-            userType: user.userType 
+            userType: user.userType,
+            stripeCustomerId: user.stripeCustomerId,
+            stripePaymentMethodId: user.stripePaymentMethodId,
         };
 
         return { user: userData, token };
@@ -153,8 +161,16 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 agentPayload.documentUrl = result;
             }
 
-            // create agent profile
+        // create agent profile
             const agent = await agentTable.create(agentPayload, { transaction });
+
+            // Create a Customer in Stripe
+            const stripeCustomer = await stripe.customers.create({
+              email: user.email,
+              name: user.fullName,
+            });
+        
+            user.stripeCustomerId = stripeCustomer.id;
 
             const timeslots = await agentTimeSlot.findAll();
             for (let day = 1; day <= 7; day++) {
@@ -183,7 +199,8 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 phoneNumber: user.phoneNumber,
                 email: user.email,
                 type: user.userTypeDisplay,
-                userType: user.userType
+                userType: user.userType,
+                stripeCustomerId: user.stripeCustomerId
             };
 
             const emailData = [];
@@ -199,6 +216,12 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
 
             return { user: returnedUserData, token };
         });
+
+        // get user by id
+        const user = await dbInstance.user.findOne({ where: { id: result.user.id }});
+        user.stripeCustomerId = result.user.stripeCustomerId;
+        await user.save();
+
        return result;
     } catch(err) {
         console.log('registerAsAgentError', err)

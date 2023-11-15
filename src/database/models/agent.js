@@ -11,11 +11,11 @@ export default function (sequelize) {
 
   Agent.init({
     id: {
-        type: DataTypes.UUID,
-        field: "id",
-        primaryKey: true,
-        unique: true,
-        defaultValue: DataTypes.UUIDV4
+      type: DataTypes.UUID,
+      field: "id",
+      primaryKey: true,
+      unique: true,
+      defaultValue: DataTypes.UUIDV4
     },
     userId: {
       allowNull: true,
@@ -27,47 +27,47 @@ export default function (sequelize) {
       onUpdate: "CASCADE",
     },
     agentId: {
-        allowNull: true,
-        type: DataTypes.UUID,
-        references: {
-          model: "users",
-          key: "id"
-        },
-        onUpdate: "CASCADE",
+      allowNull: true,
+      type: DataTypes.UUID,
+      references: {
+        model: "users",
+        key: "id"
+      },
+      onUpdate: "CASCADE",
     },
     managerId: {
-        allowNull: true,
-        type: DataTypes.UUID,
-        references: {
-          model: "users",
-          key: "id"
-        },
-        onUpdate: "CASCADE",
+      allowNull: true,
+      type: DataTypes.UUID,
+      references: {
+        model: "users",
+        key: "id"
+      },
+      onUpdate: "CASCADE",
     },
     agentType: {
-        type: DataTypes.STRING,
-        enum: ["agent", "manager", "staff"]
+      type: DataTypes.STRING,
+      enum: ["agent", "manager", "staff"]
     },
     companyName: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
-    companyLogo:{
-        type: DataTypes.STRING,
+    companyLogo: {
+      type: DataTypes.STRING,
     },
-    companyAddress:{
-        type: DataTypes.TEXT,
+    companyAddress: {
+      type: DataTypes.TEXT,
     },
     companyPosition: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     mobileNumber: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     zipCode: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     mortgageAdvisorEmail: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     jobTitle: {
       type: DataTypes.STRING,
@@ -95,12 +95,12 @@ export default function (sequelize) {
       defaultValue: null
     },
     createdBy: {
-        type: DataTypes.UUID,
-        field: "created_by",
+      type: DataTypes.UUID,
+      field: "created_by",
     },
     updatedBy: {
-        type: DataTypes.UUID,
-        field: "updated_by",
+      type: DataTypes.UUID,
+      field: "updated_by",
     },
   }, {
     modelName: 'agent',
