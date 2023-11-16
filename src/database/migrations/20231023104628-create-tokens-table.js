@@ -33,6 +33,11 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false
       },
+      remainingAmount: {
+        field: 'remaining_amount',
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
       acquiredDate: {
         field: 'acquired_date',
         type: Sequelize.DATE,
@@ -54,6 +59,20 @@ module.exports = {
       stripeInvoiceStatus: {
         field: 'stripe_invoice_status',
         type: Sequelize.ENUM('draft', 'open', 'void', 'paid', 'uncollectible')
+      },
+      valid: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
+      createdBy: {
+        allowNull: true,
+        type:Sequelize.UUID,
+        field: 'created_by'
+      },
+      updatedBy: {
+        allowNull: true,
+        type:Sequelize.UUID,
+        field: 'updated_by'
       },
       createdAt: {
         type: Sequelize.DATE,

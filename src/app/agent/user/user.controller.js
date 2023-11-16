@@ -180,3 +180,21 @@ export const getUserTokenTransactions = async (req, res, next) => {
         next(err);
     }
 }
+
+/**
+ * POST /agent/user/:userId/token-transactions
+ * Create token transaction for user
+ */
+export const createTokenTransaction = async (req, res, next) => {
+    try {
+        const result = await userService.createTokenTransaction(req.params?.userId, req.body, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.status(201).json(result);
+    } catch (err) {
+        console.log('createAgentUsersError', err);
+        next(err);
+    }
+}

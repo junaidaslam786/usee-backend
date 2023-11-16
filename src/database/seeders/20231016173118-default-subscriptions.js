@@ -12,8 +12,8 @@ module.exports = {
         price: 10.00,
         duration: 30,
         description: 'Basic Subscription Plan',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ], {});
   },

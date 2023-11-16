@@ -16,5 +16,6 @@ router.get('/:id', isAuthenticated, userController.getAgentUser);
 router.delete('/:id', isAuthenticated, userController.deleteAgentUser);
 router.get('/:userId/tokens', isAuthenticated, userController.getUserTokens);
 router.get('/:userId/token-transactions', isAuthenticated, userController.getUserTokenTransactions);
+router.post('/:userId/token-transaction', isAuthenticated, userController.createTokenTransaction);
 
 export default router;

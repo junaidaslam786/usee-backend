@@ -165,7 +165,7 @@ app.post('/create-customer', async (req, res) => {
 // Route to create an invoice for a customer with a specific product
 // 
 app.post('/create-invoice', async (req, res) => {
-  const { customerId, productId, priceId, quantity, amount } = req.body;
+  const { customerId, priceId, quantity } = req.body;
 
   try {
     // Retrieve customer's Stripe ID from your database
@@ -175,12 +175,18 @@ app.post('/create-invoice', async (req, res) => {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
+    // Fetch price from stripe
+    const price = await stripe.prices.retrieve(priceId);
+
+    if (!price) {
+      return res.status(404).json({ error: 'Price not found' });
+    }
+
     // Create an invoice for the customer
     const invoice = await stripe.invoices.create({
       customer: customerId,
       collection_method: 'charge_automatically',
     });
-    // console.log("INVOICE: ", invoice);
 
     // Create an invoice item for the product
     const invoiceItem = await stripe.invoiceItems.create({
@@ -189,21 +195,23 @@ app.post('/create-invoice', async (req, res) => {
       price: priceId,
       quantity: quantity,
     });
-    // console.log("INVOICE ITEM: ", invoiceItem);
 
     // Finalize the invoice
     const finalizedInvoice = await stripe.invoices.finalizeInvoice(
       invoice.id
     );
 
+    const totalAmount = quantity * price.unit_amount / 100;
+
     // Add the tokens to the user's account in your database
     const token = await db.models.token.create({
       userId: customer.id,
       quantity: quantity,
-      price: amount,
-      totalAmount: quantity * amount,
+      price: price.unit_amount / 100,
+      totalAmount: totalAmount,
+      remainingAmount: totalAmount,
       stripeInvoiceId: invoice.id,
-      stripeInvoiceStatus: invoice.status
+      stripeInvoiceStatus: finalizedInvoice ? finalizedInvoice.status : invoice.status
     });
 
     res.status(200).json({ token: token, message: 'Invoice created successfully!' });
@@ -229,6 +237,17 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
   switch (event.type) {
     case 'invoice.payment_succeeded':
       const invoice = event.data.object;
+
+      // find token by invoice id
+      const token = await db.models.token.findOne({
+        where: { stripe_invoice_id: invoice.id },
+      });
+
+      if (token) {
+        token.stripeInvoiceStatus = invoice.status;
+        await token.save();
+      }
+
       // Handle successful payment, e.g., update your database
       break;
     case 'customer.created':
@@ -238,6 +257,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
       const user = await db.models.user.findOne({
         where: { email: customer.email },
       });
+      
       if (user) {
         user.stripeCustomerId = customer.id;
         await user.save();

@@ -20,6 +20,15 @@ module.exports = {
           key: 'id'
         }
       },
+      tokenId: {
+        field: 'token_id',
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: 'tokens',
+          key: 'id'
+        }
+      },
       amount: {
         type: Sequelize.INTEGER,
         allowNull: false
@@ -27,9 +36,15 @@ module.exports = {
       description: {
         type: Sequelize.STRING
       },
-      date: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+      createdBy: {
+        allowNull: true,
+        type:Sequelize.UUID,
+        field: 'created_by'
+      },
+      updatedBy: {
+        allowNull: true,
+        type:Sequelize.UUID,
+        field: 'updated_by'
       },
       createdAt: {
         type: Sequelize.DATE,
