@@ -144,3 +144,39 @@ export const updateAgentUser = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /agent/user/:userId/tokens
+ * Get user tokens by user id
+ */
+export const getUserTokens = async (req, res, next) => {
+    try {
+        const result = await userService.getUserTokens(req.params?.userId, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.status(200).json(result);
+    } catch (err) {
+        console.log('createAgentUsersError', err);
+        next(err);
+    }
+}
+
+/**
+ * GET /agent/user/:userId/token-transactions
+ * Get user token transactions by user id
+ */
+export const getUserTokenTransactions = async (req, res, next) => {
+    try {
+        const result = await userService.getUserTokenTransactions(req.params?.userId, req.dbInstance);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.status(200).json(result);
+    } catch (err) {
+        console.log('createAgentUsersError', err);
+        next(err);
+    }
+}

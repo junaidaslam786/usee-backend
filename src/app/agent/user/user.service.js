@@ -381,3 +381,43 @@ export const updateAgentUser = async (reqBody, req) => {
         return { error: true, message: 'Server not responding, please try again later.'}
     }
 }
+
+export const getUserTokens = async (userId, dbInstance) => {
+    try {
+
+        // use dbinstance to get tokens by using user id
+        const tokens = await dbInstance.token.findAll({
+            where: { userId },
+            attributes: ["id", "userId", "quantity", "price", "totalAmount", "acquiredDate", "stripeInvoiceId", "stripeInvoiceStatus"],
+            order: [["createdAt", "DESC"]],
+        });
+
+        if (!tokens) {
+            return { error: true, message: 'Invalid user id or user do not exist.'}
+        }
+
+        return tokens;
+    } catch(err) {
+        console.log('getUserTokensServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}
+
+export const getUserTokenTransactions = async (userId, dbInstance) => {
+    try {
+        const tokenTransactions = await dbInstance.tokenTransaction.findAll({
+            where: { userId },
+            attributes: ["id", "userId", "amount", "description", "date"],
+            order: [["createdAt", "DESC"]],
+        });
+
+        if (!tokenTransactions) {
+            return { error: true, message: 'Invalid user id or user do not exist.'}
+        }
+
+        return tokenTransactions;
+    } catch(err) {
+        console.log('getUserTokenTransactionsServiceError', err)
+        return { error: true, message: 'Server not responding, please try again later.'}
+    }
+}

@@ -130,6 +130,10 @@ app.post('/create-customer', async (req, res) => {
   const { email, token, userId } = req.body;
 
   try {
+    const user = await db.models.user.findOne({
+      where: { id: userId },
+    });
+
     // Create a PaymentMethod using the provided card details
     const paymentMethod = await stripe.paymentMethods.create({
       type: 'card',
@@ -140,6 +144,7 @@ app.post('/create-customer', async (req, res) => {
 
     // Create a Customer in Stripe
     const customer = await stripe.customers.create({
+      name: user.fullName,
       email: email,
       payment_method: paymentMethod.id,
       invoice_settings: {
@@ -147,10 +152,6 @@ app.post('/create-customer', async (req, res) => {
       },
     });
 
-    // Save the Stripe customer ID to your database
-    const user = await db.models.user.findOne({
-      where: { id: userId },
-    });
     user.stripeCustomerId = customer.id;
     await user.save();
 
