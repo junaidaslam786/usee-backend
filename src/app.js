@@ -95,12 +95,13 @@ app.get('/config/:configKey', async (req, res) => {
 // ROUTES THAT INTERACT WITH THE STRIPE API
 // Create a PaymentIntent
 app.post('/create-payment-intent', async (req, res) => {
-  const { amount, currency } = req.body;
+  const { amount } = req.body;
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency,
+      amount: amount,
+      currency: 'aed',
+      automatic_payment_methods: {enabled: true},
     });
 
     res.json({ clientSecret: paymentIntent.client_secret });
@@ -110,18 +111,45 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 });
 
-app.post('/charge', async (req, res) => {
+// Route to confirm a payment intent
+app.post('/confirm-payment-intent', async (req, res) => {
+  const { paymentIntentId } = req.body;
+
   try {
-    // const token = req.body.stripeToken; // Get the Stripe token from the request
-    const charge = await stripe.charges.create({ // Create a new charge
-      amount: req.body.amount, // Amount to charge in cents
-      currency: 'usd', // Currency
-      description: 'Package of 50 tokens', // Description of the charge
-      source: stripe.token.create(), // Source token
-    });
-    res.status(200).json(charge); // Send the charge data as a response
-  } catch (err) {
-    res.status(500).json(err); // Send any errors as a response
+    const paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId);
+
+    res.status(200).json({ paymentIntent: paymentIntent });
+  } catch (error) {
+    console.error('Error confirming payment intent:', error.message);
+    res.status(500).json({ error: 'Failed to confirm payment intent' });
+  }
+});
+
+// Route to capture a payment intent
+app.post('/capture-payment-intent', async (req, res) => {
+  const { paymentIntentId } = req.body;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.capture(paymentIntentId);
+
+    res.status(200).json({ paymentIntent: paymentIntent });
+  } catch (error) {
+    console.error('Error capturing payment intent:', error.message);
+    res.status(500).json({ error: 'Failed to capture payment intent' });
+  }
+});
+
+// Route to cancel a payment intent
+app.post('/cancel-payment-intent', async (req, res) => {
+  const { paymentIntentId } = req.body;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.cancel(paymentIntentId);
+
+    res.status(200).json({ paymentIntent: paymentIntent });
+  } catch (error) {
+    console.error('Error cancelling payment intent:', error.message);
+    res.status(500).json({ error: 'Failed to cancel payment intent' });
   }
 });
 
@@ -163,7 +191,6 @@ app.post('/create-customer', async (req, res) => {
 });
 
 // Route to create an invoice for a customer with a specific product
-// 
 app.post('/create-invoice', async (req, res) => {
   const { customerId, priceId, quantity } = req.body;
 
@@ -218,6 +245,95 @@ app.post('/create-invoice', async (req, res) => {
   } catch (error) {
     console.error('Error creating invoice:', error.message);
     res.status(500).json({ error: 'Failed to create invoice' });
+  }
+});
+
+// Route to finalize an invoice
+app.post('/finalize-invoice', async (req, res) => {
+  const { stripeInvoiceId } = req.body;
+
+  try {
+    const invoice = await stripe.invoices.finalizeInvoice(stripeInvoiceId, { auto_advance: true });
+
+    res.status(200).json({ invoice: invoice });
+  } catch (error) {
+    console.error('Error finalizing invoice:', error.message);
+    res.status(500).json({ error: 'Failed to finalize invoice' });
+  }
+});
+
+// Route to pay an invoice
+app.post('/pay-invoice', async (req, res) => {
+  const { stripeInvoiceId } = req.body;
+
+  try {
+    const invoice = await stripe.invoices.pay(stripeInvoiceId, { out_of_band: true });
+
+    res.status(200).json({ invoice: invoice });
+  } catch (error) {
+    console.error('Error paying invoice:', error.message);
+    res.status(500).json({ error: 'Failed to pay invoice' });
+  }
+});
+
+// Route to send invoice to customer manually
+app.post('/send-invoice', async (req, res) => {
+  const { stripeInvoiceId } = req.body;
+
+  try {
+    const invoice = await stripe.invoices.sendInvoice(stripeInvoiceId);
+
+    res.status(200).json({ invoice: invoice });
+  } catch (error) {
+    console.error('Error sending invoice:', error.message);
+    res.status(500).json({ error: 'Failed to send invoice' });
+  }
+});
+
+// Route to fetch details of a product from Stripe
+app.get('/fetch-stripe-product-details', async (req, res) => {
+  const { productId } = req.body;
+
+  try {
+    const product = await stripe.products.retrieve(
+      productId
+    );
+
+    res.status(200).json({ product: product });
+  } catch (error) {
+    console.error('Error fetching product details:', error.message);
+    res.status(500).json({ error: 'Failed to fetch product details' });
+  }
+});
+
+// Route to fetch all active prices of a product from Stripe
+app.get('/fetch-stripe-product-active-prices', async (req, res) => {
+  const { productId } = req.body;
+
+  try {
+    const prices = await stripe.prices.list({
+      product: productId,
+      active: true,
+    });
+
+    res.status(200).json({ prices: prices });
+  } catch (error) {
+    console.error('Error fetching product prices:', error.message);
+    res.status(500).json({ error: 'Failed to fetch product prices' });
+  }
+});
+
+// Route to fetch a price from Stripe
+app.get('/fetch-stripe-price-details', async (req, res) => {
+  const { priceId } = req.body;
+
+  try {
+    const price = await stripe.prices.retrieve(priceId);
+
+    res.status(200).json({ price: price });
+  } catch (error) {
+    console.error('Error fetching price:', error.message);
+    res.status(500).json({ error: 'Failed to fetch price details' });
   }
 });
 
