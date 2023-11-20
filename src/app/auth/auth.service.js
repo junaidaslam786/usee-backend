@@ -12,7 +12,7 @@ import timezoneJson from "../../../timezones.json";
 // Import stripe and initialize with specific api version
 import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16'
+    apiVersion: '2023-10-16'
 })
 
 export const login = async (reqBody, dbInstance) => {
@@ -29,20 +29,20 @@ export const login = async (reqBody, dbInstance) => {
         }
 
         // Find user by email address
-        const user = await dbInstance.user.findOne({ 
+        const user = await dbInstance.user.findOne({
             include: [
-                { 
-                    model: dbInstance.agent, 
+                {
+                    model: dbInstance.agent,
                     attributes: ["jobTitle", "agentType"],
                 },
-                { 
-                    model: dbInstance.agentAccessLevel, 
+                {
+                    model: dbInstance.agentAccessLevel,
                 },
                 {
                     attributes: ["id", "name"],
                     model: dbInstance.role, as: 'role',
-                    include: [{ 
-                        model: dbInstance.permission, 
+                    include: [{
+                        model: dbInstance.permission,
                         attributes: ["id", "name", "key"],
                         through: { attributes: [] }
                     }]
@@ -53,21 +53,21 @@ export const login = async (reqBody, dbInstance) => {
         });
 
         if (!user) {
-            return { error: true, message: 'There is no user with this email address!'}
+            return { error: true, message: 'There is no user with this email address!' }
         }
 
         if (!user.status) {
-            return { error: true, message: 'Account is disabled, please contact admin!'}
+            return { error: true, message: 'Account is disabled, please contact admin!' }
         }
 
         if (user.deletedAt) {
-            return { error: true, message: 'Account is deleted, please contact admin!'}
+            return { error: true, message: 'Account is deleted, please contact admin!' }
         }
 
         // Check user password
         const isValidPassword = await user.validatePassword(password);
         if (!isValidPassword) {
-            return { error: true, message: 'Incorrect password!'}
+            return { error: true, message: 'Incorrect password!' }
         }
 
         // Generate and return token
@@ -96,27 +96,27 @@ export const login = async (reqBody, dbInstance) => {
         };
 
         return { user: userData, token };
-    } catch(err) {
+    } catch (err) {
         console.log('loginServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return { error: true, message: 'Server not responding, please try again later.' }
     }
 }
 
 export const registerAsAgent = async (req, reqBody, dbInstance) => {
     try {
         const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
-        const { 
-            firstName, 
-            lastName, 
-            email, 
-            password, 
-            companyName, 
-            companyPosition, 
-            phoneNumber, 
+        const {
+            firstName,
+            lastName,
+            email,
+            password,
+            companyName,
+            companyPosition,
+            phoneNumber,
             jobTitle,
             timezone
         } = reqBody;
-        
+
         let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
         const result = await db.transaction(async (transaction) => {
             if (timezone) {
@@ -128,12 +128,12 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
 
             // Create user
             const user = await userService.createUserWithPassword({
-                firstName, 
-                lastName, 
-                email: email.toLowerCase(), 
+                firstName,
+                lastName,
+                email: email.toLowerCase(),
                 password,
                 phoneNumber,
-                status: 1, 
+                status: 1,
                 userType: USER_TYPE.AGENT,
                 signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
                 otpCode: reqBody?.otpCode ? reqBody.otpCode : null,
@@ -143,11 +143,11 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
 
             let agentPayload = {
                 userId: user.id,
-                companyName, 
+                companyName,
                 companyPosition,
                 jobTitle,
                 licenseNo: reqBody?.licenseNo ? reqBody.licenseNo : "",
-                agentType: AGENT_TYPE.AGENT, 
+                agentType: AGENT_TYPE.AGENT,
                 apiCode: utilsHelper.generateRandomString(10, true)
             }
 
@@ -161,16 +161,20 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 agentPayload.documentUrl = result;
             }
 
-        // create agent profile
+            // create agent profile
             const agent = await agentTable.create(agentPayload, { transaction });
 
             // Create a Customer in Stripe
             const stripeCustomer = await stripe.customers.create({
-              email: user.email,
-              name: user.fullName,
+                email: user.email,
+                name: user.fullName,
             });
-        
-            user.stripeCustomerId = stripeCustomer.id;
+
+            // get user by id
+            if (stripeCustomer?.id) {
+                user.stripeCustomerId = stripeCustomer.id;
+                await user.save({ transaction });
+            }
 
             const timeslots = await agentTimeSlot.findAll();
             for (let day = 1; day <= 7; day++) {
@@ -217,15 +221,10 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
             return { user: returnedUserData, token };
         });
 
-        // get user by id
-        const user = await dbInstance.user.findOne({ where: { id: result.user.id }});
-        user.stripeCustomerId = result.user.stripeCustomerId;
-        await user.save();
-
-       return result;
-    } catch(err) {
+        return result;
+    } catch (err) {
         console.log('registerAsAgentError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return { error: true, message: 'Server not responding, please try again later.' }
     }
 }
 
@@ -244,12 +243,12 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
 
         // Create user
         const userData = {
-            firstName, 
-            lastName, 
+            firstName,
+            lastName,
             email: email.toLowerCase(),
-            phoneNumber, 
+            phoneNumber,
             password,
-            status: 1, 
+            status: 1,
             userType: USER_TYPE.CUSTOMER,
             signupStep: reqBody?.signupStep ? reqBody.signupStep : 0,
             otpCode: reqBody?.otpCode ? reqBody.otpCode : null,
@@ -284,9 +283,9 @@ export const registerAsCustomer = async (reqBody, dbInstance) => {
         mailHelper.sendMail(payload);
 
         return { user: returnedUserData, token, refreshToken };
-    } catch(err) {
+    } catch (err) {
         console.log('registerAsCustomerError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return { error: true, message: 'Server not responding, please try again later.' }
     }
 }
 
@@ -298,11 +297,11 @@ export const forgotPassword = async (reqBody, dbInstance) => {
         // Find user by email address
         const user = await userModel.findOne({ where: { email } });
         if (!user) {
-            return { error: true, message: 'There is no user with this email address!'}
+            return { error: true, message: 'There is no user with this email address!' }
         }
 
         if (!user.status) {
-            return { error: true, message: 'Account is disabled, contact admin!'}
+            return { error: true, message: 'Account is disabled, contact admin!' }
         }
 
         // Update remember token in database
@@ -322,9 +321,9 @@ export const forgotPassword = async (reqBody, dbInstance) => {
         mailHelper.sendMail(payload);
 
         return true;
-    } catch(err) {
+    } catch (err) {
         console.log('forgotPasswordServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return { error: true, message: 'Server not responding, please try again later.' }
     }
 }
 
@@ -334,9 +333,9 @@ export const resetPassword = async (reqBody, dbInstance) => {
         const userModel = dbInstance.user;
 
         // Find user by email address
-        const user = await userModel.findOne({ 
-            where: { 
-                rememberToken: token, 
+        const user = await userModel.findOne({
+            where: {
+                rememberToken: token,
                 rememberTokenExpire: {
                     [OP.lt]: new Date(),
                     [OP.gt]: new Date(new Date() - 1 * 60 * 60 * 1000) // 1 hour
@@ -345,15 +344,15 @@ export const resetPassword = async (reqBody, dbInstance) => {
         });
 
         if (!user) {
-            return { error: true, message: 'Password reset token is invalid or has expired'}
+            return { error: true, message: 'Password reset token is invalid or has expired' }
         }
-  
+
         // Update password
         user.rememberToken = null;
         user.rememberTokenExpire = null;
         user.password = password;
         await user.save();
-  
+
         const emailData = [];
         emailData.name = user.fullName;
         emailData.email = user.email;
@@ -367,9 +366,9 @@ export const resetPassword = async (reqBody, dbInstance) => {
         mailHelper.sendMail(payload);
 
         return true;
-    } catch(err) {
+    } catch (err) {
         console.log('resetPasswordServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return { error: true, message: 'Server not responding, please try again later.' }
     }
 }
 
@@ -379,7 +378,7 @@ export const sendOtp = async (req) => {
         const { dbInstance } = req;
 
         const otp = Math.floor(100000 + Math.random() * 900000);
-        const user = await dbInstance.user.findOne({ where: { id: userId }});
+        const user = await dbInstance.user.findOne({ where: { id: userId } });
         user.otpCode = otp;
 
         if (otpExpiry) {
@@ -399,9 +398,9 @@ export const sendOtp = async (req) => {
         mailHelper.sendMail(payload);
 
         return true;
-    } catch(err) {
+    } catch (err) {
         console.log('sendOtpError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return { error: true, message: 'Server not responding, please try again later.' }
     }
 }
 
@@ -414,7 +413,7 @@ export const checkFieldExists = async (reqBody, dbInstance) => {
             // Find user by email address
             const user = await userModel.findOne({ where: { email } });
             if (user) {
-                return { error: true, message: 'Email address already exist.'}
+                return { error: true, message: 'Email address already exist.' }
             }
         }
 
@@ -422,21 +421,21 @@ export const checkFieldExists = async (reqBody, dbInstance) => {
             // Find user by phone number
             const user = await userModel.findOne({ where: { phoneNumber: phone } });
             if (user) {
-                return { error: true, message: 'Phone number already exist.'}
+                return { error: true, message: 'Phone number already exist.' }
             }
         }
 
         return true;
-    } catch(err) {
+    } catch (err) {
         console.log('checkFieldExistsServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+        return { error: true, message: 'Server not responding, please try again later.' }
     }
 }
 
 export const fetchTokenPrice = async (req, configKey) => {
     // try {
-        console.log("configKey", configKey);
-        return await req.dbInstance.appConfiguration.findOne({ where: { configKey } });
+    console.log("configKey", configKey);
+    return await req.dbInstance.appConfiguration.findOne({ where: { configKey } });
     // } catch (error) {
     //     throw new Error(`Fetching configuration by key failed: ${error.message}`);
     // }

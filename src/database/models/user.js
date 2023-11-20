@@ -124,6 +124,10 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       field: "stripe_customer_id",
     },
+    stripePaymentMethodId: {
+      type: DataTypes.STRING,
+      field: "stripe_payment_method_id",
+    },
     timezone: {
       type: DataTypes.STRING,
     },

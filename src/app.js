@@ -93,18 +93,64 @@ app.get('/config/:configKey', async (req, res) => {
 });
 
 // ROUTES THAT INTERACT WITH THE STRIPE API
+// Create a checkout session on stripe
+app.post('/create-checkout-session', async (req, res) => {
+  const { customerId, priceId, quantity } = req.body;
+
+  try {
+    // break the server url in authenticaion, host name and port number
+    // const serverUrl = req.headers.referer;
+    // console.log("SERVER URL: ", req);
+    // const serverUrlParts = serverUrl.split('/');
+    // const serverUrlProtocol = serverUrlParts[0];
+    // const serverUrlHostName = serverUrlParts[2];
+    // const serverUrlPort = serverUrlParts[3];
+    // console.log(serverUrlProtocol, serverUrlHostName, serverUrlPort);
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [{
+        price: priceId,
+        quantity: quantity,
+      }],
+      mode: 'payment',
+      success_url: 'http://localhost:3001/success',
+      cancel_url: 'http://localhost:3001/cancel',
+    });
+
+    res.json({ session: session });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
 // Create a PaymentIntent
 app.post('/create-payment-intent', async (req, res) => {
-  const { amount } = req.body;
+  const { customerId, invoiceId, paymentMethodId, amount } = req.body;
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
+      customer: customerId,
+      invoice: invoiceId,
+      payment_method: paymentMethodId,
+      amount: amount * 100,
       currency: 'aed',
+      // description: 'Payment for Invoice #123',
       automatic_payment_methods: {enabled: true},
+      payment_method_types: ['card'],
+      setup_future_usage: 'off_session',
+      confirm: true,
     });
+    console.log("PAYMENT INTENT: ", paymentIntent);
 
-    res.json({ clientSecret: paymentIntent.client_secret });
+    const invoice = await stripe.invoices.update( invoiceId, {
+      payment_intent: paymentIntent.id
+    });
+    console.log("INVOICE: ", invoice);
+
+    res.json({ success: true, paymentIntent: paymentIntent, invoice: invoice });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create payment intent' });
@@ -181,6 +227,7 @@ app.post('/create-customer', async (req, res) => {
     });
 
     user.stripeCustomerId = customer.id;
+    user.stripePaymentMethodId = paymentMethod.id;
     await user.save();
 
     res.status(200).json({ customerId: customer.id, message: 'Stripe customer created successfully!' });
@@ -212,7 +259,7 @@ app.post('/create-invoice', async (req, res) => {
     // Create an invoice for the customer
     const invoice = await stripe.invoices.create({
       customer: customerId,
-      collection_method: 'charge_automatically',
+      auto_advance: true,
     });
 
     // Create an invoice item for the product
@@ -361,6 +408,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
 
       if (token) {
         token.stripeInvoiceStatus = invoice.status;
+        token.valid = true;
         await token.save();
       }
 
