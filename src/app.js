@@ -100,7 +100,7 @@ app.post('/create-checkout-session', async (req, res) => {
   try {
     // break the server url in authenticaion, host name and port number
     // const serverUrl = req.headers.referer;
-    // console.log("SERVER URL: ", req);
+    // console.log("REQ: ", req);
     // const serverUrlParts = serverUrl.split('/');
     // const serverUrlProtocol = serverUrlParts[0];
     // const serverUrlHostName = serverUrlParts[2];
@@ -115,6 +115,9 @@ app.post('/create-checkout-session', async (req, res) => {
         quantity: quantity,
       }],
       mode: 'payment',
+      invoice_creation: {
+        enabled: true,
+      },
       success_url: 'http://localhost:3001/success',
       cancel_url: 'http://localhost:3001/cancel',
     });
@@ -124,6 +127,11 @@ app.post('/create-checkout-session', async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Failed to create checkout session' });
   }
+});
+
+// Create a success url
+app.get('/success', async (req, res) => {
+  res.render('success');
 });
 
 // Create a PaymentIntent
@@ -138,14 +146,14 @@ app.post('/create-payment-intent', async (req, res) => {
       amount: amount * 100,
       currency: 'aed',
       // description: 'Payment for Invoice #123',
-      automatic_payment_methods: {enabled: true},
+      automatic_payment_methods: { enabled: true },
       payment_method_types: ['card'],
       setup_future_usage: 'off_session',
       confirm: true,
     });
     console.log("PAYMENT INTENT: ", paymentIntent);
 
-    const invoice = await stripe.invoices.update( invoiceId, {
+    const invoice = await stripe.invoices.update(invoiceId, {
       payment_intent: paymentIntent.id
     });
     console.log("INVOICE: ", invoice);
@@ -421,7 +429,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
       const user = await db.models.user.findOne({
         where: { email: customer.email },
       });
-      
+
       if (user) {
         user.stripeCustomerId = customer.id;
         await user.save();
