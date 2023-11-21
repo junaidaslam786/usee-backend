@@ -115,14 +115,23 @@ app.post('/create-checkout-session', async (req, res) => {
         quantity: quantity,
       }],
       mode: 'payment',
-      invoice_creation: {
-        enabled: true,
-      },
+      // invoice_creation: {
+      //   enabled: true,
+      // },
       success_url: 'http://localhost:3001/success',
       cancel_url: 'http://localhost:3001/cancel',
     });
+    console.log("SESSION: ", session);
 
-    res.json({ session: session });
+    // Create an Invoice
+    const invoice = await stripe.invoices.create({
+      customer: session.customer,
+      // description: 'Invoice for Product Purchase',
+      payment_intent: session.payment_intent,
+      auto_advance: true
+    })
+
+    res.json({ session: session, invoice: invoice });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create checkout session' });
