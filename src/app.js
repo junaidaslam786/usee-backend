@@ -131,7 +131,7 @@ app.post('/create-checkout-session', async (req, res) => {
     //   auto_advance: true
     // })
 
-    res.json({ session: session, invoice: invoice });
+    res.json({ session: session });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create checkout session' });
