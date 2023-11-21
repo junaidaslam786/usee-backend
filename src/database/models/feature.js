@@ -63,51 +63,5 @@ export default function (sequelize) {
     paranoid: true
   });
 
-  // Add an afterSave hook to create a Stripe product
-  // Feature.afterCreate(async (feature, options) => {
-  //   console.log("FEATURE: ", feature);
-  //   try {
-  //     // Check if the Stripe product has already been created
-  //     if (feature.stripeProductId) {
-  //       return;
-  //     }
-
-  //     // Create a Stripe product
-  //     const product = await stripe.products.create({
-  //       name: feature.name,
-  //       type: 'good',
-  //       description: feature.description,
-  //       attributes: ['color', 'size'],
-  //     });
-
-  //     // Associate the Stripe product with the feature instance
-  //     feature.stripeProductId = product.id;
-  //     await feature.save();
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // });
-
-  // Add an onupdate hook to update the Stripe product price
-  // Feature.afterUpdate(async (feature, options) => {
-  //   try {
-  //     // Check if the Stripe product has already been created
-  //     if (!feature.stripeProductId) {
-  //       return;
-  //     }
-
-  //     // Get the Stripe product
-  //     const product = await stripe.products.retrieve(feature.stripeProductId);
-
-  //     // Update the Stripe product
-  //     await stripe.products.update(feature.stripeProductId, {
-  //       name: feature.name,
-  //       description: feature.description,
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // });
-
   return Feature;
 }
