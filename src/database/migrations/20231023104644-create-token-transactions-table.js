@@ -29,7 +29,16 @@ module.exports = {
           key: 'id'
         }
       },
-      amount: {
+      featureId: {
+        field: 'feature_id',
+        type: Sequelize.UUID,
+        // allowNull: false,
+        references: {
+          model: 'features',
+          key: 'id'
+        }
+      },
+      quantity: {
         type: Sequelize.INTEGER,
         allowNull: false
       },

@@ -138,6 +138,39 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 });
 
+// Fetch all checkout sessions of a customer
+app.get('/fetch-checkout-sessions', async (req, res) => {
+  const { customerId } = req.body;
+
+  try {
+    const checkoutSessions = await stripe.checkout.sessions.list({
+      customer: customerId,
+      limit: 10,
+    });
+
+    res.json({ checkoutSessions: checkoutSessions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch checkout sessions' });
+  }
+});
+
+// Fetch all line items of a checkout session of a customer
+app.get('/fetch-checkout-session-line-items', async (req, res) => {
+  const { sessionId } = req.body;
+
+  try {
+    const lineItems = await stripe.checkout.sessions.listLineItems(
+      sessionId, {}
+    );
+
+    res.json({ lineItems: lineItems });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch checkout session line items' });
+  }
+});
+
 // Create a success url
 app.get('/success', async (req, res) => {
   res.render('success');

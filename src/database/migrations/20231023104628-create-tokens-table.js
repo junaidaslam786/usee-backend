@@ -43,14 +43,6 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       },
-      featureId: {
-        field: 'feature_id',
-        type: Sequelize.UUID,
-        references: {
-          model: 'features',
-          key: 'id'
-        }
-      },
       stripeInvoiceId: {
         field: 'stripe_invoice_id',
         type: Sequelize.STRING,

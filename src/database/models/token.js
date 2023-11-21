@@ -43,13 +43,6 @@ export default function (sequelize) {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
-    featureId: {
-      type: DataTypes.UUID,
-      references: {
-        model: 'features',
-        key: 'id'
-      }
-    },
     stripeInvoiceId: {
       type: DataTypes.STRING,
       allowNull: true,

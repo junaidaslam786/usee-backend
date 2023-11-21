@@ -382,10 +382,10 @@ export const updateAgentUser = async (reqBody, req) => {
   }
 }
 
-export const getUserTokens = async (userId, dbInstance) => {
+export const getUserTokens = async (userId, dbInstance, res) => {
   try {
 
-    // use dbinstance to get tokens by using user id
+    // Get tokens by user id
     const tokens = await dbInstance.token.findAll({
       where: { userId },
       attributes: ["id", "userId", "quantity", "price", "totalAmount", "remainingAmount", "acquiredDate", "stripeInvoiceId", "stripeInvoiceStatus", "valid"],
@@ -396,7 +396,26 @@ export const getUserTokens = async (userId, dbInstance) => {
       return { error: true, message: 'Invalid user id or user do not exist.' }
     }
 
-    return tokens;
+    let totalTokens = 0, totalTokensUsed = 0, totalTokensRemaining = 0, pendingTokens = 0;
+    for (const token of tokens) {
+      if (token.valid) {
+        totalTokens += token.totalAmount;
+        totalTokensUsed += token.totalAmount - token.remainingAmount;
+        totalTokensRemaining += token.remainingAmount;
+      }
+
+      if (!token.valid) {
+        pendingTokens += token.totalAmount;
+      }
+    }
+
+    res.json({
+      tokens,
+      totalTokens,
+      totalTokensUsed,
+      totalTokensRemaining,
+      pendingTokens,
+    });
   } catch (err) {
     console.log('getUserTokensServiceError', err)
     return { error: true, message: 'Server not responding, please try again later.' }
@@ -407,7 +426,7 @@ export const getUserTokenTransactions = async (userId, dbInstance) => {
   try {
     const tokenTransactions = await dbInstance.tokenTransaction.findAll({
       where: { userId },
-      attributes: ["id", "userId", "tokenId", "amount", "description", "createdAt", "updatedAt", "createdBy", "updatedBy"],
+      attributes: ["id", "userId", "tokenId", "featureId", "quantity", "description", "createdAt", "updatedAt", "createdBy", "updatedBy"],
       order: [["createdAt", "DESC"]],
     });
 

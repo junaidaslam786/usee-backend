@@ -31,7 +31,15 @@ export default function (sequelize) {
         key: 'id'
       }
     },
-    amount: {
+    featureId: {
+      type: DataTypes.UUID,
+      // allowNull: false,
+      references: {
+        model: 'features',
+        key: 'id'
+      }
+    },
+    quantity: {
       type: DataTypes.INTEGER, // can be negative if tokens are spent or positive if added
       allowNull: false,
     },

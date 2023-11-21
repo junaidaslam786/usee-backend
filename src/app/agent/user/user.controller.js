@@ -151,7 +151,7 @@ export const updateAgentUser = async (req, res, next) => {
  */
 export const getUserTokens = async (req, res, next) => {
     try {
-        const result = await userService.getUserTokens(req.params?.userId, req.dbInstance);
+        const result = await userService.getUserTokens(req.params?.userId, req.dbInstance, res);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }
