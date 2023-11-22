@@ -56,6 +56,10 @@ export const login = async (reqBody, dbInstance) => {
             return { error: true, message: 'There is no user with this email address!' }
         }
 
+        if (!user.active) {
+            return { error: true, message: 'Account is not approved, please contact admin!' }
+        }
+
         if (!user.status) {
             return { error: true, message: 'Account is disabled, please contact admin!' }
         }
@@ -139,6 +143,7 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 otpCode: reqBody?.otpCode ? reqBody.otpCode : null,
                 otpExpiry: reqBody?.otpExpiry ? reqBody.otpExpiry : null,
                 timezone: selectedTimezone,
+                active: false,
             }, transaction);
 
             let agentPayload = {

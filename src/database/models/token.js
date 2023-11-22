@@ -4,7 +4,7 @@ export default function (sequelize) {
   class Token extends Model {
     static associate(models) {
       Token.belongsTo(models.user, { foreignKey: 'userId' });
-      Token.belongsTo(models.feature, { foreignKey: 'featureId' }); // If tokens are linked to a specific feature
+      // Token.belongsTo(models.feature, { foreignKey: 'featureId' }); // If tokens are linked to a specific feature
     }
   }
 
