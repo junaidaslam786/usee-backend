@@ -5,6 +5,7 @@ export default function (sequelize) {
     static associate(models) {
       TokenTransaction.belongsTo(models.user, { foreignKey: 'userId' });
       TokenTransaction.belongsTo(models.token, { foreignKey: 'tokenId' });
+      TokenTransaction.belongsTo(models.feature, { foreignKey: 'featureId' });
     }
   }
 

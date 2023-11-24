@@ -43,6 +43,11 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       },
+      stripeCheckoutSessionId: {
+        field: 'stripe_checkout_session_id',
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       stripeInvoiceId: {
         field: 'stripe_invoice_id',
         type: Sequelize.STRING,

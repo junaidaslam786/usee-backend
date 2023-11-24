@@ -25,15 +25,6 @@ const stripe = Stripe(configs.stripeConfig.stripe.apiKey, {
   apiVersion: configs.stripeConfig.stripe.apiVersion
 });
 
-// Create a Stripe product
-// const product = stripe.products.create({
-//   name: "Video Call",
-//   type: 'good',
-//   description: "Service for video call",
-//   attributes: ['color', 'size'],
-// });
-// console.log("PRODUCT: ", product);
-
 // Initialize sentry
 if (NODE_ENV !== "development") {
   // configuration
@@ -43,6 +34,84 @@ if (NODE_ENV !== "development") {
   app.use(Sentry.Handlers.requestHandler());
   app.use(Sentry.Handlers.tracingHandler());
 }
+
+// Webhook endpoint to handle events from Stripe
+app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (request, response) => {
+  let event = request.body;
+  // Only verify the event if you have an endpoint secret defined.
+  // Otherwise use the basic event deserialized with JSON.parse
+  if (endpointSecret) {
+    // Get the signature sent by Stripe
+    const signature = request.headers['stripe-signature'];
+    try {
+      event = stripe.webhooks.constructEvent(
+        request.body,
+        signature,
+        endpointSecret
+      );
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      return response.sendStatus(400);
+    }
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'invoice.payment_succeeded':
+      console.log("invoice.payment_succeeded: ", event.data.object);
+      const invoice = event.data.object;
+
+      // find token by invoice id
+      const token = await db.models.token.findOne({
+        where: { stripe_invoice_id: invoice.id },
+      });
+
+      if (token) {
+        token.stripeInvoiceStatus = invoice.status;
+        token.valid = true;
+        await token.save();
+      }
+
+      // Handle successful payment, e.g., update your database
+      break;
+    case 'customer.created':
+      console.log("customer.created: ", event.data.object);
+      const customer = event.data.object;
+
+      // Save the Stripe customer ID to your database
+      const user = await db.models.user.findOne({
+        where: { email: customer.email },
+      });
+
+      if (user) {
+        user.stripeCustomerId = customer.id;
+        await user.save();
+      }
+      break;
+    case 'checkout.session.completed':
+      console.log("checkout.session.completed: ", event.data.object);
+      // Payment is successful and the subscription is created.
+      // You should provision the subscription and save the customer ID to your database.
+      const checkoutSession = event.data.object;
+
+      // Save the Stripe subscription ID to your database
+      const user2 = await db.models.user.findOne({
+        where: { stripe_customer_id: checkoutSession.customer },
+      });
+
+      if (user2) {
+        // user2.stripeSubscriptionId = checkoutSession.subscription;
+        await user2.save();
+      }
+      break;
+    default:
+      // Unexpected event type
+      console.log(`Unhandled event type ${event.type}.`);
+  }
+
+  // Return a 200 response to acknowledge receipt of the event
+  response.send();
+});
 
 // Required middleware list
 app.use(logger("dev"));
@@ -79,6 +148,8 @@ if (NODE_ENV !== "development") {
 // Load router paths
 configs.routerConfig(app);
 
+const endpointSecret = 'whsec_a09eac543a6bc08af4fb0b9eafeb76235561ea244a22751be3070be51a71d07c';
+
 // TRADER ROUTES
 // Get app configuration by key 
 app.get('/config/:configKey', async (req, res) => {
@@ -98,14 +169,13 @@ app.post('/create-checkout-session', async (req, res) => {
   const { customerId, priceId, quantity } = req.body;
 
   try {
-    // break the server url in authenticaion, host name and port number
-    // const serverUrl = req.headers.referer;
-    // console.log("REQ: ", req);
-    // const serverUrlParts = serverUrl.split('/');
-    // const serverUrlProtocol = serverUrlParts[0];
-    // const serverUrlHostName = serverUrlParts[2];
-    // const serverUrlPort = serverUrlParts[3];
-    // console.log(serverUrlProtocol, serverUrlHostName, serverUrlPort);
+    const requestHeaders = req.headers;
+    const serverUrlProtocol = req.protocol;
+    const serverUrlHostName = req.hostname;
+    const serverUrlPort = req.get('host').split(':')[1]; // Extract port from host header
+
+    // Check if port is required in the URL
+    const serverUrl = serverUrlPort ? `${serverUrlProtocol}://${serverUrlHostName}:${serverUrlPort}` : `${serverUrlProtocol}://${serverUrlHostName}`;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -118,18 +188,10 @@ app.post('/create-checkout-session', async (req, res) => {
       invoice_creation: {
         enabled: true,
       },
-      success_url: 'http://localhost:3001/success',
-      cancel_url: 'http://localhost:3001/cancel',
+      success_url: `${serverUrl}/success`,
+      cancel_url: `${serverUrl}/cancel`,
     });
     console.log("SESSION: ", session);
-
-    // Create an Invoice
-    // const invoice = await stripe.invoices.create({
-    //   customer: session.customer,
-    //   // description: 'Invoice for Product Purchase',
-    //   payment_intent: session.payment_intent,
-    //   auto_advance: true
-    // })
 
     res.json({ session: session });
   } catch (err) {
@@ -145,7 +207,7 @@ app.get('/fetch-checkout-sessions', async (req, res) => {
   try {
     const checkoutSessions = await stripe.checkout.sessions.list({
       customer: customerId,
-      limit: 10,
+      limit: 3,
     });
 
     res.json({ checkoutSessions: checkoutSessions });
@@ -432,56 +494,6 @@ app.get('/fetch-stripe-price-details', async (req, res) => {
     console.error('Error fetching price:', error.message);
     res.status(500).json({ error: 'Failed to fetch price details' });
   }
-});
-
-// Webhook endpoint to handle events from Stripe
-app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, 'your_stripe_webhook_secret');
-  } catch (err) {
-    console.error('Webhook error:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle the event based on its type
-  switch (event.type) {
-    case 'invoice.payment_succeeded':
-      const invoice = event.data.object;
-
-      // find token by invoice id
-      const token = await db.models.token.findOne({
-        where: { stripe_invoice_id: invoice.id },
-      });
-
-      if (token) {
-        token.stripeInvoiceStatus = invoice.status;
-        token.valid = true;
-        await token.save();
-      }
-
-      // Handle successful payment, e.g., update your database
-      break;
-    case 'customer.created':
-      const customer = event.data.object;
-
-      // Save the Stripe customer ID to your database
-      const user = await db.models.user.findOne({
-        where: { email: customer.email },
-      });
-
-      if (user) {
-        user.stripeCustomerId = customer.id;
-        await user.save();
-      }
-      break;
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
-  }
-
-  res.status(200).send('Success');
 });
 
 // catch 404 and forward to error handler

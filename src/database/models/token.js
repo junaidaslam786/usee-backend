@@ -43,6 +43,10 @@ export default function (sequelize) {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    stripeCheckoutSessionId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     stripeInvoiceId: {
       type: DataTypes.STRING,
       allowNull: true,
