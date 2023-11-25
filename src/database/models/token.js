@@ -43,16 +43,16 @@ export default function (sequelize) {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
-    stripeCheckoutSessionId: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     stripeInvoiceId: {
       type: DataTypes.STRING,
       allowNull: true,
     },
     stripeInvoiceStatus: {
       type: DataTypes.ENUM('draft', 'open', 'void', 'paid', 'uncollectible'),
+      allowNull: true,
+    },
+    stripeCheckoutSessionId: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     valid: {

@@ -244,15 +244,16 @@ app.post('/create-payment-intent', async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      customer: customerId,
-      invoice: invoiceId,
+      // customer: customerId,
+      // invoice: invoiceId,
       payment_method: paymentMethodId,
       amount: amount * 100,
       currency: 'aed',
-      // description: 'Payment for Invoice #123',
-      automatic_payment_methods: { enabled: true },
-      payment_method_types: ['card'],
-      setup_future_usage: 'off_session',
+      description: `Payment for Invoice# ${invoiceId}`,
+      return_url: 'http://localhost:3000/success',
+      // automatic_payment_methods: { enabled: true },
+      // payment_method_types: ['card'],
+      // setup_future_usage: 'off_session',
       confirm: true,
     });
     console.log("PAYMENT INTENT: ", paymentIntent);
@@ -426,7 +427,7 @@ app.post('/pay-invoice', async (req, res) => {
   const { stripeInvoiceId } = req.body;
 
   try {
-    const invoice = await stripe.invoices.pay(stripeInvoiceId, { out_of_band: true });
+    const invoice = await stripe.invoices.pay(stripeInvoiceId, {});
 
     res.status(200).json({ invoice: invoice });
   } catch (error) {

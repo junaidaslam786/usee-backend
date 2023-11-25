@@ -10,8 +10,8 @@ module.exports = {
       config_key: 'tokenPrice',
       config_value: '5',
       description: 'This is the price for a single token in USEE360. These tokens will be used to purchase services in the app.',
-      stripe_product_id: 'prod_OxkEHqzEUtR6P5',
-      stripe_price_id: 'price_1O9okEJ6zXdtc21yBiyLt4M7',
+      stripe_product_id: 'prod_P4W0XpwFd7MXLR',
+      stripe_price_id: 'price_1OGMyKJ6zXdtc21ylldhy8VS',
       created_at: new Date(),
       updated_at: new Date()
     }], {});
