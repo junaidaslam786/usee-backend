@@ -35,6 +35,8 @@ if (NODE_ENV !== "development") {
   app.use(Sentry.Handlers.tracingHandler());
 }
 
+const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
+
 // Webhook endpoint to handle events from Stripe
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (request, response) => {
   let event = request.body;
@@ -58,25 +60,24 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
   // Handle the event
   switch (event.type) {
     case 'invoice.payment_succeeded':
-      console.log("invoice.payment_succeeded: ", event.data.object);
       const invoice = event.data.object;
+      console.log("invoice: ", invoice);
 
       // find token by invoice id
-      const token = await db.models.token.findOne({
-        where: { stripe_invoice_id: invoice.id },
-      });
+      // const token = await db.models.token.findOne({
+      //   where: { stripe_invoice_id: invoice.id },
+      // });
 
-      if (token) {
-        token.stripeInvoiceStatus = invoice.status;
-        token.valid = true;
-        await token.save();
-      }
-
-      // Handle successful payment, e.g., update your database
+      // if (token) {
+      //   token.stripeInvoiceStatus = invoice.status;
+      //   token.valid = true;
+      //   await token.save();
+      // }
       break;
+
     case 'customer.created':
-      console.log("customer.created: ", event.data.object);
       const customer = event.data.object;
+      console.log("customer: ", customer);
 
       // Save the Stripe customer ID to your database
       const user = await db.models.user.findOne({
@@ -88,29 +89,32 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
         await user.save();
       }
       break;
+
     case 'checkout.session.completed':
-      console.log("checkout.session.completed: ", event.data.object);
+      const checkoutSession = event.data.object;
+      console.log("checkoutSession: ", checkoutSession);
       // Payment is successful and the subscription is created.
       // You should provision the subscription and save the customer ID to your database.
-      const checkoutSession = event.data.object;
 
       // Save the Stripe subscription ID to your database
-      const user2 = await db.models.user.findOne({
-        where: { stripe_customer_id: checkoutSession.customer },
+      const token = await db.models.tokens.findOne({
+        where: { stripe_checkout_session_id: checkoutSession.customer },
       });
 
-      if (user2) {
-        // user2.stripeSubscriptionId = checkoutSession.subscription;
-        await user2.save();
+      if (token) {
+        token.stripeInvoiceId = checkoutSession.invoice;
+        token.stripeInvoiceStatus = checkoutSession.payment_status;
+        await token.save();
       }
       break;
+
     default:
       // Unexpected event type
       console.log(`Unhandled event type ${event.type}.`);
   }
 
   // Return a 200 response to acknowledge receipt of the event
-  response.send();
+  response.status(200).end();
 });
 
 // Required middleware list
@@ -148,8 +152,6 @@ if (NODE_ENV !== "development") {
 // Load router paths
 configs.routerConfig(app);
 
-const endpointSecret = 'whsec_a09eac543a6bc08af4fb0b9eafeb76235561ea244a22751be3070be51a71d07c';
-
 // TRADER ROUTES
 // Get app configuration by key 
 app.get('/config/:configKey', async (req, res) => {
@@ -177,8 +179,11 @@ app.post('/create-checkout-session', async (req, res) => {
     // Check if port is required in the URL
     const serverUrl = serverUrlPort ? `${serverUrlProtocol}://${serverUrlHostName}:${serverUrlPort}` : `${serverUrlProtocol}://${serverUrlHostName}`;
 
+    // Retrieve customer's Stripe ID from your database
+    const customer = await db.models.user.findOne({ where: { stripe_customer_id: customerId } })
+
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
+      customer: customer.stripeCustomerId,
       payment_method_types: ['card'],
       line_items: [{
         price: priceId,
@@ -188,10 +193,30 @@ app.post('/create-checkout-session', async (req, res) => {
       invoice_creation: {
         enabled: true,
       },
-      success_url: `${serverUrl}/success`,
-      cancel_url: `${serverUrl}/cancel`,
+      success_url: `${serverUrl}/agent/wallet`,
+      cancel_url: `${serverUrl}/agent/wallet`,
     });
     console.log("SESSION: ", session);
+
+    // Fetch config value from app configurations table using stripe price id
+    const appConfiguration = await db.models.appConfiguration.findOne({
+      where: {
+        configKey: 'tokenPrice',
+        stripePriceId: priceId,
+      },
+      attributes: ['configValue'] // Fetch only the configValue attribute
+    });
+    const totalAmount = quantity * appConfiguration.configValue;
+
+    // Add the tokens to the user's account in your database
+    const token = await db.models.token.create({
+      userId: customer.id,
+      quantity: quantity,
+      price: appConfiguration.configValue,
+      totalAmount: totalAmount,
+      remainingAmount: totalAmount,
+      stripeCheckoutSessionId: session.id,
+    });
 
     res.json({ session: session });
   } catch (err) {
@@ -494,6 +519,43 @@ app.get('/fetch-stripe-price-details', async (req, res) => {
   } catch (error) {
     console.error('Error fetching price:', error.message);
     res.status(500).json({ error: 'Failed to fetch price details' });
+  }
+});
+
+app.get('/fetch-customer-invoices', async (req, res) => {
+  const { customerId } = req.query; // or req.body, depending on your client's request
+
+  try {
+    const invoices = await stripe.invoices.list({
+      customer: customerId,
+      limit: 10, // You can adjust the limit or make it a parameter
+    });
+
+    res.status(200).json({ invoices: invoices.data });
+  } catch (error) {
+    console.error('Error fetching invoices:', error.message);
+    res.status(500).json({ error: 'Failed to fetch invoices' });
+  }
+});
+
+// Route to fetch a specific invoice for a customer
+app.get('/fetch-customer-invoice/:invoiceId', async (req, res) => {
+  const { invoiceId } = req.params;
+
+  try {
+    // Fetch the specific invoice using the Stripe API
+    const invoice = await stripe.invoices.retrieve(invoiceId);
+
+    // Check if the invoice exists
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    // Respond with the invoice details
+    res.status(200).json({ invoice: invoice });
+  } catch (error) {
+    console.error('Error fetching invoice:', error.message);
+    res.status(500).json({ error: 'Failed to fetch invoice' });
   }
 });
 

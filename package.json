@@ -4,8 +4,8 @@
   "description": "A boilerplate for Node.js api projects",
   "license": "MIT",
   "author": {
-    "name": "Hassan Mehmood",
-    "email": "hassan.mehmood@invozone.com"
+    "name": "Ali Haider",
+    "email": "a.haider_5@hotmail.com"
   },
   "scripts": {
     "build": "babel src --out-dir dist",
