@@ -316,9 +316,26 @@ export async function getTokensAnalytics(req, res) {
       limit: limit ? parseInt(limit) : 10,
     });
 
+    let totalTokens = 0, totalTokensUsed = 0, totalTokensRemaining = 0, pendingTokens = 0;
+    for (const token of rows) {
+      if (token.valid) {
+        totalTokens += token.totalAmount;
+        totalTokensUsed += token.totalAmount - token.remainingAmount;
+        totalTokensRemaining += token.remainingAmount;
+      }
+
+      if (!token.valid) {
+        pendingTokens += token.totalAmount;
+      }
+    }
+
     res.json({
       rows,
       count,
+      totalTokens,
+      totalTokensUsed,
+      totalTokensRemaining,
+      pendingTokens,
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
