@@ -21,21 +21,28 @@ module.exports = {
       tokensPerUnit: {
         field: 'tokens_per_unit',
         type: Sequelize.FLOAT,
-        // allowNull: false,
-      },
-      dailyTokenLimit: {
-        field: 'daily_token_limit',
-        type: Sequelize.INTEGER
+        allowNull: false,
       },
       totalUnits: {
         field: 'total_units',
         type: Sequelize.FLOAT,
-        // allowNull: false,
+        allowNull: false,
       },
-      maxPurchaseLimit: {
-        field: 'max_purchase_limit',
+      freeUnits: {
+        field: 'free_units',
         type: Sequelize.FLOAT,
-        // allowNull: false,
+        allowNull: false,
+      },
+      unitName: {
+        field: 'unit_name',
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      unitType: {
+        field: 'unit_type',
+        type: Sequelize.ENUM,
+        defaultValue: "number",
+        values: ["number", "minute", "hour", "day", "week", "month"]
       },
       featureType: {
         field: 'feature_type',

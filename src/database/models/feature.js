@@ -26,18 +26,23 @@ export default function (sequelize) {
     },
     tokensPerUnit: {
       type: DataTypes.FLOAT,
-      // allowNull: false
-    },
-    dailyTokenLimit: {
-      type: DataTypes.INTEGER
+      allowNull: false
     },
     totalUnits: {
       type: DataTypes.FLOAT,
-      // allowNull: false,
+      allowNull: false,
     },
-    maxPurchaseLimit: {
+    freeUnits: {
       type: DataTypes.FLOAT,
-      // allowNull: false,
+      allowNull: false,
+    },
+    unitName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    unitType: {
+      type: DataTypes.STRING,
+      enum: ["number", "minute", "hour", "day", "week", "month"]
     },
     featureType: {
       type: DataTypes.STRING,

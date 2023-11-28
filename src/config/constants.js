@@ -194,3 +194,12 @@ export const AGENT_USER_ACCESS_TYPE = [
     { value: "edit_property", label: "Edit Property" },
     { value: "delete_property", label: "Delete Property" },
 ];
+
+export const FEATURE_UNIT_TYPE_VALUE = {
+    NUMBER: "number",
+    MINUTE: "minute",
+    HOUR: "hour",
+    DAY: "day",
+    WEEK: "week",
+    MONTH: "month",
+}

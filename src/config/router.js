@@ -32,6 +32,7 @@ import superAdminSubscriptionRouter from '../app/superAdmin/subscription/subscri
 import superAdminFeatureRouter from '../app/superAdmin/feature/feature.route';
 import superAdminAppConfigurationRouter from '../app/superAdmin/appConfiguration/appConfiguration.route';
 import superAdminAnalticsRouter from '../app/superAdmin/analytics/analytics.route';
+import featureRouter from '../app/feature/feature.route';
 
 export default function (app) {
   app.use('/', indexRouter);
@@ -50,6 +51,7 @@ export default function (app) {
   app.use('/customer/wishlist', customerWishlistRouter);
   app.use('/customer/appointment', customerAppointmentRouter);
   app.use('/customer/dashboard', customerDashboardRouter);
+  app.use('/feature', featureRouter);
   app.use('/home/property', homePropertyRouter);
   app.use('/iframe', iframeRouter);
   app.use('/cms', cmsRouter);
