@@ -46,7 +46,8 @@ export default function (sequelize) {
   AppConfiguration.addHook('beforeBulkUpdate', async (appConfiguration, options) => {
     if (appConfiguration.attributes.configKey === 'tokenPrice') {
       console.log("Updating token price on stripe");
-      const product = await stripe.products.retrieve("prod_OxkEHqzEUtR6P5");
+      // Retrieve Token product from stripe
+      const product = await stripe.products.retrieve("prod_P4W0XpwFd7MXLR");
 
       // create a new price for the product
       const price = await stripe.prices.create({
