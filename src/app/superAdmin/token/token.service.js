@@ -11,9 +11,9 @@ export const getTokenMetrics = async () => {
   };
 };
 
-export const listTokenBatches = async () => {
-  const batches = await db.tokenBatch.findAll();
-  return batches;
+export const listTokens = async () => {
+  const tokens = await db.models.token.findAll();
+  return tokens;
 };
 
 export const getTokenBatch = async (id) => {

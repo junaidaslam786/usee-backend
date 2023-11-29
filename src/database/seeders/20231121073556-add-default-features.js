@@ -11,7 +11,7 @@ module.exports = {
       description: 'Enable video calls for users.',
       tokens_per_unit: 5.0,
       total_units: 30.0,
-      free_units: 120.0,
+      free_units: 4.0,
       unit_name: 'time_slots',
       unit_type: 'minute',
       feature_type: 'feature',

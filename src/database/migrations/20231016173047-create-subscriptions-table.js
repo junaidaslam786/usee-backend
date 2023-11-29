@@ -14,21 +14,8 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      price: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
-      },
-      duration: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-      },
       description: {
         type: Sequelize.STRING,
-      },
-      stripePlanId: {
-        field: 'stripe_plan_id',
-        type: Sequelize.STRING,
-        unique: true,
       },
       createdAt: {
         type: Sequelize.DATE,

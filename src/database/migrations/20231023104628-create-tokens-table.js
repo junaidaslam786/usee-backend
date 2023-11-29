@@ -55,7 +55,23 @@ module.exports = {
       },
       stripeInvoiceStatus: {
         field: 'stripe_invoice_status',
-        type: Sequelize.ENUM('draft', 'open', 'void', 'paid', 'uncollectible')
+        type: Sequelize.ENUM('draft', 'open', 'void', 'paid', 'uncollectible'),
+        allowNull: true
+      },
+      refundStatus: {
+        field: 'refund_status',
+        type: Sequelize.ENUM('duplicate', 'fraudulent', 'requested_by_customer'),
+        allowNull: true
+      },
+      refundAmount: {
+        field: 'refund_amount',
+        type: Sequelize.INTEGER,
+        allowNull: true
+      },
+      refundInvoiceId: {
+        field: 'refund_invoice_id',
+        type: Sequelize.STRING,
+        allowNull: true
       },
       valid: {
         type: Sequelize.BOOLEAN,

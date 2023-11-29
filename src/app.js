@@ -475,6 +475,36 @@ app.post('/send-invoice', async (req, res) => {
   }
 });
 
+// Endpoint to process refunds
+app.post('/refund', async (req, res) => {
+  try {
+    const { user, invoiceId, paymentIntentId, amountToRefund } = req.body;
+
+    // Refund the PaymentIntent
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+      amount: amountToRefund * 100,
+    });
+
+    // user invoice ID to fetch invoice details, aty, price , total amount
+
+    // Add the tokens to the user's account in your database
+    const token = await db.models.token.create({
+      userId: user.id,
+      quantity: quantity, // from invoice
+      price: appConfiguration.configValue, // from inoive
+      totalAmount: -totalAmount, // from invoice
+      remainingAmount: 0, // from invoice
+      stripeCheckoutSessionId: session.id, // from invoice
+    });
+
+    res.json({ success: true, message: 'Refund successful', refund });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
 // Route to fetch details of a product from Stripe
 app.get('/fetch-stripe-product-details', async (req, res) => {
   const { productId } = req.body;
@@ -556,6 +586,60 @@ app.get('/fetch-customer-invoice/:invoiceId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching invoice:', error.message);
     res.status(500).json({ error: 'Failed to fetch invoice' });
+  }
+});
+
+// Endpoint to create a coupon
+app.post('/create-coupon-amount', async (req, res) => {
+  try {
+    const { duration = 'once', amountOff, durationInMonths, couponId, name } = req.body;
+
+    // Create a coupon on Stripe
+    const coupon = await stripe.coupons.create({
+      id: couponId,
+      name,
+      duration,
+      amount_off: amountOff,
+      currency: 'aed',
+    });
+
+    res.json({ success: true, message: 'Coupon created successfully', coupon });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// Endpoint to create a coupon
+app.post('/create-coupon-percent', async (req, res) => {
+  try {
+    const { duration = 'once', percentOff, durationInMonths, couponId } = req.body;
+
+    // Create a coupon on Stripe
+    const coupon = await stripe.coupons.create({
+      id: couponId,
+      duration,
+      percent_off: percentOff,
+      duration_in_months: durationInMonths,
+    });
+
+    res.json({ success: true, message: 'Coupon created successfully', coupon });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// Endpoint to list all coupons using the Stripe coupons route
+app.get('/list-coupons', async (req, res) => {
+  try {
+    // Use the official Stripe coupons route to list all coupons
+    const coupons = await stripe.coupons.list();
+
+    res.json({ success: true, coupons });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
 

@@ -7,7 +7,7 @@ router.post('/create', subscriptionPlanController.addSubscriptionPlan);
 router.put('/:id', subscriptionPlanController.editSubscriptionPlan);
 router.delete('/:id', subscriptionPlanController.deleteSubscriptionPlan);
 router.get('/:id', subscriptionPlanController.viewSubscriptionPlanDetail);
-router.post('/:id/features', subscriptionPlanController.associateFeaturesToPlan);
+router.post('/:id/features', subscriptionPlanController.associateFeaturesToSubscription);
 router.get('/:id/features', subscriptionPlanController.listFeaturesBySubscription);
 
 export default router;

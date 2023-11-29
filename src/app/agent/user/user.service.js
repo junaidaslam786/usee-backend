@@ -382,6 +382,83 @@ export const updateAgentUser = async (reqBody, req) => {
   }
 }
 
+export const associateUserToSubscriptionFeatures = async (userId, reqBody, req) => {
+  try {
+    const { user: agentInfo, dbInstance } = req;
+    const { featureIds } = reqBody;
+
+    console.log("agentInfo", agentInfo);
+    console.log("userId", userId);
+    // if (agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
+    //   return { error: true, message: 'You do not have permission to subscribe user.' }
+    // }
+
+    await db.transaction(async (transaction) => {
+      // const agentUser = await getAgentUserByUserId(userId, dbInstance);
+
+      // // remove previous access levels
+      // await dbInstance.agentAccessLevel.destroy({
+      //   where: {
+      //     userId: agentUser.userId
+      //   }
+      // });
+
+      // // create access levels
+      // const agentAccessLevels = [];
+      // for (const featureId of featureIds) {
+      //   agentAccessLevels.push({
+      //     userId: agentUser.userId,
+      //     accessLevel: featureId,
+      //   });
+      // }
+
+      // if (agentAccessLevels?.length > 0) {
+      //   await dbInstance.agentAccessLevel.bulkCreate(agentAccessLevels, { transaction });
+      // }
+
+      const subscription = addUserToSubscription(userId, featureIds, dbInstance, transaction);
+
+      return subscription;
+    });
+
+    return true;
+  } catch (err) {
+    console.log('associateUserToSubscriptionFeatures', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
+export const addUserToSubscription = async (userId, featureIds, dbInstance, transaction) => {
+  try {
+    const user = await dbInstance.user.findOne({ where: { id: userId } });
+    if (!user) {
+      return { error: true, message: 'Invalid user id or user do not exist.' }
+    }
+    
+    const subscription = await dbInstance.subscription.findOne({ where: { userId } });
+    if (!subscription) {
+      return { error: true, message: 'Invalid user id or user do not exist.' }
+    }
+    
+    const subscriptionFeatures = [];
+    for (const featureId of featureIds) {
+      subscriptionFeatures.push({
+        subscriptionId: subscription.id,
+        featureId,
+      });
+    }
+
+    if (subscriptionFeatures?.length > 0) {
+      await dbInstance.subscriptionFeature.bulkCreate(subscriptionFeatures, { transaction });
+    }
+    
+    return subscription;
+  } catch (err) {
+    console.log('createAgentUsersServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
 export const getUserTokens = async (userId, dbInstance, res) => {
   try {
 

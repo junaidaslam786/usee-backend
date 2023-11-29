@@ -14,6 +14,7 @@ router.put('/update-branch', isAuthenticated, validate(userValidations.updateAge
 router.put('/update-sorting', isAuthenticated, validate(userValidations.updateAgentUserSortingRules), userController.updateAgentUserSorting);
 router.get('/:id', isAuthenticated, userController.getAgentUser);
 router.delete('/:id', isAuthenticated, userController.deleteAgentUser);
+router.post('/:userId/subscribe', userController.associateUserToSubscriptionFeatures);
 router.get('/:userId/tokens', isAuthenticated, userController.getUserTokens);
 router.get('/:userId/token-transactions', isAuthenticated, userController.getUserTokenTransactions);
 router.post('/:userId/token-transaction', isAuthenticated, userController.createTokenTransaction);

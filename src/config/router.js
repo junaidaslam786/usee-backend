@@ -32,6 +32,7 @@ import superAdminSubscriptionRouter from '../app/superAdmin/subscription/subscri
 import superAdminFeatureRouter from '../app/superAdmin/feature/feature.route';
 import superAdminAppConfigurationRouter from '../app/superAdmin/appConfiguration/appConfiguration.route';
 import superAdminAnalticsRouter from '../app/superAdmin/analytics/analytics.route';
+import superAdminTokenRouter from '../app/superAdmin/token/token.route';
 import featureRouter from '../app/feature/feature.route';
 
 export default function (app) {
@@ -72,13 +73,14 @@ export default function (app) {
   // Super Admin Routes
   app.use('/superadmin', superAdminUserRouter);
 
-  app.use('/superadmin/analytics', superAdminAnalticsRouter);
-  app.use('/superadmin/config', superAdminAppConfigurationRouter);
-  app.use('/superadmin/auth', superAdminAuthRouter);
   app.use('/superadmin/agent', superAdminAgentRouter);
-  app.use('/superadmin/feature', superAdminFeatureRouter);
+  app.use('/superadmin/analytics', superAdminAnalticsRouter);
+  app.use('/superadmin/auth', superAdminAuthRouter);
+  app.use('/superadmin/config', superAdminAppConfigurationRouter);
   app.use('/superadmin/cms/page', superAdminNewsRouter);
-  app.use('/superadmin/user', superAdminUserRouter);
+  app.use('/superadmin/feature', superAdminFeatureRouter);
   app.use('/superadmin/property', superAdminPropertyRouter);
   app.use('/superadmin/subscription', superAdminSubscriptionRouter);
+  app.use('/superadmin/token', superAdminTokenRouter);
+  app.use('/superadmin/user', superAdminUserRouter);
 }

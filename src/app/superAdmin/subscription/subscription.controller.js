@@ -51,9 +51,9 @@ export const viewSubscriptionPlanDetail = async (req, res) => {
   }
 };
 
-export const associateFeaturesToPlan = async (req, res) => {
+export const associateFeaturesToSubscription = async (req, res) => {
   try {
-    const feature = await subscriptionPlanService.associateFeatures(req.dbInstance, req.params.id, req.body.features);
+    const feature = await subscriptionPlanService.associateFeaturesToSubscription(req.dbInstance, req.params.id, req.body.features);
     if (!feature) return res.status(404).json({ message: 'Feature not found' });
     res.json({ message: 'Feature(s) added successfully' });
   } catch (error) {

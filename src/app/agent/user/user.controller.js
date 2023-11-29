@@ -145,6 +145,20 @@ export const updateAgentUser = async (req, res, next) => {
     }
 };
 
+export const associateUserToSubscriptionFeatures = async (req, res, next) => {
+    try {
+        const result = await userService.associateUserToSubscriptionFeatures(req.params?.userId, req.body, req);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.json({ success: true, message: "User subscribed successfully" });
+    } catch (err) {
+        console.log('associateUserToSubscriptionFeatures', err);
+        next(err);
+    }
+}
+
 /**
  * GET /agent/user/:userId/tokens
  * Get user tokens by user id

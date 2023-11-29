@@ -55,6 +55,18 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    refundStatus: {
+      type: DataTypes.ENUM('duplicate', 'fraudulent', 'requested_by_customer'),
+      allowNull: true,
+    },
+    refundAmount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    refundInvoiceId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     valid: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

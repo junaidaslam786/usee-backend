@@ -97,6 +97,7 @@ export const login = async (reqBody, dbInstance) => {
             userType: user.userType,
             stripeCustomerId: user.stripeCustomerId,
             stripePaymentMethodId: user.stripePaymentMethodId,
+            active: user.active,
         };
 
         return { user: userData, token };

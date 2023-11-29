@@ -5,6 +5,7 @@ export default function (sequelize) {
     static associate(models) {
       UserSubscription.belongsTo(models.user, { foreignKey: 'userId' });
       UserSubscription.belongsTo(models.subscription, { foreignKey: 'subscriptionId' });
+      UserSubscription.belongsTo(models.feature, { foreignKey: 'featureId' });
       // User.belongsTo(models.role, { foreignKey: 'roleId' })
       // User.hasOne(models.agent, { foreignKey: 'userId' })
       // User.hasMany(models.agentBranch, { foreignKey: 'userId' })
@@ -30,6 +31,7 @@ export default function (sequelize) {
     },
     userId: {
       type: DataTypes.UUID,
+      primaryKey: true,
       references: {
         model: 'users',
         key: 'id',
@@ -42,9 +44,20 @@ export default function (sequelize) {
         key: 'id',
       }
     },
-    stripeSubscriptionId: {
-      type: DataTypes.STRING,
-      unique: true,
+    featureId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'features',
+        key: 'id',
+      }
+    },
+    freeRemainingUnits: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    paidRemainingUnits: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
     },
     startDate: {
       type: DataTypes.DATE,

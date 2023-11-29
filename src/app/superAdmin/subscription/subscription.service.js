@@ -67,7 +67,7 @@ export const getSubscriptionPlanDetail = async (dbInstance, id) => {
   }
 };
 
-export const associateFeatures = async (dbInstance, planId, features) => {
+export const associateFeaturesToSubscription = async (dbInstance, planId, features) => {
   try {
     const plan = await dbInstance.subscription.findByPk(planId);
     if (!plan) return false;

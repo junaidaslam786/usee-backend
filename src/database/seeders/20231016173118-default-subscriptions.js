@@ -8,10 +8,8 @@ module.exports = {
     return queryInterface.bulkInsert('subscriptions', [
       {
         id: v4(),
-        name: 'Basic',
-        price: 10.00,
-        duration: 30,
-        description: 'Basic Subscription Plan',
+        name: 'USEE360 Basic',
+        description: 'Basic subscription plan with free services.',
         created_at: new Date(),
         updated_at: new Date()
       }

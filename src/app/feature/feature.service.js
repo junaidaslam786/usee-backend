@@ -24,7 +24,7 @@ import { calculateDistance } from '@/helpers/utils';
 export const getAllFeatures = async (body, req) => {
   try {
     const { limit, offset, categoryId, search, status, propertyId, userId } = body;
-    const { user, dbInstance } = req;
+    const { dbInstance } = req;
     const where = {};
     if (categoryId) {
       where.categoryId = categoryId;
@@ -42,34 +42,17 @@ export const getAllFeatures = async (body, req) => {
       where.userId = userId;
     }
 
-    console.log('dbInstance', dbInstance);
-    const features = await dbInstance.feature.findAndCountAll({
+    const { count, rows } = await dbInstance.feature.findAndCountAll({
       where,
       limit,
       offset,
       order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: dbInstance.productCategory,
-          as: 'category',
-          attributes: ['id', 'name', 'description', 'status'],
-          required: false,
-        },
-        {
-          model: dbInstance.property,
-          as: 'property',
-          attributes: ['id', 'name', 'description', 'status'],
-          required: false,
-        },
-        {
-          model: dbInstance.user,
-          as: 'user',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'phone', 'status'],
-          required: false,
-        },
-      ],
     });
-    return features;
+    
+    return {
+      data: rows,
+      totalItems: count,
+    };
   } catch (error) {
     throw error;
   }

@@ -30,6 +30,26 @@ module.exports = {
         },
         onDelete: 'CASCADE'
       },
+      featureId: {
+        field: 'feature_id',
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: 'features',
+          key: 'id',
+        },
+        onDelete: 'CASCADE'
+      },
+      freeRemainingUnits: {
+        field: 'free_remaining_units',
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      paidRemainingUnits: {
+        field: 'paid_remaining_units',
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
       startDate: {
         field: 'start_date',
         type: Sequelize.DATE,
@@ -42,12 +62,6 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: false,
-      },
-      stripeSubscriptionId: {
-        field: 'stripe_subscription_id',
-        type: Sequelize.STRING,
-        allowNull: true,
-        unique: true,
       },
       createdAt: {
         field: 'created_at',

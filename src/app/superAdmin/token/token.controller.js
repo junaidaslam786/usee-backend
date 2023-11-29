@@ -1,17 +1,8 @@
 import * as tokenService from './token.service';
 
-export const getTokenMetrics = async (req, res) => {
+export const listTokens = async (req, res) => {
   try {
-    const metrics = await tokenService.getTokenMetrics();
-    res.json(metrics);
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
-
-export const listTokenBatches = async (req, res) => {
-  try {
-    const batches = await tokenService.listTokenBatches();
+    const batches = await tokenService.listTokens();
     res.json(batches);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });

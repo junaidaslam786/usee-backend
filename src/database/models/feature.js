@@ -7,6 +7,7 @@ export default function (sequelize) {
         through: 'SubscriptionFeatures',
         foreignKey: 'featureId'
       });
+      Feature.hasMany(models.userSubscription, { foreignKey: 'featureId' });
     }
   }
 
