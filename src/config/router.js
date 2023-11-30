@@ -34,6 +34,7 @@ import superAdminAppConfigurationRouter from '../app/superAdmin/appConfiguration
 import superAdminAnalticsRouter from '../app/superAdmin/analytics/analytics.route';
 import superAdminTokenRouter from '../app/superAdmin/token/token.route';
 import featureRouter from '../app/feature/feature.route';
+import superAdminCmsCommunityRouter from '../app/superAdmin/cms/community/community.route';
 
 export default function (app) {
   app.use('/', indexRouter);
@@ -76,8 +77,9 @@ export default function (app) {
   app.use('/superadmin/agent', superAdminAgentRouter);
   app.use('/superadmin/analytics', superAdminAnalticsRouter);
   app.use('/superadmin/auth', superAdminAuthRouter);
-  app.use('/superadmin/config', superAdminAppConfigurationRouter);
+  app.use('/superadmin/cms/community', superAdminCmsCommunityRouter);
   app.use('/superadmin/cms/page', superAdminNewsRouter);
+  app.use('/superadmin/config', superAdminAppConfigurationRouter);
   app.use('/superadmin/feature', superAdminFeatureRouter);
   app.use('/superadmin/property', superAdminPropertyRouter);
   app.use('/superadmin/subscription', superAdminSubscriptionRouter);
