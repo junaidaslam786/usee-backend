@@ -7,11 +7,11 @@ export default function (sequelize) {
         through: 'SubscriptionFeatures',
         foreignKey: 'subscriptionId'
       })
-      Subscription.belongsToMany(models.user, {
-        through: 'UserSubscriptions',
-        foreignKey: 'subscriptionId'
-      })
-      // Subscription.hasMany(models.userSubscription, { foreignKey: 'subscriptionId' })
+      // Subscription.belongsToMany(models.user, {
+      //   through: 'UserSubscriptions',
+      //   foreignKey: 'subscriptionId'
+      // })
+      Subscription.hasMany(models.userSubscription, { foreignKey: 'subscriptionId' })
     }
   }
 
@@ -23,8 +23,20 @@ export default function (sequelize) {
       unique: true,
       defaultValue: DataTypes.UUIDV4
     },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     description: {
       type: DataTypes.STRING,
+    },
+    createdAt: {
+      field: 'created_at',
+      type: DataTypes.DATE,
+    },
+    updatedAt: {
+      field: 'updated_at',
+      type: DataTypes.DATE,
     },
   }, {
     modelName: 'subscription',

@@ -6,7 +6,7 @@ import { v4 } from 'uuid';
 module.exports = {
   async up (queryInterface, Sequelize) {
     return queryInterface.bulkInsert('features', [{
-      id: v4(),
+      id: '159c869a-1b24-4cd3-ac61-425645b730c7',
       name: 'Video Call',
       description: 'Enable video calls for users.',
       tokens_per_unit: 5.0,
@@ -17,7 +17,7 @@ module.exports = {
       feature_type: 'feature',
     },
     {
-      id: v4(),
+      id: '989d96e5-e839-4fe2-8f3e-bb6a5b2d30a2',
       name: 'Property Listing',
       description: 'List and manage properties on your platform.',
       tokens_per_unit: 8.0,
@@ -28,7 +28,7 @@ module.exports = {
       feature_type: 'feature',
     },
     {
-      id: v4(),
+      id: '3ae5fd58-6cca-4e51-b368-1a3a310d99fc',
       name: 'API Subscription',
       description: 'Provide access to your API with a subscription model.',
       tokens_per_unit: 10.0,
@@ -39,7 +39,7 @@ module.exports = {
       feature_type: 'addon',
     },
     {
-      id: v4(),
+      id: '02d5274e-0739-4032-87fa-620211a31700',
       name: 'Analytics & Reporting',
       description: 'Provide access to your API with a subscription model.',
       tokens_per_unit: 5.0,

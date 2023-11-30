@@ -51,22 +51,6 @@ export const deleteSubscriptionPlan = async (dbInstance, id) => {
   }
 };
 
-export const getSubscriptionPlanDetail = async (dbInstance, id) => {
-  try {
-    // Database call to get a single plan's detail.
-    const plan = await dbInstance.subscription.findOne({
-      where: {
-        id,
-      }
-      // include: [db.feature],  // Assuming many-to-many relation with features.
-    });
-    return plan;
-  } catch (error) {
-    console.error('Error in getSubscriptionPlanDetail:', error);
-    throw error;
-  }
-};
-
 export const associateFeaturesToSubscription = async (dbInstance, planId, features) => {
   try {
     const plan = await dbInstance.subscription.findByPk(planId);
@@ -117,31 +101,28 @@ export const listFeaturesBySubscription = async (dbInstance, subscriptionId, res
         subscription_id: subscriptionId
       },
       include: [{
-        model: dbInstance.subscription, // Include the Subscription model
-        attributes: ['id', 'name', 'price', 'duration', 'description', 'stripePlanId'], // Specify the attributes you want to include
-      }, {
-        model: dbInstance.feature, // Include the Feature model
-        attributes: ['id', 'name', 'description'], // Specify the attributes you want to include
-      }]
+        model: dbInstance.feature,
+        attributes: ['id', 'name', 'description', 'tokensPerUnit', 'totalUnits', 'freeUnits', 'unitName', 'unitType', 'featureType'],
+      }],
     });
-    const subscription = await dbInstance.subscription.findByPk(subscriptionId);
+
+    const subscription = await dbInstance.subscription.findByPk(subscriptionId, { raw: true });
+    
     const output = {
       subscription: {
         id: subscription.id,
         name: subscription.name,
-        price: subscription.price,
-        duration: subscription.duration,
-        description: subscription.description,
-        stripePlanId: subscription.stripePlanId,
+        description: subscription.description
       },
       features: features.map(feature => ({
         id: feature.feature.id,
         name: feature.feature.name,
         description: feature.feature.description,
         tokensPerUnit: feature.feature.tokensPerUnit,
-        dailyTokenLimit: feature.feature.dailyTokenLimit,
         totalUnits: feature.feature.totalUnits,
-        maxPurchaseLimit: feature.feature.maxPurchaseLimit,
+        freeUnits: feature.feature.freeUnits,
+        unitName: feature.feature.unitName,
+        unitType: feature.feature.unitType,
         featureType: feature.feature.featureType,
       })),
     };

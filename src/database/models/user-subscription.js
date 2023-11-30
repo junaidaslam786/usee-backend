@@ -22,22 +22,16 @@ export default function (sequelize) {
   }
 
   UserSubscription.init({
-    id: {
-      type: DataTypes.UUID,
-      field: "id",
-      primaryKey: true,
-      unique: true,
-      defaultValue: DataTypes.UUIDV4
-    },
     userId: {
-      type: DataTypes.UUID,
       primaryKey: true,
+      type: DataTypes.UUID,
       references: {
         model: 'users',
         key: 'id',
       }
     },
     subscriptionId: {
+      primaryKey: true,
       type: DataTypes.UUID,
       references: {
         model: 'subscriptions',
@@ -45,6 +39,7 @@ export default function (sequelize) {
       }
     },
     featureId: {
+      primaryKey: true,
       type: DataTypes.UUID,
       references: {
         model: 'features',

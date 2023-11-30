@@ -4,13 +4,8 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('user_subscriptions', {
-      id: {
-        type: Sequelize.UUID,
-        primaryKey: true,
-        unique: true,
-        defaultValue: Sequelize.UUIDV4
-      },
       userId: {
+        primaryKey: true,
         field: 'user_id',
         type: Sequelize.UUID,
         allowNull: false,
@@ -21,6 +16,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       subscriptionId: {
+        primaryKey: true,
         field: 'subscription_id',
         type: Sequelize.UUID,
         allowNull: false,
@@ -31,6 +27,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       featureId: {
+        primaryKey: true,
         field: 'feature_id',
         type: Sequelize.UUID,
         allowNull: false,

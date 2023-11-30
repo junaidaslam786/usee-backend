@@ -41,16 +41,6 @@ export const deleteSubscriptionPlan = async (req, res) => {
   }
 };
 
-export const viewSubscriptionPlanDetail = async (req, res) => {
-  try {
-    const planDetail = await subscriptionPlanService.getSubscriptionPlanDetail(req.dbInstance, req.params.id);
-    if (!planDetail) return res.status(404).json({ message: 'Subscription not found' });
-    res.json(planDetail);
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
-
 export const associateFeaturesToSubscription = async (req, res) => {
   try {
     const feature = await subscriptionPlanService.associateFeaturesToSubscription(req.dbInstance, req.params.id, req.body.features);
