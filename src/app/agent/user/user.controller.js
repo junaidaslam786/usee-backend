@@ -165,7 +165,7 @@ export const associateUserToSubscriptionFeatures = async (req, res, next) => {
  */
 export const getUserTokens = async (req, res, next) => {
     try {
-        const result = await userService.getUserTokens(req.params?.userId, req.dbInstance, res);
+        const result = await userService.getUserTokens(req.body, req.dbInstance, res);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }
@@ -201,7 +201,8 @@ export const getUserTokenTransactions = async (req, res, next) => {
  */
 export const createTokenTransaction = async (req, res, next) => {
     try {
-        const result = await userService.createTokenTransaction(req.params?.userId, req.body, req.dbInstance);
+        // const result = await userService.createTokenTransaction(req.params?.userId, req.body, req.dbInstance);
+        const result = await userService.createTokenTransactionMultiple(req.params?.userId, req.body, req.dbInstance);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }

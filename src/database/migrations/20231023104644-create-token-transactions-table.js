@@ -20,15 +20,6 @@ module.exports = {
           key: 'id'
         }
       },
-      tokenId: {
-        field: 'token_id',
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'tokens',
-          key: 'id'
-        }
-      },
       featureId: {
         field: 'feature_id',
         type: Sequelize.UUID,

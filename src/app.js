@@ -216,6 +216,8 @@ app.post('/create-checkout-session', async (req, res) => {
       totalAmount: totalAmount,
       remainingAmount: totalAmount,
       stripeCheckoutSessionId: session.id,
+      createdBy: customer.id,
+      updatedBy: customer.id,
     });
 
     res.json({ session: session });

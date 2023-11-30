@@ -78,12 +78,12 @@ module.exports = {
         defaultValue: false
       },
       createdBy: {
-        allowNull: true,
+        // allowNull: true,
         type:Sequelize.UUID,
         field: 'created_by'
       },
       updatedBy: {
-        allowNull: true,
+        // allowNull: true,
         type:Sequelize.UUID,
         field: 'updated_by'
       },

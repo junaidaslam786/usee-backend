@@ -410,16 +410,16 @@ export const addUserToSubscription = async (userId, subscriptionId, featureIds, 
     if (!user) {
       return { error: true, message: 'Invalid user id or user does not exist.' }
     }
-    
+
     const subscription = await dbInstance.subscription.findOne({ where: { id: subscriptionId } });
     if (!subscription) {
       return { error: true, message: 'Invalid subscription id or subscription does not exist.' }
     }
-    
+
     const userSubscriptions = [];
     let results;
     for (const featureId of featureIds) {
-      
+
       const feature = await dbInstance.feature.findOne({ where: { id: featureId } });
       if (!feature) {
         return { error: true, message: 'Invalid feature id or feature do not exist.' }
@@ -447,13 +447,27 @@ export const addUserToSubscription = async (userId, subscriptionId, featureIds, 
   }
 }
 
-export const getUserTokens = async (userId, dbInstance, res) => {
-  try {
+export const getUserTokens = async (reqBody, dbInstance, res) => {
+  const { userId, valid, available } = reqBody;
+
+  // try {
+    const whereClause = { userId };
+
+    whereClause.valid = valid !== undefined ? valid : true;
+    available !== undefined ?
+      available ?
+      whereClause.remainingAmount = {
+        [OP.gt]: 0
+      }
+      : whereClause.remainingAmount = {
+        [OP.gte]: 0
+      }
+    : false
 
     // Get tokens by user id
     const tokens = await dbInstance.token.findAll({
-      where: { userId },
-      attributes: ["id", "userId", "quantity", "price", "totalAmount", "remainingAmount", "acquiredDate", "stripeInvoiceId", "stripeInvoiceStatus", "valid"],
+      where: whereClause,
+      // attributes: ["id", "userId", "quantity", "price", "totalAmount", "remainingAmount", "acquiredDate", "stripeInvoiceId", "stripeInvoiceStatus", "valid"],
       order: [["createdAt", "DESC"]],
     });
 
@@ -481,9 +495,28 @@ export const getUserTokens = async (userId, dbInstance, res) => {
       totalTokensRemaining,
       pendingTokens,
     });
+  // } catch (err) {
+  //   console.log('getUserTokensServiceError', err)
+  //   return { error: true, message: 'Server not responding, please try again later.' }
+  // }
+}
+
+export const getUserValidRemainingTokens = async (userId, dbInstance, res) => {
+  try {
+    const tokens = await dbInstance.token.findAll({
+      where: {
+        userId,
+        remainingAmount: {
+          [OP.gt]: 0
+        },
+        valid: true,
+      }
+    });
+
+    return tokens;
   } catch (err) {
-    console.log('getUserTokensServiceError', err)
-    return { error: true, message: 'Server not responding, please try again later.' }
+    console.log('getUserTokensServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
   }
 }
 
@@ -508,21 +541,33 @@ export const getUserTokenTransactions = async (userId, dbInstance) => {
 
 export const createTokenTransaction = async (userId, reqBody, dbInstance) => {
   try {
-    const { tokenId, amount, description } = reqBody;
+    const { tokenId, quantity, description } = reqBody;
+
+    let hasBalance = false
+
+    const token = await dbInstance.token.findOne({ where: { id: tokenId } });
+    if (token.remainingAmount >= quantity) {
+      hasBalance = true;
+    }
+
+    if (!hasBalance) {
+      return { error: true, message: 'Insufficient balance' };
+    }
 
     const result = await db.transaction(async (transaction) => {
       const tokenTransaction = await dbInstance.tokenTransaction.create({
         userId,
         tokenId,
-        amount,
+        quantity,
         description,
       }, { transaction });
 
       const token = await dbInstance.token.findOne({ where: { id: tokenId } });
-      token.remainingAmount -= amount;
+      token.remainingAmount -= quantity;
       await token.save({ transaction });
 
-      return tokenTransaction;
+      // return tokenTransaction;
+      return { success: true, message: 'Token transaction created successfully.', tokenTransaction };
     });
 
     return result;
@@ -530,4 +575,65 @@ export const createTokenTransaction = async (userId, reqBody, dbInstance) => {
     console.log('createTokenTransactionServiceError', err)
     return { error: true, message: 'Server not responding, please try again later.' }
   }
+}
+
+export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance) => {
+  // try {
+    const { featureId, quantity, amount, description } = reqBody;
+
+    const tokenTransactions = await getUserTokens(reqBody, dbInstance);
+
+    console.log("tokenTransactions", tokenTransactions);
+
+    const results = await db.transaction(async (transaction) => {
+      const createdTransactions = [];
+
+      for (const tokenTransaction of tokenTransactions) {
+        // const { tokenId, quantity, description } = tokenTransaction;
+
+        let hasBalance = false;
+
+        const token = await dbInstance.token.findOne({ where: { id: tokenTransaction.id } });
+        if (token.remainingAmount >= quantity) {
+          hasBalance = true;
+        }
+
+        if (!hasBalance) {
+          return { error: true, message: 'Insufficient balance' };
+        }
+
+        const createdTransaction = await dbInstance.tokenTransaction.create(
+          {
+            userId,
+            featureId,
+            quantity,
+            description,
+          },
+          { transaction }
+        );
+
+        token.remainingAmount -= amount;
+        await token.save({ transaction });
+
+        createdTransactions.push(createdTransaction);
+      } 
+
+      return { success: true, message: 'Token transactions created successfully.', createdTransactions };
+    });
+
+    if (results?.success) {
+      // update user subscription
+      const userSubscription = await dbInstance.userSubscription.findOne({ where: { userId, featureId } });
+
+      if (userSubscription) {
+        userSubscription.paidRemainingUnits += quantity;
+        await userSubscription.save();
+      }
+    }
+
+    return results;
+  // } catch (err) {
+  //   console.log('createTokenTransactionMultipleServiceError', err);
+  //   return { error: true, message: 'Server not responding, please try again later.' };
+  // }
 }

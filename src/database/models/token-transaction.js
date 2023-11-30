@@ -24,14 +24,6 @@ export default function (sequelize) {
         key: 'id'
       }
     },
-    tokenId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'tokens',
-        key: 'id'
-      }
-    },
     featureId: {
       type: DataTypes.UUID,
       // allowNull: false,

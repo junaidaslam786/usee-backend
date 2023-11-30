@@ -41,7 +41,6 @@ export default function (sequelize) {
     },
     acquiredDate: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
     },
     stripeInvoiceId: {
       type: DataTypes.STRING,
