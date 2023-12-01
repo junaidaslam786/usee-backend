@@ -151,7 +151,8 @@ export const updateAgentUser = async (req, res, next) => {
  */
 export const getUserSubscriptionDetails = async (req, res, next) => {
   try {
-    const result = await userService.getUserSubscriptionDetails(req.params, req.body, req.dbInstance, res);
+    const userId = req.params.userId;
+    const result = await userService.getUserSubscriptionDetails(userId, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
