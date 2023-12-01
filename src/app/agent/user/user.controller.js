@@ -1,22 +1,22 @@
-import createError from 'http-errors';
-import * as userService from './user.service';
+import createError from "http-errors";
+import * as userService from "./user.service";
 
 /**
  * GET /agent/user/list
  * List all users created by agent
  */
 export const listAgentUsers = async (req, res, next) => {
-    try {
-      const result = await userService.listAgentUsers(req.user, req.query, req.dbInstance);
-      if (result?.error && result?.message) {
-          return next(createError(400, result.message));
-      }
-  
-      return res.status(200).json(result);
-    } catch (err) {
-      console.log('listAgentUsersError', err);
-      return next(err);
+  try {
+    const result = await userService.listAgentUsers(req.user, req.query, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("listAgentUsersError", err);
+    return next(err);
+  }
 };
 
 /**
@@ -24,17 +24,17 @@ export const listAgentUsers = async (req, res, next) => {
  * List all users created by agent to allocate to properties
  */
 export const listAgentUsersToAllocate = async (req, res, next) => {
-    try {
-      const result = await userService.listAgentUsersToAllocate(req);
-      if (result?.error && result?.message) {
-          return next(createError(400, result.message));
-      }
-  
-      return res.status(200).json(result);
-    } catch (err) {
-      console.log('listAgentUsersToAllocateError', err);
-      return next(err);
+  try {
+    const result = await userService.listAgentUsersToAllocate(req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("listAgentUsersToAllocateError", err);
+    return next(err);
+  }
 };
 
 /**
@@ -42,17 +42,17 @@ export const listAgentUsersToAllocate = async (req, res, next) => {
  * Create user by agent
  */
 export const createAgentUser = async (req, res, next) => {
-    try {
-        const result = await userService.createAgentUser(req.body, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        res.status(201).json(result);
-    } catch (err) {
-        console.log('createAgentUsersError', err);
-        next(err);
+  try {
+    const result = await userService.createAgentUser(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    res.status(201).json(result);
+  } catch (err) {
+    console.log("createAgentUsersError", err);
+    next(err);
+  }
 };
 
 /**
@@ -60,17 +60,17 @@ export const createAgentUser = async (req, res, next) => {
  * Update branch of the agent
  */
 export const updateAgentUserBranch = async (req, res, next) => {
-    try {
-        const result = await userService.updateAgentUserBranch(req.body, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.json({ success: true, message: "Branch updated successfully" });
-    } catch (err) {
-        console.log('updateAgentUserBranchError', err);
-        next(err);
+  try {
+    const result = await userService.updateAgentUserBranch(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    return res.json({ success: true, message: "Branch updated successfully" });
+  } catch (err) {
+    console.log("updateAgentUserBranchError", err);
+    next(err);
+  }
 };
 
 /**
@@ -78,17 +78,17 @@ export const updateAgentUserBranch = async (req, res, next) => {
  * Update branch of the agent
  */
 export const updateAgentUserSorting = async (req, res, next) => {
-    try {
-        const result = await userService.updateAgentUserSorting(req.body, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.json({ success: true, message: "Sorting updated successfully" });
-    } catch (err) {
-        console.log('updateAgentUserSortingError', err);
-        next(err);
+  try {
+    const result = await userService.updateAgentUserSorting(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    return res.json({ success: true, message: "Sorting updated successfully" });
+  } catch (err) {
+    console.log("updateAgentUserSortingError", err);
+    next(err);
+  }
 };
 
 /**
@@ -96,17 +96,17 @@ export const updateAgentUserSorting = async (req, res, next) => {
  * Get agent user detail by id
  */
 export const getAgentUser = async (req, res, next) => {
-    try {
-        const result = await userService.getAgentUser((req.params?.id ? req.params?.id : 0), req.dbInstance);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        res.status(200).json(result);
-    } catch (err) {
-        console.log('getAgentUserError', err);
-        next(err);
+  try {
+    const result = await userService.getAgentUser(req.params?.id ? req.params?.id : 0, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.log("getAgentUserError", err);
+    next(err);
+  }
 };
 
 /**
@@ -114,17 +114,17 @@ export const getAgentUser = async (req, res, next) => {
  * Delete user by id
  */
 export const deleteAgentUser = async (req, res, next) => {
-    try {
-        const result = await userService.deleteAgentUser((req.params?.id ? req.params?.id : 0), req.dbInstance);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.json({ success: true, message: "User deleted successfully" });
-    } catch (err) {
-        console.log('deleteAgentUserError', err);
-        next(err);
+  try {
+    const result = await userService.deleteAgentUser(req.params?.id ? req.params?.id : 0, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    return res.json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    console.log("deleteAgentUserError", err);
+    next(err);
+  }
 };
 
 /**
@@ -132,17 +132,17 @@ export const deleteAgentUser = async (req, res, next) => {
  * Update user by agent
  */
 export const updateAgentUser = async (req, res, next) => {
-    try {
-        const result = await userService.updateAgentUser(req.body, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.json({ success: true, message: "User updated successfully" });
-    } catch (err) {
-        console.log('createAgentUsersError', err);
-        next(err);
+  try {
+    const result = await userService.updateAgentUser(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
+
+    return res.json({ success: true, message: "User updated successfully" });
+  } catch (err) {
+    console.log("createAgentUsersError", err);
+    next(err);
+  }
 };
 
 /**
@@ -150,83 +150,85 @@ export const updateAgentUser = async (req, res, next) => {
  * Get user subscription details by user id
  */
 export const getUserSubscriptionDetails = async (req, res, next) => {
-    try {
-        const result = await userService.getUserSubscriptionDetails(req.params, req.body, req.dbInstance, res);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.status(200).json(result);
-    } catch (err) {
-        console.log('getUserSubscriptionDetailsError', err);
-        next(err);
+  try {
+    const result = await userService.getUserSubscriptionDetails(req.params, req.body, req.dbInstance, res);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
-}
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("getUserSubscriptionDetailsError", err);
+    next(err);
+  }
+};
 
 export const associateUserToSubscriptionFeatures = async (req, res, next) => {
-    try {
-        const result = await userService.associateUserToSubscriptionFeatures(req.params?.userId, req.body, req);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.json({ success: true, message: "User subscribed successfully" });
-    } catch (err) {
-        console.log('associateUserToSubscriptionFeatures', err);
-        next(err);
+  try {
+    const result = await userService.associateUserToSubscriptionFeatures(req.params?.userId, req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
-}
+
+    return res.json({ success: true, message: "User subscribed successfully" });
+  } catch (err) {
+    console.log("associateUserToSubscriptionFeatures", err);
+    next(err);
+  }
+};
 
 /**
  * GET /agent/user/:userId/tokens
  * Get user tokens by user id
  */
 export const getUserTokens = async (req, res, next) => {
-    try {
-        const result = await userService.getUserTokens(req.body, req.dbInstance, res);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
+  try {
+    const userId = req.params.userId;
+    const result = await userService.getUserTokens(userId, req.dbInstance);
 
-        return res.status(200).json(result);
-    } catch (err) {
-        console.log('getUserTokensError', err);
-        next(err);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
-}
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("getUserTokensError", err);
+    next(err);
+  }
+};
 
 /**
  * GET /agent/user/:userId/token-transactions
  * Get user token transactions by user id
  */
 export const getUserTokenTransactions = async (req, res, next) => {
-    try {
-        const result = await userService.getUserTokenTransactions(req.params?.userId, req.dbInstance);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.status(200).json(result);
-    } catch (err) {
-        console.log('createAgentUsersError', err);
-        next(err);
+  try {
+    const result = await userService.getUserTokenTransactions(req.params?.userId, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
-}
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("createAgentUsersError", err);
+    next(err);
+  }
+};
 
 /**
  * POST /agent/user/:userId/token-transactions
  * Create token transaction for user
  */
 export const createTokenTransaction = async (req, res, next) => {
-    try {
-        const result = await userService.createTokenTransactionMultiple(req.params?.userId, req.body, req.dbInstance, res);
-        if (result?.error && result?.message) {
-            return next(createError(400, result.message));
-        }
-
-        return res.status(201).json(result);
-    } catch (err) {
-        console.log('createTokenTransactionError', err);
-        next(err);
+  try {
+    const result = await userService.createTokenTransactionMultiple(req.params?.userId, req.body, req.dbInstance, res);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
     }
-}
+
+    return res.status(201).json(result);
+  } catch (err) {
+    console.log("createTokenTransactionError", err);
+    next(err);
+  }
+};
