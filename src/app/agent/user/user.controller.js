@@ -145,6 +145,24 @@ export const updateAgentUser = async (req, res, next) => {
     }
 };
 
+/**
+ * POST /agent/user/:userId/subscriptions
+ * Get user subscription details by user id
+ */
+export const getUserSubscriptionDetails = async (req, res, next) => {
+    try {
+        const result = await userService.getUserSubscriptionDetails(req.params, req.body, req.dbInstance, res);
+        if (result?.error && result?.message) {
+            return next(createError(400, result.message));
+        }
+
+        return res.status(200).json(result);
+    } catch (err) {
+        console.log('getUserSubscriptionDetailsError', err);
+        next(err);
+    }
+}
+
 export const associateUserToSubscriptionFeatures = async (req, res, next) => {
     try {
         const result = await userService.associateUserToSubscriptionFeatures(req.params?.userId, req.body, req);
@@ -172,7 +190,7 @@ export const getUserTokens = async (req, res, next) => {
 
         return res.status(200).json(result);
     } catch (err) {
-        console.log('createAgentUsersError', err);
+        console.log('getUserTokensError', err);
         next(err);
     }
 }
@@ -201,15 +219,14 @@ export const getUserTokenTransactions = async (req, res, next) => {
  */
 export const createTokenTransaction = async (req, res, next) => {
     try {
-        // const result = await userService.createTokenTransaction(req.params?.userId, req.body, req.dbInstance);
-        const result = await userService.createTokenTransactionMultiple(req.params?.userId, req.body, req.dbInstance);
+        const result = await userService.createTokenTransactionMultiple(req.params?.userId, req.body, req.dbInstance, res);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }
 
         return res.status(201).json(result);
     } catch (err) {
-        console.log('createAgentUsersError', err);
+        console.log('createTokenTransactionError', err);
         next(err);
     }
 }

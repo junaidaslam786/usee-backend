@@ -4,7 +4,6 @@ export default function (sequelize) {
   class TokenTransaction extends Model {
     static associate(models) {
       TokenTransaction.belongsTo(models.user, { foreignKey: 'userId' });
-      TokenTransaction.belongsTo(models.token, { foreignKey: 'tokenId' });
       TokenTransaction.belongsTo(models.feature, { foreignKey: 'featureId' });
     }
   }
@@ -26,7 +25,7 @@ export default function (sequelize) {
     },
     featureId: {
       type: DataTypes.UUID,
-      // allowNull: false,
+      allowNull: false,
       references: {
         model: 'features',
         key: 'id'
@@ -34,6 +33,10 @@ export default function (sequelize) {
     },
     quantity: {
       type: DataTypes.INTEGER, // can be negative if tokens are spent or positive if added
+      allowNull: false,
+    },
+    amount: {
+      type: DataTypes.INTEGER, // e.g., 1000 tokens
       allowNull: false,
     },
     description: {

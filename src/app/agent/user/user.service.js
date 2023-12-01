@@ -382,6 +382,43 @@ export const updateAgentUser = async (reqBody, req) => {
   }
 }
 
+export const getUserSubscriptionDetails = async (params, reqBody, dbInstance, res) => {
+  try {
+    const { userId, subscriptionId } = reqBody;
+
+    const userSubscriptions = await dbInstance.userSubscription.findAll({
+      where: {
+        userId,
+        subscription_id: '35e0b998-53bc-4777-a207-261fff3489aa',
+        status: 'active',
+      },
+      attributes: ["freeRemainingUnits", "paidRemainingUnits", "startDate", "endDate", "status"],
+      include: [{
+        model: dbInstance.feature,
+        attributes: ['id', 'name', 'description', 'tokensPerUnit', 'totalUnits', 'freeUnits', 'unitName', 'unitType', 'featureType'],
+      }],
+    });
+
+    const subscription = await dbInstance.subscription.findByPk('35e0b998-53bc-4777-a207-261fff3489aa');
+
+    console.log('\nSBS', subscription);
+
+    const output = {
+      subscription: {
+        id: subscription.id,
+        name: subscription.name,
+        description: subscription.description
+      },
+      userSubscriptions: userSubscriptions,
+    };
+
+    return output;
+  } catch (err) {
+    console.log('getUserSubscriptionDetails', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
 export const associateUserToSubscriptionFeatures = async (userId, reqBody, req) => {
   try {
     const { user, dbInstance } = req;
@@ -450,19 +487,19 @@ export const addUserToSubscription = async (userId, subscriptionId, featureIds, 
 export const getUserTokens = async (reqBody, dbInstance, res) => {
   const { userId, valid, available } = reqBody;
 
-  // try {
+  try {
     const whereClause = { userId };
 
     whereClause.valid = valid !== undefined ? valid : true;
     available !== undefined ?
       available ?
-      whereClause.remainingAmount = {
-        [OP.gt]: 0
-      }
-      : whereClause.remainingAmount = {
-        [OP.gte]: 0
-      }
-    : false
+        whereClause.remainingAmount = {
+          [OP.gt]: 0
+        }
+        : whereClause.remainingAmount = {
+          [OP.gte]: 0
+        }
+      : false
 
     // Get tokens by user id
     const tokens = await dbInstance.token.findAll({
@@ -488,35 +525,16 @@ export const getUserTokens = async (reqBody, dbInstance, res) => {
       }
     }
 
-    res.json({
+    return {
       tokens,
       totalTokens,
       totalTokensUsed,
       totalTokensRemaining,
       pendingTokens,
-    });
-  // } catch (err) {
-  //   console.log('getUserTokensServiceError', err)
-  //   return { error: true, message: 'Server not responding, please try again later.' }
-  // }
-}
-
-export const getUserValidRemainingTokens = async (userId, dbInstance, res) => {
-  try {
-    const tokens = await dbInstance.token.findAll({
-      where: {
-        userId,
-        remainingAmount: {
-          [OP.gt]: 0
-        },
-        valid: true,
-      }
-    });
-
-    return tokens;
+    };
   } catch (err) {
-    console.log('getUserTokensServiceError', err);
-    return { error: true, message: 'Server not responding, please try again later.' };
+    console.log('getUserTokensServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
 
@@ -577,54 +595,66 @@ export const createTokenTransaction = async (userId, reqBody, dbInstance) => {
   }
 }
 
-export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance) => {
-  // try {
+export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance, res) => {
+  try {
     const { featureId, quantity, amount, description } = reqBody;
 
-    const tokenTransactions = await getUserTokens(reqBody, dbInstance);
+    const userSubscription = await dbInstance.userSubscription.findOne({ where: { userId, subscriptionId: "35e0b998-53bc-4777-a207-261fff3489aa", featureId } });
+    if (!userSubscription) {
+      return { error: true, message: 'You are not subscribed to buy this feature.' };
+    }
 
-    console.log("tokenTransactions", tokenTransactions);
+    reqBody.available = true;
+    const tokenTransactions = await getUserTokens(reqBody, dbInstance, res);
+    if (tokenTransactions?.error) {
+      return { error: true, message: 'Invalid user id or user do not exist.' }
+    }
+
+    if (tokenTransactions.totalTokensRemaining < amount) {
+      return { error: true, message: 'Insufficient balance' };
+    }
+
 
     const results = await db.transaction(async (transaction) => {
       const createdTransactions = [];
+      let balance = amount;
+      let deductedAmount = 0;
 
-      for (const tokenTransaction of tokenTransactions) {
-        // const { tokenId, quantity, description } = tokenTransaction;
+      for (const token of tokenTransactions.tokens) {
 
-        let hasBalance = false;
-
-        const token = await dbInstance.token.findOne({ where: { id: tokenTransaction.id } });
-        if (token.remainingAmount >= quantity) {
-          hasBalance = true;
+        if (token.remainingAmount >= balance) {
+          deductedAmount = balance;
+          balance = 0;
         }
 
-        if (!hasBalance) {
-          return { error: true, message: 'Insufficient balance' };
+        if (token.remainingAmount < balance) {
+          deductedAmount = token.remainingAmount;
+          balance -= token.remainingAmount;
         }
+
+        token.remainingAmount -= deductedAmount;
+        await token.save({ transaction });
 
         const createdTransaction = await dbInstance.tokenTransaction.create(
           {
             userId,
             featureId,
             quantity,
+            amount: deductedAmount,
             description,
+            createdBy: userId,
+            updatedBy: userId,
           },
           { transaction }
         );
 
-        token.remainingAmount -= amount;
-        await token.save({ transaction });
-
         createdTransactions.push(createdTransaction);
-      } 
+      }
 
       return { success: true, message: 'Token transactions created successfully.', createdTransactions };
     });
 
     if (results?.success) {
-      // update user subscription
-      const userSubscription = await dbInstance.userSubscription.findOne({ where: { userId, featureId } });
-
       if (userSubscription) {
         userSubscription.paidRemainingUnits += quantity;
         await userSubscription.save();
@@ -632,8 +662,8 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
     }
 
     return results;
-  // } catch (err) {
-  //   console.log('createTokenTransactionMultipleServiceError', err);
-  //   return { error: true, message: 'Server not responding, please try again later.' };
-  // }
+  } catch (err) {
+    console.log('createTokenTransactionMultipleServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
 }
