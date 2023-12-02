@@ -2,7 +2,17 @@ import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
   class ProductLog extends Model {
+    static associate(models) {
+      ProductLog.belongsTo(models.user, {
+        foreignKey: 'userId',
+        as: 'user',
+      });
 
+      ProductLog.belongsTo(models.product, {
+        foreignKey: 'productId',
+        as: 'product',
+      });
+    }
   }
 
   ProductLog.init({

@@ -943,11 +943,11 @@ export async function getPropertiesSoldRented(req, res) {
     //   count,
     // });
     
-    res.json({
+    return {
       rows,
       count,
       propertiesSoldRentedByMonth,
-    });
+    };
   }
   catch (error) {
     console.log(error);

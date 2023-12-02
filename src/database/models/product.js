@@ -12,6 +12,7 @@ export default function (sequelize) {
       Product.belongsToMany(models.appointment, { through: 'appointment_products', updatedAt: false, unique: false });
       Product.hasMany(models.productOffer, { foreignKey: 'productId' })
       Product.hasMany(models.productLog, { foreignKey: 'productId' })
+      Product.hasMany(models.productLog, { foreignKey: 'productId', as: 'productViews', scope: { log_type: 'viewed' } });
       Product.hasMany(models.productVisit, { foreignKey: 'productId' })
       Product.hasOne(models.productRemoveRequest, { foreignKey: 'productId', as: 'removeRequest' })
     }
