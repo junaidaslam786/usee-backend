@@ -3,7 +3,7 @@ import { SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from '@/conf
 import { utilsHelper } from '@/helpers';
 import db from '@/database';
 import { Sequelize } from 'sequelize';
-import { calculateDistance, calculateTime } from '@/helpers/googleMapHelper';
+// import { calculateDistance, calculateTime } from '@/helpers/googleMapHelper';
 
 const { Op } = Sequelize;
 
