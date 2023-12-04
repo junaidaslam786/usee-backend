@@ -5,7 +5,7 @@ import * as homeService from '../home/home.service';
  * GET /
  * Home page
  */
-export const index = (req, res) => res.send('App is online!');
+export const index = (req, res) => res.json({ message: "App is online!" });
 
 /**
  * GET /health
