@@ -62,7 +62,7 @@ export default function (sequelize) {
       type: DataTypes.DATE,
     },
     status: {
-      type: DataTypes.STRING, // e.g., "active", "cancelled", "expired"
+      type: DataTypes.ENUM('active', 'cancelled', 'expired'),
       allowNull: false,
     },
   }, {

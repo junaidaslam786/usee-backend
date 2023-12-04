@@ -6,6 +6,15 @@ export default function (sequelize) {
       Agent.belongsTo(models.user, { foreignKey: 'userId' })
       Agent.belongsTo(models.appointment, { foreignKey: 'userId' })
       Agent.belongsTo(models.agentBranch, { foreignKey: 'branchId' })
+      Agent.hasMany(models.agentAvailability, { foreignKey: 'userId' })
+      Agent.hasMany(models.product, { foreignKey: 'userId' })
+      Agent.hasMany(models.productAllocation, { foreignKey: 'userId' })
+      Agent.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
+      Agent.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' })
+      Agent.hasMany(models.userSubscription, { foreignKey: 'userId' });
+      Agent.hasMany(models.agent, { foreignKey: 'agentId' });
+      Agent.hasMany(models.agent, { foreignKey: 'managerId' });
+      Agent.hasMany(models.agent, { foreignKey: 'userId' });
     }
   }
 

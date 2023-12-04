@@ -57,7 +57,7 @@ module.exports = {
         type: Sequelize.DATE,
       },
       status: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM('active', 'cancelled', 'expired'),
         allowNull: false,
       },
       createdAt: {

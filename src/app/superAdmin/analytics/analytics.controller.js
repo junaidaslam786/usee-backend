@@ -27,9 +27,45 @@ export const getNonActiveUsersAnalytics = async (req, res) => {
     }
 };
 
+export const getCustomersAnalytics = async (req, res) => {
+    try {
+        const customersAnalytics = await analyticsService.getCustomersAnalytics(req, res);
+        res.json(customersAnalytics);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+}
+
+export const getActiveCustomersAnalytics = async (req, res) => {
+    try {
+        const activeCustomersAnalytics = await analyticsService.getActiveCustomersAnalytics(req, res);
+        res.json(activeCustomersAnalytics);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+}
+
+export const getAgentsAnalytics = async (req, res) => {
+    try {
+        const agentsAnalytics = await analyticsService.getAgentsAnalytics(req, res);
+        res.json(agentsAnalytics);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+}
+
+export const getActiveAgentsAnalytics = async (req, res) => {
+    try {
+        const activeAgentsAnalytics = await analyticsService.getActiveAgentsAnalytics(req, res);
+        res.json(activeAgentsAnalytics);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+}
+
 export const getSubscriptionsAnalytics = async (req, res) => {
     try {
-        const subscriptionsAnalytics = await analyticsService.getSubscriptionsAnalytics(req);
+        const subscriptionsAnalytics = await analyticsService.getSubscriptionsAnalytics(req, res);
         res.json(subscriptionsAnalytics);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -92,7 +128,7 @@ export const getCallDuration = async (req, res) => {
 
 export const getUnresponsiveAgents = async (req, res) => {
     try {
-        const unresponsiveAgents = await analyticsService.getUnresponsiveAgents(req);
+        const unresponsiveAgents = await analyticsService.getUnresponsiveAgents(req, res);
         res.json(unresponsiveAgents);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -101,7 +137,7 @@ export const getUnresponsiveAgents = async (req, res) => {
 
 export const getRequestsSent = async (req, res) => {
     try {
-        const requestsSent = await analyticsService.getRequestsSent(req);
+        const requestsSent = await analyticsService.getRequestsSent(req, res);
         res.json(requestsSent);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -119,7 +155,7 @@ export const getPropertyOffers = async (req, res) => {
 
 export const getCarbonFootprint = async (req, res) => {
     try {
-        const carbonFootprint = await analyticsService.getCarbonFootprint(req);
+        const carbonFootprint = await analyticsService.getCarbonFootprint(req, res);
         res.json(carbonFootprint);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
