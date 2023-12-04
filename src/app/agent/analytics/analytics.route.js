@@ -8,6 +8,20 @@ const router = Router();
 router.get('/users', analyticsController.getUsersAnalytics);
 router.get('/active-users', analyticsController.getActiveUsersAnalytics);
 router.get('/non-active-users', analyticsController.getNonActiveUsersAnalytics);
+// Customer analytics
+router.get('/customers', analyticsController.getCustomersAnalytics);
+router.get('/active-customers', analyticsController.getActiveCustomersAnalytics);
+// Agent analytics
+router.get('/agents', analyticsController.getAgentsAnalytics);
+router.get('/active-agents', analyticsController.getActiveAgentsAnalytics);
+// // Developer analytics
+// router.get('/developers', analyticsController.getDevelopersAnalytics);
+// // Real estate analytics
+// router.get('/real-estates', analyticsController.getRealEstatesAnalytics);
+// // Freelancer analytics
+// router.get('/freelancers', analyticsController.getFreelancersAnalytics);
+
+
 // Subscription analytics
 router.get('/subscriptions', analyticsController.getSubscriptionsAnalytics);
 // Token analytics
