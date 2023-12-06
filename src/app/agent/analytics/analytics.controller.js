@@ -164,7 +164,7 @@ export const getCarbonFootprint = async (req, res) => {
 
 export const getPropertiesSoldRented = async (req, res) => {
     try {
-        const propertiesSoldRented = await analyticsService.getPropertiesSoldRented(req);
+        const propertiesSoldRented = await analyticsService.getPropertiesSoldRented(req, res);
         res.json(propertiesSoldRented);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -173,7 +173,7 @@ export const getPropertiesSoldRented = async (req, res) => {
 
 export const getPropertiesListed = async (req, res) => {
     try {
-        const propertiesListed = await analyticsService.getPropertiesListed(req);
+        const propertiesListed = await analyticsService.getPropertiesListed(req, res);
         res.json(propertiesListed);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -182,7 +182,7 @@ export const getPropertiesListed = async (req, res) => {
 
 export const getAgentDetails = async (req, res) => {
     try {
-        const agentDetails = await analyticsService.getAgentDetails(req);
+        const agentDetails = await analyticsService.getAgentDetails(req, res);
         res.json(agentDetails);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });

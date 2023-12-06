@@ -214,7 +214,7 @@ app.post('/create-checkout-session', async (req, res) => {
       quantity: quantity,
       price: appConfiguration.configValue,
       totalAmount: totalAmount,
-      remainingAmount: totalAmount,
+      remainingAmount: quantity,
       stripeCheckoutSessionId: session.id,
       createdBy: customer.id,
       updatedBy: customer.id,
@@ -423,7 +423,7 @@ app.post('/create-invoice', async (req, res) => {
       quantity: quantity,
       price: price.unit_amount / 100,
       totalAmount: totalAmount,
-      remainingAmount: totalAmount,
+      remainingAmount: quantity,
       stripeInvoiceId: invoice.id,
       stripeInvoiceStatus: finalizedInvoice ? finalizedInvoice.status : invoice.status
     });

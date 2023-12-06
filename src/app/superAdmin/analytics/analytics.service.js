@@ -76,6 +76,9 @@ export async function getUsersAnalytics(req, res) {
       limit: limit ? parseInt(limit) : 10,
     });
 
+    // get query to count all users in db
+    const { count } = await user.findAndCountAll();
+
     let activeUsers = 0,
       nonActiveUsers = 0,
       customerUsers = 0,
@@ -91,7 +94,7 @@ export async function getUsersAnalytics(req, res) {
     }
 
     return {
-      rows,
+      // rows,
       totalUsers: rows.length,
       activeUsers,
       nonActiveUsers,
@@ -99,6 +102,7 @@ export async function getUsersAnalytics(req, res) {
       agentUsers,
       adminUsers,
       superAdminUsers,
+      totalUsersAll: count,
     };
   } catch (error) {
     console.log(error);
@@ -324,16 +328,26 @@ export async function getCustomersAnalytics(req, res) {
 
     });
 
-    let activeCustomers = 0, nonActiveCustomers = 0;
+    const propertiesBought = await productOffer.findAndCountAll({});
+
+    let activeCustomers = 0, nonActiveCustomers = 0, revenue_generated = 0, propertiesUnderOffer = 0, propertiesRented = 0;
     for (const customer of rows) {
       customer.active ? activeCustomers++ : nonActiveCustomers++;
     }
+    for (const productOffer of propertiesBought.rows) {
+      productOffer.status === 'accepted' ? revenue_generated += Number(productOffer.amount) : false;
+      productOffer.status === 'pending' ? propertiesUnderOffer++ : false;
+    }
 
     return {
-      rows,
+      // rows,
       totalCustomers: count,
       activeCustomers,
       nonActiveCustomers,
+      propertiesBought: propertiesBought.count,
+      propertiesRented,
+      propertiesUnderOffer,
+      revenue_generated,
     };
   } catch (error) {
     console.log(error);
@@ -428,6 +442,8 @@ export async function getAgentsAnalytics(req, res) {
       limit: limit ? parseInt(limit) : 10,
     });
 
+    const agentTokensTransactions = await getTokenTransactionsAnalytics(req, res);
+
     let totalAgents = 0, activeAgents = 0, inactiveAgents = 0;
     for (const agent of agents) {
       if (agent.user.active) {
@@ -439,10 +455,11 @@ export async function getAgentsAnalytics(req, res) {
     totalAgents = activeAgents + inactiveAgents;
 
     return {
-      rows: agents,
+      // rows: agents,
       totalAgents,
       activeAgents,
       inactiveAgents,
+      servicesBought: agentTokensTransactions.count,
     };
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
@@ -589,11 +606,11 @@ export async function getTokensAnalytics(req, res) {
       limit: limit ? parseInt(limit) : 10,
     });
 
-    let totalTokens = 0, tokensSold = 0, tokensUsed = 0, tokensRemaining = 0, pendingTokens = 0;
+    let totalTokens = 0, tokensUsed = 0, tokensRemaining = 0, pendingTokens = 0, revenue_generated = 0;
     for (const token of rows) {
       if (token.valid) {
-        // totalTokens += token.totalAmount;
-        tokensUsed += token.totalAmount - token.remainingAmount;
+        revenue_generated += token.totalAmount;
+        tokensUsed += token.quantity - token.remainingAmount;
         tokensRemaining += token.remainingAmount;
       }
 
@@ -606,10 +623,10 @@ export async function getTokensAnalytics(req, res) {
     return {
       rows,
       totalTokens,
-      tokensSold,
       tokensUsed,
       tokensRemaining,
       pendingTokens,
+      revenue_generated,
     };
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
@@ -716,7 +733,12 @@ export async function getTokenTransactionsAnalytics(req, res) {
   if (search) {
     where[Op.or] = [
       {
-        name: {
+        quantity: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        amount: {
           [Op.iLike]: `%${search}%`,
         },
       },
@@ -732,8 +754,8 @@ export async function getTokenTransactionsAnalytics(req, res) {
     const { rows, count } = await tokenTransaction.findAndCountAll({
       where,
       order: [['createdAt', 'DESC']],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
+      // limit: limit ? parseInt(limit) : 10,
     });
 
     return {
@@ -1189,7 +1211,7 @@ export async function getPropertiesListed(req, res) {
 
   const where = {
     status: {
-      [Op.in]: ['pending', 'rejected'],
+      [Op.in]: ['active'],
     },
   };
 
@@ -1202,22 +1224,27 @@ export async function getPropertiesListed(req, res) {
   if (search) {
     where[Op.or] = [
       {
-        firstName: {
+        title: {
           [Op.iLike]: `%${search}%`,
         },
       },
       {
-        lastName: {
+        description: {
           [Op.iLike]: `%${search}%`,
         },
       },
       {
-        email: {
+        address: {
           [Op.iLike]: `%${search}%`,
         },
       },
       {
-        phoneNumber: {
+        city: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        region: {
           [Op.iLike]: `%${search}%`,
         },
       },
@@ -1225,43 +1252,31 @@ export async function getPropertiesListed(req, res) {
   }
 
   try {
-    const { rows, count } = await agent.findAndCountAll({
+    const propertiesListed = await product.findAndCountAll({
       where,
-      include: [
-        {
-          model: agentBranch,
-          as: 'agentBranches',
-          attributes: ['id', 'name'],
-        },
-        {
-          model: agentAvailability,
-          as: 'agentAvailabilities',
-          attributes: ['id', 'day_id', 'time_slot_id', 'status'],
-        },
-      ],
+      attributes: ['id', 'title', 'price', 'description', 'address', 'status'],
       order: [['createdAt', 'DESC']],
       offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
-
+      // limit: limit ? parseInt(limit) : 10,
     });
-    const totalPropertiesListed = await agent.findAndCountAll({
-      where,
-      include: [
-        {
-          model: agentBranch,
-          attributes: ['id', 'name'],
-        },
-        {
-          model: agentAvailability,
-          attributes: ['id', 'day_id', 'time_slot_id', 'status'],
-        },
-      ],
 
-    });
+    const propertiesOffers = await productOffer.findAndCountAll({});
+
+    let revenue_generated = 0, propertiesUnderOffer = 0;
+    // for (const total of rows) {
+    //   customer.active ? activeCustomers++ : nonActiveCustomers++;
+    // }
+
+    for (const productOffer of propertiesOffers.rows) {
+      productOffer.status === 'accepted' ? revenue_generated += Number(productOffer.amount) : false;
+      productOffer.status === 'pending' ? propertiesUnderOffer++ : false;
+    }
+
     return {
-      rows,
-      count,
-      totalPropertiesListed,
+      // rows,
+      propertiesListed: propertiesListed.count,
+      revenue_generated,
+      propertiesUnderOffer,
     };
   }
   catch (error) {
