@@ -72,6 +72,23 @@ export const updateCurrentUser = async (reqBody, req) => {
   }
 };
 
+export const blockTraderById = async (id, dbInstance) => {
+  try {
+    const [updated] = await dbInstance.user.update(
+      { status: false }, // Set status to false to indicate the trader is blocked
+      { where: { id: id, user_type: USER_TYPE.AGENT } }
+    );
+
+    if (updated) {
+      return { message: 'Trader successfully blocked.' };
+    } else {
+      return { error: true, message: 'Trader not found or already blocked.' };
+    }
+  } catch (err) {
+    console.log('blockTraderByIdServiceError', err);
+    return { error: true, message: 'Error blocking trader.' };
+  }
+};
 export const updateUserById = async (reqBody, req) => {
   try {
     const user = await db.models.user.findOne({

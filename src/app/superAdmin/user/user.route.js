@@ -21,4 +21,6 @@ router.put("/:id/activate", isAuthenticated, userController.activateUserById);
 router.put("/:id/deactivate", isAuthenticated, userController.deactivateUserById);
 router.delete("/user/:id", isAuthenticated, userController.deleteUser);
 
+router.put('/block-trader/:id', isAuthenticated, userController.blockTraderById);
+
 export default router;

@@ -19,6 +19,23 @@ export const listAgents = async (req, res, next) => {
     }
 };
 
+export const blockTraderById = async (req, res, next) => {
+    try {
+      const traderId = req.params.id; // Get the trader ID from the request parameters
+      const result = await userService.blockTraderById(traderId, req.dbInstance);
+  
+      if (result?.error) {
+        return next(createError(400, result.message));
+      }
+  
+      return res.status(200).json({ message: 'Trader successfully blocked.' });
+    } catch (err) {
+      console.log('blockTraderByIdError', err);
+      return next(err);
+    }
+  };
+  
+
 /**
  * GET /agent/user/list
  * List all users created by agent

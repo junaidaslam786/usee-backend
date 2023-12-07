@@ -12,4 +12,7 @@ router.put('/update-status', isAuthenticated, userController.updateAgentUserStat
 router.post('/:id', isAuthenticated, userController.getAgentUser);
 router.delete('/:id', isAuthenticated, userController.deleteAgentUser);
 
+
+
+
 export default router;
