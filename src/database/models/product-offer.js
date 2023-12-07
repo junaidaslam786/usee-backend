@@ -5,6 +5,7 @@ export default function (sequelize) {
     static associate(models) {
       ProductOffer.belongsTo(models.product, { foreignKey: 'productId' })
       ProductOffer.belongsTo(models.user, { foreignKey: 'customerId' })
+      ProductOffer.belongsTo(models.user, { foreignKey: 'customerId', as: 'customer' })
       ProductOffer.hasOne(models.productSnagList, { foreignKey: 'offerId' })
     }
   }

@@ -31,6 +31,7 @@ import superAdminCmsCommunityRouter from '../app/superAdmin/cms/community/commun
 import superAdminFeatureRouter from '../app/superAdmin/feature/feature.route';
 import superAdminNewsRouter from '../app/superAdmin/cms/pages/cms.route';
 import superAdminPropertyRouter from '../app/superAdmin/property/property.route';
+import superAdminReportsRouter from '../app/superAdmin/reports/reports.route';
 import superAdminSubscriptionRouter from '../app/superAdmin/subscription/subscription.route';
 import superAdminTokenRouter from '../app/superAdmin/token/token.route';
 import superAdminUserRouter from '../app/superAdmin/user/user.route'
@@ -91,6 +92,7 @@ export default function (app) {
   app.use('/superadmin/config', superAdminAppConfigurationRouter);
   app.use('/superadmin/feature', superAdminFeatureRouter);
   app.use('/superadmin/property', superAdminPropertyRouter);
+  app.use('/superadmin/reports', superAdminReportsRouter);
   app.use('/superadmin/subscription', superAdminSubscriptionRouter);
   app.use('/superadmin/token', superAdminTokenRouter);
   app.use('/superadmin/user', superAdminUserRouter);
