@@ -268,6 +268,27 @@ export const listUsersExceptSuperAdmin = async (dbInstance) => {
   }
 };
 
+export const listAgentUsers = async (params, dbInstance) => {
+  try {
+    const { count, rows } = await dbInstance.user.findAndCountAll({
+      where: { status: true },
+      include: [{
+        model: dbInstance.agent,
+        where: {agent_id: params.id}
+      }],
+      order: [['id', 'DESC']],
+    });
+
+    return {
+      data: rows,
+      totalItems: count,
+    };
+  } catch (err) {
+    console.log('listAgentUsersServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};
+
 export const listCustomerUsers = async (dbInstance) => {
   try {
     return await dbInstance.user.findAll({

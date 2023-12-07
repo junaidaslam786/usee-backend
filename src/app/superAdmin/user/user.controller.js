@@ -229,6 +229,24 @@ export const getSuperAdminDetails = async (req, res, next) => {
 };
 
 /**
+ * GET /superadmin/user/list-trader-users
+ * List all users created by agent
+ */
+export const listAgentUsers = async (req, res, next) => {
+  try {
+    const result = await userService.listAgentUsers(req.params, req.dbInstance);
+    if (result?.error && result?.message) {
+        return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('listAgentUsersError', err);
+    return next(err);
+  }
+};
+
+/**
  * PUT /superadmin/user/update
  * Update superadmin user details
  */

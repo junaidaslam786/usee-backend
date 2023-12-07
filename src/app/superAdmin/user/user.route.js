@@ -9,6 +9,7 @@ const router = Router();
 router.post("/upload-image", isAuthenticated, userController.uploadUserProfileImage);
 
 router.get("/superadmin-details", isAuthenticated, userController.getSuperAdminDetails);
+router.get('/list-trader-users/:id', isAuthenticated, userController.listAgentUsers);
 // router.put('/update',isAuthenticated, userController.updateSuperAdminDetails)
 // router.put('/update', isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser);
 router.put("/update", isAuthenticated, userController.updateCurrentUser);
