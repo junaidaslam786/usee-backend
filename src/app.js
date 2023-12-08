@@ -171,6 +171,10 @@ app.post('/create-checkout-session', async (req, res) => {
   const { customerId, priceId, quantity } = req.body;
 
   try {
+    if (!req.user.stripe_checkout_session_id !== customerId) {
+      return res.status(403).json({ error: "Unauthorized", message: "Stripe Customer ID does not match signed in user." });
+    }
+
     const requestHeaders = req.headers;
     const serverUrlProtocol = req.protocol;
     const serverUrlHostName = req.hostname;
@@ -216,8 +220,8 @@ app.post('/create-checkout-session', async (req, res) => {
       totalAmount: totalAmount,
       remainingAmount: quantity,
       stripeCheckoutSessionId: session.id,
-      createdBy: customer.id,
-      updatedBy: customer.id,
+      createdBy: req.user.id,
+      updatedBy: req.user.id,
     });
 
     res.json({ session: session });
@@ -479,25 +483,35 @@ app.post('/send-invoice', async (req, res) => {
 
 // Endpoint to process refunds
 app.post('/refund', async (req, res) => {
-  try {
-    const { user, invoiceId, paymentIntentId, amountToRefund } = req.body;
+  const { customerId, invoiceId, paymentIntentId } = req.body;
+  console.log("!!!------!!!USER: ", req.user);
 
+  if(!customerId || !invoiceId || !paymentIntentId) {
+    return res.status(400).json({ error: "Bad Request", message: "userId, invoiceId and paymentIntentId are required." });
+  }
+
+  const customer = await db.models.user.findOne({ where: { stripe_customer_id: customerId } })
+
+  if (req.user.id !== customer.id) {
+    return res.status(403).json({ error: "Unauthorized", message: "userId does not match signed in user." });
+  }
+
+  try {
     // Refund the PaymentIntent
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
-      amount: amountToRefund * 100,
     });
-
-    // user invoice ID to fetch invoice details, aty, price , total amount
 
     // Add the tokens to the user's account in your database
     const token = await db.models.token.create({
-      userId: user.id,
+      userId: customer.id,
       quantity: quantity, // from invoice
       price: appConfiguration.configValue, // from inoive
       totalAmount: -totalAmount, // from invoice
       remainingAmount: 0, // from invoice
       stripeCheckoutSessionId: session.id, // from invoice
+      createdBy: user.id,
+      updatedBy: user.id,
     });
 
     res.json({ success: true, message: 'Refund successful', refund });
@@ -615,11 +629,12 @@ app.post('/create-coupon-amount', async (req, res) => {
 // Endpoint to create a coupon
 app.post('/create-coupon-percent', async (req, res) => {
   try {
-    const { duration = 'once', percentOff, durationInMonths, couponId } = req.body;
+    const { duration = 'once', percentOff, durationInMonths, couponId, name } = req.body;
 
     // Create a coupon on Stripe
     const coupon = await stripe.coupons.create({
       id: couponId,
+      name,
       duration,
       percent_off: percentOff,
     });
