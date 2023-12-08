@@ -50,8 +50,16 @@ export default function (sequelize) {
       type: DataTypes.ENUM('draft', 'open', 'void', 'paid', 'uncollectible'),
       allowNull: true,
     },
+    stripeInvoiceData: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
     stripeCheckoutSessionId: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    stripeCheckoutSessionData: {
+      type: DataTypes.JSON,
       allowNull: true,
     },
     refundStatus: {

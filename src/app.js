@@ -14,7 +14,7 @@ import db from "@/database";
 
 import * as configs from "@/config";
 import { authenticationMiddleware, stripeSubscriptionMiddleware, sentryMiddleware } from "@/middleware";
-import user from "./database/models/user";
+// import user from "./database/models/user";
 
 const { NODE_ENV } = process.env;
 
@@ -171,10 +171,6 @@ app.post('/create-checkout-session', async (req, res) => {
   const { customerId, priceId, quantity } = req.body;
 
   try {
-    if (!req.user.stripe_checkout_session_id !== customerId) {
-      return res.status(403).json({ error: "Unauthorized", message: "Stripe Customer ID does not match signed in user." });
-    }
-
     const requestHeaders = req.headers;
     const serverUrlProtocol = req.protocol;
     const serverUrlHostName = req.hostname;
@@ -182,6 +178,19 @@ app.post('/create-checkout-session', async (req, res) => {
 
     // Check if port is required in the URL
     const serverUrl = serverUrlPort ? `${serverUrlProtocol}://${serverUrlHostName}:${serverUrlPort}` : `${serverUrlProtocol}://${serverUrlHostName}`;
+
+    // Fetch config value from app configurations table using stripe price id
+    const appConfiguration = await db.models.appConfiguration.findOne({
+      where: {
+        configKey: 'tokenPrice',
+        stripePriceId: priceId,
+      },
+      attributes: ['configValue'] // Fetch only the configValue attribute
+    });
+
+    if (!appConfiguration) {
+      return res.status(404).json({ error: 'Price ID not found' });
+    }
 
     // Retrieve customer's Stripe ID from your database
     const customer = await db.models.user.findOne({ where: { stripe_customer_id: customerId } })
@@ -202,14 +211,6 @@ app.post('/create-checkout-session', async (req, res) => {
     });
     console.log("SESSION: ", session);
 
-    // Fetch config value from app configurations table using stripe price id
-    const appConfiguration = await db.models.appConfiguration.findOne({
-      where: {
-        configKey: 'tokenPrice',
-        stripePriceId: priceId,
-      },
-      attributes: ['configValue'] // Fetch only the configValue attribute
-    });
     const totalAmount = quantity * appConfiguration.configValue;
 
     // Add the tokens to the user's account in your database
@@ -220,8 +221,9 @@ app.post('/create-checkout-session', async (req, res) => {
       totalAmount: totalAmount,
       remainingAmount: quantity,
       stripeCheckoutSessionId: session.id,
-      createdBy: req.user.id,
-      updatedBy: req.user.id,
+      stripeCheckoutSessionData: session,
+      createdBy: customer.id,
+      updatedBy: customer.id,
     });
 
     res.json({ session: session });
@@ -483,17 +485,16 @@ app.post('/send-invoice', async (req, res) => {
 
 // Endpoint to process refunds
 app.post('/refund', async (req, res) => {
-  const { customerId, invoiceId, paymentIntentId } = req.body;
-  console.log("!!!------!!!USER: ", req.user);
+  const { body: { customerId, invoiceId, paymentIntentId } } = req;
 
-  if(!customerId || !invoiceId || !paymentIntentId) {
-    return res.status(400).json({ error: "Bad Request", message: "userId, invoiceId and paymentIntentId are required." });
+  if (!customerId || !invoiceId || !paymentIntentId) {
+    return res.status(400).json({ error: "Bad Request", message: "customerId, invoiceId and paymentIntentId are required." });
   }
 
   const customer = await db.models.user.findOne({ where: { stripe_customer_id: customerId } })
 
-  if (req.user.id !== customer.id) {
-    return res.status(403).json({ error: "Unauthorized", message: "userId does not match signed in user." });
+  if (!customer) {
+    return res.status(403).json({ error: true, message: "user does not exist." });
   }
 
   try {
@@ -510,8 +511,8 @@ app.post('/refund', async (req, res) => {
       totalAmount: -totalAmount, // from invoice
       remainingAmount: 0, // from invoice
       stripeCheckoutSessionId: session.id, // from invoice
-      createdBy: user.id,
-      updatedBy: user.id,
+      createdBy: customer.id,
+      updatedBy: customer.id,
     });
 
     res.json({ success: true, message: 'Refund successful', refund });

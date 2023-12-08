@@ -51,7 +51,6 @@ import userSubscriptionModel from './models/user-subscription';
 import featureModel from './models/feature';
 import tokenModel from './models/token';
 import tokenTransactionModel from './models/token-transaction';
-import productVisitModel from './models/product-visit';
 
 // Configuration
 const env = process.env.NODE_ENV;
@@ -110,7 +109,6 @@ const modelDefiners = [
   tokenModel,
   tokenTransactionModel,
   appConfigurationModel,
-  productVisitModel,
 ];
 
 // eslint-disable-next-line no-restricted-syntax

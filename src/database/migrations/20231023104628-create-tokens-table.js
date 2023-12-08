@@ -48,6 +48,11 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
+      stripeCheckoutSessionData: {
+        field: 'stripe_checkout_session_data',
+        type: Sequelize.JSON,
+        allowNull: true
+      },
       stripeInvoiceId: {
         field: 'stripe_invoice_id',
         type: Sequelize.STRING,
@@ -56,6 +61,11 @@ module.exports = {
       stripeInvoiceStatus: {
         field: 'stripe_invoice_status',
         type: Sequelize.ENUM('draft', 'open', 'void', 'paid', 'uncollectible'),
+        allowNull: true
+      },
+      stripeInvoieData: {
+        field: 'stripe_invoice_data',
+        type: Sequelize.JSON,
         allowNull: true
       },
       refundStatus: {

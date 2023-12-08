@@ -13,7 +13,6 @@ export default function (sequelize) {
       Product.hasMany(models.productOffer, { foreignKey: 'productId' })
       Product.hasMany(models.productLog, { foreignKey: 'productId' })
       Product.hasMany(models.productLog, { foreignKey: 'productId', as: 'productViews', scope: { log_type: 'viewed' } });
-      Product.hasMany(models.productVisit, { foreignKey: 'productId' })
       Product.hasOne(models.productRemoveRequest, { foreignKey: 'productId', as: 'removeRequest' })
     }
   }
