@@ -1281,14 +1281,11 @@ export async function getPropertiesSoldRented(req, res) {
       limit: limit ? parseInt(limit) : 10,
     });
 
-    console.log("ROWS: ", rows);
-
-    const propertiesSold = rows.length;
+    // console.log("ROWS: ", rows);
 
     return {
       rows,
-      count,
-      propertiesSold,
+      propertiesSold: count,
       propertiesRented: 0,
     };
   } catch (error) {

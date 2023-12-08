@@ -1134,7 +1134,7 @@ export async function getPropertiesSoldRented(req, res) {
 
   const where = {
     status: {
-      [Op.in]: ['pending', 'rejected'],
+      [Op.in]: ['active'],
     },
   };
 
@@ -1147,22 +1147,27 @@ export async function getPropertiesSoldRented(req, res) {
   if (search) {
     where[Op.or] = [
       {
-        firstName: {
+        title: {
           [Op.iLike]: `%${search}%`,
         },
       },
       {
-        lastName: {
+        description: {
           [Op.iLike]: `%${search}%`,
         },
       },
       {
-        email: {
+        address: {
           [Op.iLike]: `%${search}%`,
         },
       },
       {
-        phoneNumber: {
+        city: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        region: {
           [Op.iLike]: `%${search}%`,
         },
       },
@@ -1172,37 +1177,77 @@ export async function getPropertiesSoldRented(req, res) {
   try {
     const { rows, count } = await product.findAndCountAll({
       where,
-      attributes: ['id', 'title', 'price', 'description'],
-      order: [['createdAt', 'DESC']],
+      // attributes: ["id", "title", "price", "description"],
+      include: [
+        {
+          model: user,
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        {
+          model: productDocument,
+          attributes: ["id", "title", "file"],
+        },
+        {
+          model: productImage,
+          attributes: ["id", "image", "sort_order"],
+        },
+        {
+          model: productMetaTag,
+          attributes: ["value"],
+          include: [
+            {
+              model: categoryField,
+              attributes: ["id", "label", "type", "options", "required"],
+            },
+          ],
+        },
+        {
+          model: productOffer,
+          attributes: ["id", "amount", "notes", "status", "rejectReason"],
+          include: [
+            {
+              model: user,
+              attributes: ["id", "firstName", "lastName", "email"],
+            },
+            {
+              model: productSnagList,
+              attributes: ["id", "agentApproved", "customerApproved"],
+              include: [
+                {
+                  model: productSnagListItem,
+                  attributes: ["snagKey", "snagValue", ["customer_comment", "cc"], ["agent_comment", "ac"]],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          model: productAllocation,
+          attributes: ["id"],
+          include: [
+            {
+              model: user,
+              attributes: ["id", "firstName", "lastName"],
+            },
+          ],
+        },
+      ],
+      distinct: true,
+      order: [["createdAt", "DESC"]],
       offset: page ? parseInt(page) * parseInt(limit) : 0,
       limit: limit ? parseInt(limit) : 10,
     });
 
-    console.log("ROWS: ", rows);
-
-    const propertiesSoldRentedByMonth = rows.length ? rows.reduce((result, agent) => {
-      agent.forEach(property => {
-        const month = new Date(property.createdAt).getMonth();
-        const year = new Date(property.createdAt).getFullYear();
-        const key = `${month}-${year}`;
-        if (result[key]) {
-          result[key]++;
-        } else {
-          result[key] = 1;
-        }
-      });
-      return result;
-    }, {}) : 0;
+    // console.log("ROWS: ", rows);
 
     return {
       rows,
-      count,
-      propertiesSoldRentedByMonth,
+      propertiesSold: count,
+      propertiesRented: 0,
     };
-  }
-  catch (error) {
+  } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 }
 
