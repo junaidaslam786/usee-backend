@@ -503,7 +503,7 @@ app.post('/refund', async (req, res) => {
     res.json({ success: true, message: 'Refund successful', refund });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
+    res.status(500).json({ success: false, message: error.raw.message });
   }
 });
 
@@ -608,7 +608,7 @@ app.post('/create-coupon-amount', async (req, res) => {
     res.json({ success: true, message: 'Coupon created successfully', coupon });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
+    res.status(500).json({ success: false, message: error.raw.message });
   }
 });
 
@@ -622,13 +622,12 @@ app.post('/create-coupon-percent', async (req, res) => {
       id: couponId,
       duration,
       percent_off: percentOff,
-      duration_in_months: durationInMonths,
     });
 
     res.json({ success: true, message: 'Coupon created successfully', coupon });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
+    res.status(500).json({ success: false, message: error.raw.message });
   }
 });
 
@@ -641,7 +640,7 @@ app.get('/list-coupons', async (req, res) => {
     res.json({ success: true, coupons });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
+    res.status(500).json({ success: false, message: error.raw.message });
   }
 });
 
