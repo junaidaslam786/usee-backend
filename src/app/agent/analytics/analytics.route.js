@@ -5,56 +5,56 @@ const router = Router();
 
 // SERVICES
 // User analytics
-router.get('/users', analyticsController.getUsersAnalytics);
-router.get('/active-users', analyticsController.getActiveUsersAnalytics);
-router.get('/non-active-users', analyticsController.getNonActiveUsersAnalytics);
+router.post('/users', analyticsController.getUsersAnalytics);
+router.post('/active-users', analyticsController.getActiveUsersAnalytics);
+router.post('/non-active-users', analyticsController.getNonActiveUsersAnalytics);
 // Customer analytics
-router.get('/customers', analyticsController.getCustomersAnalytics);
-router.get('/active-customers', analyticsController.getActiveCustomersAnalytics);
+router.post('/customers', analyticsController.getCustomersAnalytics);
+router.post('/active-customers', analyticsController.getActiveCustomersAnalytics);
 // Agent analytics
-router.get('/agents', analyticsController.getAgentsAnalytics);
-router.get('/active-agents', analyticsController.getActiveAgentsAnalytics);
+router.post('/agents', analyticsController.getAgentsAnalytics);
+router.post('/active-agents', analyticsController.getActiveAgentsAnalytics);
 // // Developer analytics
-// router.get('/developers', analyticsController.getDevelopersAnalytics);
+// router.post('/developers', analyticsController.getDevelopersAnalytics);
 // // Real estate analytics
-// router.get('/real-estates', analyticsController.getRealEstatesAnalytics);
+// router.post('/real-estates', analyticsController.getRealEstatesAnalytics);
 // // Freelancer analytics
-// router.get('/freelancers', analyticsController.getFreelancersAnalytics);
+// router.post('/freelancers', analyticsController.getFreelancersAnalytics);
 
 
 // Subscription analytics
-router.get('/subscriptions', analyticsController.getSubscriptionsAnalytics);
+router.post('/subscriptions', analyticsController.getSubscriptionsAnalytics);
 // Token analytics
-router.get('/tokens', analyticsController.getTokensAnalytics);
+router.post('/tokens', analyticsController.getTokensAnalytics);
 // Feature analytics
-router.get('/features', analyticsController.getFeaturesAnalytics);
+router.post('/features', analyticsController.getFeaturesAnalytics);
 // Subscription Features analytics
-router.get('/subscription-features', analyticsController.getSubscriptionFeaturesAnalytics);
+router.post('/subscription-features', analyticsController.getSubscriptionFeaturesAnalytics);
 // Token Transaction analytics
-router.get('/token-transactions', analyticsController.getTokenTransactionsAnalytics);
+router.post('/token-transactions', analyticsController.getTokenTransactionsAnalytics);
 
 // 1. Visits per property
-router.get('/property-visits', analyticsController.getPropertyVisits);
+router.post('/property-visits', analyticsController.getPropertyVisits);
 // 2. Duration of usee360 calls
-router.get('/call-duration', analyticsController.getCallDuration);
+router.post('/call-duration', analyticsController.getCallDuration);
 // 3. Agents not responding to calls
-router.get('/unresponsive-agents', analyticsController.getUnresponsiveAgents);
+router.post('/unresponsive-agents', analyticsController.getUnresponsiveAgents);
 // 4. Number of usee360 requests sent
-router.get('/requests-sent', analyticsController.getRequestsSent);
+router.post('/requests-sent', analyticsController.getRequestsSent);
 
 // 5. Number and status of offers on property list
-router.get('/property-offers', analyticsController.getPropertyOffers); // DONE
+router.post('/property-offers', analyticsController.getPropertyOffers); // DONE
 
 // 6. Carbon footprint savings per usee360 call
-router.get('/carbon-footprint', analyticsController.getCarbonFootprint);
+router.post('/carbon-footprint', analyticsController.getCarbonFootprint);
 
 // 7. Number of properties sold or rented each month
-router.get('/properties-sold-rented', analyticsController.getPropertiesSoldRented);
+router.post('/properties-sold-rented', analyticsController.getPropertiesSoldRented);
 
 // 8. Number of properties listed per developer/real estate/freelancer/owner
-router.get('/properties-listed', analyticsController.getPropertiesListed);
+router.post('/properties-listed', analyticsController.getPropertiesListed);
 
 // 9. Number and details of agents for each registered company
-router.get('/agent-details', analyticsController.getAgentDetails);
+router.post('/agent-details', analyticsController.getAgentDetails);
 
 export default router;
