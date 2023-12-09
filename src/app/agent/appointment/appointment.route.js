@@ -8,6 +8,7 @@ const router = Router();
 
 router.get('/list', isAuthenticated, appointmentController.listAppointments);
 router.get('/session-token/:id', isAuthenticated, appointmentController.getSessionToken);
+router.get('/session-details/:id', isAuthenticated, appointmentController.getSessionDetails);
 router.get('/:id', isAuthenticated, appointmentController.getAppointment);
 router.post('/create', isAuthenticated, validate(appointmentValidations.createAppointmentRules), appointmentController.createAppointment);
 router.delete('/:id', isAuthenticated, appointmentController.deleteAppointment);

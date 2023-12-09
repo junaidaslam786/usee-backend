@@ -102,11 +102,13 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
       });
 
       if (token) {
-        token.stripeInvoiceId = checkoutSession.invoice;
-        token.stripeInvoiceStatus = checkoutSession.payment_status;
         // fetch invoice data from stripe
         const invoice = await stripe.invoices.retrieve(checkoutSession.invoice);
         token.stripeInvoiceData = invoice;
+        token.stripeInvoiceId = checkoutSession.invoice;
+        token.stripeInvoiceStatus = checkoutSession.payment_status;
+        token.acquiredDate = new Date();
+        token.valid = true;
         await token.save();
       }
       break;
