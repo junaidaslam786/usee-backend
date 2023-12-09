@@ -23,6 +23,13 @@ export const AGENT_TYPE = {
     STAFF: "staff",
 };
 
+export const AGENT_JOB_TITLE = {
+    DEVELOPER: "developer",
+    LANDLORD: "landlord",
+    FREELANCE_AGENT: "freelance_agent",
+    REAL_ESTATE_AGENT: "real_estate_agent",
+};
+
 export const CMS_STATUS = {
     PUBLISHED: "published",
     UNPUBLISHED: "unpublished",
