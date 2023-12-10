@@ -170,6 +170,15 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
             // create agent profile
             const agent = await agentTable.create(agentPayload, { transaction });
 
+            // create one default branch for agent
+            const agentBranch = await dbInstance.agentBranch.create({
+                userId: user.id,
+                name: companyName,
+            }, { transaction });
+
+            agent.branchId = agentBranch.id;
+            await agent.save({ transaction });
+
             // Create a Customer in Stripe
             const stripeCustomer = await stripe.customers.create({
                 email: user.email,
@@ -210,7 +219,8 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
                 email: user.email,
                 type: user.userTypeDisplay,
                 userType: user.userType,
-                stripeCustomerId: user.stripeCustomerId
+                stripeCustomerId: user.stripeCustomerId,
+                agentBranch: agentBranch,
             };
 
             const emailData = [];

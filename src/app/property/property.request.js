@@ -11,3 +11,9 @@ export const removalRequestRules = [
     });
   }), 
 ];
+
+export const customerOfferRequestRules = [
+  body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('amount').exists().withMessage('Please provide amount').notEmpty().withMessage('Please provide amount'),
+  body('notes').optional(),
+];

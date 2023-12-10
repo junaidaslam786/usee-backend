@@ -1218,7 +1218,7 @@ export async function getPropertiesSoldRented(req, res) {
   }
 
   try {
-    const { rows, count } = await product.findAndCountAll({
+    const propertiesForSale = await product.findAndCountAll({
       where,
       // attributes: ["id", "title", "price", "description"],
       include: [
@@ -1237,16 +1237,19 @@ export async function getPropertiesSoldRented(req, res) {
         {
           model: productMetaTag,
           attributes: ["value"],
-          include: [
-            {
-              model: categoryField,
-              attributes: ["id", "label", "type", "options", "required"],
-            },
-          ],
+          where: {
+            key: 2,
+            value: "sale",
+          },
         },
         {
           model: productOffer,
           attributes: ["id", "amount", "notes", "status", "rejectReason"],
+          where: {
+            status: {
+              [Op.in]: ["accepted"],
+            },
+          },
           include: [
             {
               model: user,
@@ -1281,12 +1284,77 @@ export async function getPropertiesSoldRented(req, res) {
       limit: limit ? parseInt(limit) : 10,
     });
 
-    // console.log("ROWS: ", rows);
+    const propertiesForRent = await product.findAndCountAll({
+      where,
+      // attributes: ["id", "title", "price", "description"],
+      include: [
+        {
+          model: user,
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        },
+        {
+          model: productDocument,
+          attributes: ["id", "title", "file"],
+        },
+        {
+          model: productImage,
+          attributes: ["id", "image", "sort_order"],
+        },
+        {
+          model: productMetaTag,
+          attributes: ["value"],
+          where: {
+            key: 2,
+            value: "rent",
+          },
+        },
+        {
+          model: productOffer,
+          attributes: ["id", "amount", "notes", "status", "rejectReason"],
+          where: {
+            status: {
+              [Op.in]: ["accepted"],
+            },
+          },
+          include: [
+            {
+              model: user,
+              attributes: ["id", "firstName", "lastName", "email"],
+            },
+            {
+              model: productSnagList,
+              attributes: ["id", "agentApproved", "customerApproved"],
+              include: [
+                {
+                  model: productSnagListItem,
+                  attributes: ["snagKey", "snagValue", ["customer_comment", "cc"], ["agent_comment", "ac"]],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          model: productAllocation,
+          attributes: ["id"],
+          include: [
+            {
+              model: user,
+              attributes: ["id", "firstName", "lastName"],
+            },
+          ],
+        },
+      ],
+      distinct: true,
+      order: [["createdAt", "DESC"]],
+      offset: page ? parseInt(page) * parseInt(limit) : 0,
+      limit: limit ? parseInt(limit) : 10,
+    });
 
     return {
-      rows,
-      propertiesSold: count,
-      propertiesRented: 0,
+      // propertiesSoldData: propertiesForSale.rows,
+      // propertiesRentedData: propertiesForRent.rows,
+      propertiesSold: propertiesForSale.count,
+      propertiesRented: propertiesForRent.count,
     };
   } catch (error) {
     console.log(error);
@@ -1340,9 +1408,28 @@ export async function getPropertiesListed(req, res) {
   }
 
   try {
-    const propertiesListed = await product.findAndCountAll({
-      where,
-      attributes: ["id", "title", "price", "description", "address", "status"],
+    const propertiesListed = await user.findAndCountAll({
+      where: {
+        userType: USER_TYPE.AGENT,
+      },
+      include: [
+        {
+          model: agent,
+          attributes: ["id", "agentType", "companyName", "companyPosition", "branchId", "job_title"],
+        },
+        {
+          model: product,
+          // as: "products",
+          attributes: ["id", "title", "price", "description", "address", "status"],
+          where: {
+            status: {
+              [Op.in]: ["active"],
+            },
+          },
+        },
+      ],
+      distinct: true,
+      group: ["user.id", "agent.id", "products.id", "agent.job_title"],
       order: [["createdAt", "DESC"]],
       offset: page ? parseInt(page) * parseInt(limit) : 0,
       // limit: limit ? parseInt(limit) : 10,
@@ -1362,7 +1449,7 @@ export async function getPropertiesListed(req, res) {
     }
 
     return {
-      // rows,
+      rows: propertiesListed.rows,
       propertiesListed: propertiesListed.count,
       revenue_generated,
       propertiesUnderOffer,
@@ -1377,8 +1464,8 @@ export async function getAgentDetails(req, res) {
   const { startDate, endDate, search, page, limit } = req.query;
 
   const where = {
-    status: {
-      [Op.in]: ["pending", "rejected"],
+    branchId: {
+      [Op.not]: null,
     },
   };
 
@@ -1417,40 +1504,19 @@ export async function getAgentDetails(req, res) {
       where,
       include: [
         {
-          model: AgentBranch,
-          as: "agentBranches",
+          model: agentBranch,
           attributes: ["id", "name"],
-        },
-        {
-          model: AgentAvailability,
-          as: "agentAvailabilities",
-          attributes: ["id", "name"],
-        },
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
         },
       ],
       order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
-    });
-    const totalAgentDetails = await agent.findAndCountAll({
-      where,
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
-        },
-      ],
+      // offset: page ? parseInt(page) * parseInt(limit) : 0,
+      // limit: limit ? parseInt(limit) : 10,
     });
 
     return {
       rows,
       count,
-      totalAgentDetails,
+      // totalAgentDetails,
     };
   } catch (error) {
     console.log(error);
