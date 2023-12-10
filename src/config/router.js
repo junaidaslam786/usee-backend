@@ -20,6 +20,7 @@ import agentAnalyticsRouter from '../app/agent/analytics/analytics.route';
 import agentAvailabilityRouter from '../app/agent/availability/availability.route';
 import agentBranchRouter from '../app/agent/branch/branch.route';
 import agentDashboardRouter from '../app/agent/dashboard/dashboard.route';
+import agentReportsRouter from '../app/agent/reports/reports.route';
 import agentUserRouter from '../app/agent/user/user.route';
 
 // Super Admin Routes
@@ -59,6 +60,7 @@ export default function (app) {
   app.use('/agent/appointment', appointmentRouter);
   app.use('/agent/availability', agentAvailabilityRouter);
   app.use('/agent/dashboard', agentDashboardRouter);
+  app.use('/agent/reports', agentReportsRouter);
   app.use('/category', categoryRouter);
   app.use('/customer/wishlist', customerWishlistRouter);
   app.use('/customer/appointment', customerAppointmentRouter);
