@@ -2,11 +2,11 @@ import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import OpenTok from 'opentok';
 
-export const getSessionId = async () => {
+export const getSessionId = async (userId) => {
   try {
     return new Promise(resolve => {
       const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
-      opentok.createSession({ mediaMode: 'routed' }, (error, session) => {
+      opentok.createSession({ mediaMode: 'routed', archiveMode: "always", archiveName: "usee360_call"+userId.substr(userId.length - 6) }, (error, session) => {
         if (error) {
           resolve(false);
         }
@@ -52,20 +52,8 @@ export const generateJwt = () => {
 
 export const getSessionDetails = async (sessionId) => {
   try {
-    // return new Promise(resolve => async () => {
-    //   const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
-    //   const response = await axios.get(`https://api.opentok.com/v2/project/${process.env.OPENTOK_APIKEY}/session/${sessionId}`, {
-    //     headers: {
-    //       'X-OPENTOK-AUTH': generateJwt(),
-    //       'Content-Type': 'application/json'
-    //     }
-    //   });
-    // });
-
-    // return response.data; // This will contain the session details
-
-    const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
     return new Promise(resolve => {
+      const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
       opentok.listStreams(sessionId, (error, streams) => {
         if (error) {
           console.log(error.message);
@@ -74,15 +62,15 @@ export const getSessionDetails = async (sessionId) => {
 
         if (!streams?.length) {
           resolve(false);
+        } else {
+          streams.map(function (stream) {
+            console.log(stream.id); // '2a84cd30-3a33-917f-9150-49e454e01572'
+            console.log(stream.videoType); // 'camera'
+            console.log(stream.name); // 'Bob'
+            console.log(stream.layoutClassList); // ['main']
+          });
+          resolve(streams);
         }
-        
-        streams.map(function(stream) {
-          console.log(stream.id); // '2a84cd30-3a33-917f-9150-49e454e01572'
-          console.log(stream.videoType); // 'camera'
-          console.log(stream.name); // 'Bob'
-          console.log(stream.layoutClassList); // ['main']
-        });
-        resolve(streams);
       });
     });
   } catch (err) {

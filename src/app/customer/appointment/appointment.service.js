@@ -142,7 +142,7 @@ export const createAppointment = async (req, dbInstance) => {
       timezone
     } = req.body;
 
-    const sessionId = await opentokHelper.getSessionId();
+    const sessionId = await opentokHelper.getSessionId(req.user.id);
     if (!sessionId) {
       return { error: true, message: 'Unable to make appointment due to voice call issue.'}
     }
