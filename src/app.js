@@ -176,14 +176,6 @@ app.post('/create-checkout-session', async (req, res) => {
   const { customerId, priceId, quantity } = req.body;
 
   try {
-    const requestHeaders = req.headers;
-    const serverUrlProtocol = req.protocol;
-    const serverUrlHostName = req.hostname;
-    const serverUrlPort = req.get('host').split(':')[1]; // Extract port from host header
-
-    // Check if port is required in the URL
-    const serverUrl = serverUrlPort ? `${serverUrlProtocol}://${serverUrlHostName}:${serverUrlPort}` : `${serverUrlProtocol}://${serverUrlHostName}`;
-
     // Fetch config value from app configurations table using stripe price id
     const appConfiguration = await db.models.appConfiguration.findOne({
       where: {
@@ -211,10 +203,10 @@ app.post('/create-checkout-session', async (req, res) => {
       invoice_creation: {
         enabled: true,
       },
-      success_url: `${serverUrl}/agent/wallet`,
-      cancel_url: `${serverUrl}/agent/wallet`,
+      success_url: `${process.env.HOME_PANEL_URL}/agent/wallet`,
+      cancel_url: `${process.env.HOME_PANEL_URL}/agent/wallet`,
     });
-    console.log("SESSION: ", session);
+    // console.log("SESSION: ", session);
 
     const totalAmount = quantity * appConfiguration.configValue;
 

@@ -582,8 +582,8 @@ export const getUserTokens = async (userId, dbInstance, valid = true, available)
       pendingTokens = 0;
     tokens.forEach((token) => {
       if (token.valid) {
-        totalTokens += token.totalAmount;
-        totalTokensUsed += token.totalAmount - token.remainingAmount;
+        totalTokens += token.quantity;
+        totalTokensUsed += token.quantity - token.remainingAmount;
         totalTokensRemaining += token.remainingAmount;
       } else {
         pendingTokens += token.totalAmount;
