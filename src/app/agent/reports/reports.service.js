@@ -17,23 +17,6 @@ export async function getUsersData(req, res) {
 
     for (const userCategory of userCategories) {
       let categoryData;
-
-      if (userCategory === 'admin') {
-        let whereClause = {};
-        whereClause.userType = 'admin';
-
-        if (startDate && endDate) {
-          whereClause.createdAt = {
-            [Op.between]: [startDate, endDate],
-          };
-        }
-
-        categoryData = await user.findAll({
-          where: whereClause,
-        });
-
-        userData.admins = categoryData;
-      }
       
       if (userCategory === 'agent') {
         let whereClause = {};
@@ -77,8 +60,10 @@ export async function getUsersData(req, res) {
   }
 }
 
-export async function getPropertiesData(req, res) {
+export async function getPropertiesData(req, res, userId) {
   const { propertyCategories, startDate, endDate } = req.body;
+
+  console.log('userId', userId);
 
   try {
     let propertyData = {};

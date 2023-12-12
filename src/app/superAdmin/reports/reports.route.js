@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import * as analyticsController from './reports.controller';
+import { isAuthenticated, validate } from '@/middleware';
 
 const router = Router();
 
-router.post('/users', analyticsController.getUsersData);
-router.post('/properties', analyticsController.getPropertiesData);
-router.post('/services', analyticsController.getServicesData);
+router.post('/users', isAuthenticated, analyticsController.getUsersData);
+router.post('/properties', isAuthenticated, analyticsController.getPropertiesData);
+router.post('/services', isAuthenticated, analyticsController.getServicesData);
 
 export default router;

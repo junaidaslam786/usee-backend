@@ -2,7 +2,7 @@ import * as analyticsService from './analytics.service';
 
 export const getUsersAnalytics = async (req, res) => {
     try {
-        const usersAnalytics = await analyticsService.getUsersAnalytics(req, res);
+        const usersAnalytics = await analyticsService.getUsersAnalytics(req, res, req.user);
         res.json(usersAnalytics);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -47,7 +47,7 @@ export const getActiveCustomersAnalytics = async (req, res) => {
 
 export const getAgentsAnalytics = async (req, res) => {
     try {
-        const agentsAnalytics = await analyticsService.getAgentsAnalytics(req, res);
+        const agentsAnalytics = await analyticsService.getAgentsAnalytics(req, res, req.user);
         res.json(agentsAnalytics);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -146,7 +146,7 @@ export const getRequestsSent = async (req, res) => {
 
 export const getPropertyOffers = async (req, res) => {
     try {
-        const propertyOffers = await analyticsService.getPropertyOffers(req, res);
+        const propertyOffers = await analyticsService.getPropertyOffers(req, res, req.user);
         res.json(propertyOffers);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -164,7 +164,7 @@ export const getCarbonFootprint = async (req, res) => {
 
 export const getPropertiesSoldRented = async (req, res) => {
     try {
-        const propertiesSoldRented = await analyticsService.getPropertiesSoldRented(req, res);
+        const propertiesSoldRented = await analyticsService.getPropertiesSoldRented(req, res, req.user);
         res.json(propertiesSoldRented);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -173,7 +173,7 @@ export const getPropertiesSoldRented = async (req, res) => {
 
 export const getPropertiesListed = async (req, res) => {
     try {
-        const propertiesListed = await analyticsService.getPropertiesListed(req, res);
+        const propertiesListed = await analyticsService.getPropertiesListed(req, res, req.user);
         res.json(propertiesListed);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });

@@ -1,60 +1,61 @@
 import { Router } from 'express';
 import * as analyticsController from './analytics.controller';
+import { isAuthenticated, validate } from '@/middleware';
 
 const router = Router();
 
 // SERVICES
 // User analytics
-router.get('/users', analyticsController.getUsersAnalytics);
-router.get('/active-users', analyticsController.getActiveUsersAnalytics);
-router.get('/non-active-users', analyticsController.getNonActiveUsersAnalytics);
+router.get('/users', isAuthenticated, analyticsController.getUsersAnalytics);
+router.get('/active-users', isAuthenticated, analyticsController.getActiveUsersAnalytics);
+router.get('/non-active-users', isAuthenticated, analyticsController.getNonActiveUsersAnalytics);
 // Customer analytics
-router.get('/customers', analyticsController.getCustomersAnalytics);
-router.get('/active-customers', analyticsController.getActiveCustomersAnalytics);
+router.get('/customers', isAuthenticated, analyticsController.getCustomersAnalytics);
+router.get('/active-customers', isAuthenticated, analyticsController.getActiveCustomersAnalytics);
 // Agent analytics
-router.get('/agents', analyticsController.getAgentsAnalytics);
-router.get('/active-agents', analyticsController.getActiveAgentsAnalytics);
+router.get('/agents', isAuthenticated, analyticsController.getAgentsAnalytics);
+router.get('/active-agents', isAuthenticated, analyticsController.getActiveAgentsAnalytics);
 // // Developer analytics
-// router.get('/developers', analyticsController.getDevelopersAnalytics);
+// router.get('/developers', isAuthenticated, analyticsController.getDevelopersAnalytics);
 // // Real estate analytics
-// router.get('/real-estates', analyticsController.getRealEstatesAnalytics);
+// router.get('/real-estates', isAuthenticated, analyticsController.getRealEstatesAnalytics);
 // // Freelancer analytics
-// router.get('/freelancers', analyticsController.getFreelancersAnalytics);
+// router.get('/freelancers', isAuthenticated, analyticsController.getFreelancersAnalytics);
 
 
 // Subscription analytics
-router.get('/subscriptions', analyticsController.getSubscriptionsAnalytics);
+router.get('/subscriptions', isAuthenticated, analyticsController.getSubscriptionsAnalytics);
 // Token analytics
-router.get('/tokens', analyticsController.getTokensAnalytics);
+router.get('/tokens', isAuthenticated, analyticsController.getTokensAnalytics);
 // Feature analytics
-router.get('/features', analyticsController.getFeaturesAnalytics);
+router.get('/features', isAuthenticated, analyticsController.getFeaturesAnalytics);
 // Subscription Features analytics
-router.get('/subscription-features', analyticsController.getSubscriptionFeaturesAnalytics);
+router.get('/subscription-features', isAuthenticated, analyticsController.getSubscriptionFeaturesAnalytics);
 // Token Transaction analytics
-router.get('/token-transactions', analyticsController.getTokenTransactionsAnalytics);
+router.get('/token-transactions', isAuthenticated, analyticsController.getTokenTransactionsAnalytics);
 
 // 1. Visits per property
-router.get('/property-visits', analyticsController.getPropertyVisits);
+router.get('/property-visits', isAuthenticated, analyticsController.getPropertyVisits);
 // 2. Duration of usee360 calls
-router.get('/call-duration', analyticsController.getCallDuration);
+router.get('/call-duration', isAuthenticated, analyticsController.getCallDuration);
 // 3. Agents not responding to calls
-router.get('/unresponsive-agents', analyticsController.getUnresponsiveAgents);
+router.get('/unresponsive-agents', isAuthenticated, analyticsController.getUnresponsiveAgents);
 // 4. Number of usee360 requests sent
-router.get('/requests-sent', analyticsController.getRequestsSent);
+router.get('/requests-sent', isAuthenticated, analyticsController.getRequestsSent);
 
 // 5. Number and status of offers on property list
-router.get('/property-offers', analyticsController.getPropertyOffers); // DONE
+router.get('/property-offers', isAuthenticated, analyticsController.getPropertyOffers); // DONE
 
 // 6. Carbon footprint savings per usee360 call
-router.get('/carbon-footprint', analyticsController.getCarbonFootprint);
+router.get('/carbon-footprint', isAuthenticated, analyticsController.getCarbonFootprint);
 
 // 7. Number of properties sold or rented each month
-router.get('/properties-sold-rented', analyticsController.getPropertiesSoldRented);
+router.get('/properties-sold-rented', isAuthenticated, analyticsController.getPropertiesSoldRented);
 
 // 8. Number of properties listed per developer/real estate/freelancer/owner
-router.get('/properties-listed', analyticsController.getPropertiesListed);
+router.get('/properties-listed', isAuthenticated, analyticsController.getPropertiesListed);
 
 // 9. Number and details of agents for each registered company
-router.get('/agent-details', analyticsController.getAgentDetails);
+router.get('/agent-details', isAuthenticated, analyticsController.getAgentDetails);
 
 export default router;

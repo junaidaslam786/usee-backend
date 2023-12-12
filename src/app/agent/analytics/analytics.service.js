@@ -1,12 +1,9 @@
-import { SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from "@/config/constants";
-
+import { AGENT_TYPE, SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from "@/config/constants";
 import { utilsHelper } from "@/helpers";
 import db from "@/database";
 import { Sequelize } from "sequelize";
 import { calculateDistance, calculateTime } from "@/helpers/googleMapHelper";
-
 const { Op } = Sequelize;
-
 const {
   categoryField,
   user,
@@ -40,15 +37,11 @@ const {
   subscriptionFeature,
 } = db.models;
 
-// GET /superadmin/analytics/users?userType=admin&startDate=2022-01-01&endDate=2022-01-31&search=john&page=1&limit=10
-export async function getUsersAnalytics(req, res) {
+// GET /agent/analytics/users?startDate=2022-01-01&endDate=2022-01-31&search=john&page=1&limit=10
+export async function getUsersAnalytics(req, res, userInstance) {
   const { userType, startDate, endDate, search, page, limit } = req.query;
 
-  const where = {
-    userType: {
-      [Op.in]: userType ? userType.split(",") : Object.values(USER_TYPE),
-    },
-  };
+  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -82,59 +75,46 @@ export async function getUsersAnalytics(req, res) {
   }
 
   try {
-    const rows = await user.findAll({
-      where,
-      include: [
-        {
-          model: agent,
-          as: "agent",
-          attributes: ["id", "companyName"],
-        },
-        {
-          model: role,
-          as: "role",
-          attributes: ["id", "name"],
-        },
-        {
-          model: agentAccessLevel,
-          as: "agentAccessLevels",
-          attributes: ["id", "accessLevel"],
-        },
-      ],
-      distinct: true,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
-    });
+  const { rows, count } = await agent.findAndCountAll({
+    where: where,
+    include: [
+      {
+        model: user,
+        include: [
+          {
+            model: productAllocation,
+          },
+          {
+            model: agentAccessLevel,
+          },
+        ],
+      },
+    ],
+    distinct: true,
+    order: [["id", "DESC"]],
+    // offset: limit * (page - 1),
+    // limit: limit,
+  });
 
-    // get query to count all users in db
-    const { count } = await user.findAndCountAll();
+  let activeUsers = 0,
+    nonActiveUsers = 0,
+    managerUsers = 0,
+    staffUsers = 0;
+  for (const agent of rows) {
+    agent.user.active ? activeUsers++ : nonActiveUsers++;
+    if (agent.agentType === USER_TYPE.AGENT) agentUsers++;
+    if (agent.agentType === AGENT_TYPE.MANAGER) managerUsers++;
+    if (agent.agentType === AGENT_TYPE.STAFF) staffUsers++;
+  }
 
-    let activeUsers = 0,
-      nonActiveUsers = 0,
-      customerUsers = 0,
-      agentUsers = 0,
-      adminUsers = 0,
-      superAdminUsers = 0;
-    for (const user of rows) {
-      user.active ? activeUsers++ : nonActiveUsers++;
-      if (user.userType === USER_TYPE.CUSTOMER) customerUsers++;
-      if (user.userType === USER_TYPE.AGENT) agentUsers++;
-      if (user.userType === USER_TYPE.ADMIN) adminUsers++;
-      if (user.userType === USER_TYPE.SUPERADMIN) superAdminUsers++;
-    }
-
-    return {
-      // rows,
-      totalUsers: rows.length,
-      activeUsers,
-      nonActiveUsers,
-      customerUsers,
-      agentUsers,
-      adminUsers,
-      superAdminUsers,
-      totalUsersAll: count,
-    };
+  return {
+    rows,
+    totalUsers: count,
+    activeUsers,
+    nonActiveUsers,
+    managerUsers,
+    staffUsers,
+  };
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Server error", error });
@@ -434,10 +414,10 @@ export async function getActiveCustomersAnalytics(req, res) {
   }
 }
 
-export async function getAgentsAnalytics(req, res) {
+export async function getAgentsAnalytics(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  const where = {};
+  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -466,16 +446,15 @@ export async function getAgentsAnalytics(req, res) {
       include: [
         {
           model: user,
-          as: "user",
           attributes: ["id", "active"],
         },
       ],
       order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
+      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
       limit: limit ? parseInt(limit) : 10,
     });
 
-    const agentTokensTransactions = await getTokenTransactionsAnalytics(req, res);
+    // const agentTokensTransactions = await getTokenTransactionsAnalytics(req, res, userInstance);
 
     let totalAgents = 0,
       activeAgents = 0,
@@ -490,11 +469,11 @@ export async function getAgentsAnalytics(req, res) {
     totalAgents = activeAgents + inactiveAgents;
 
     return {
-      // rows: agents,
+      rows: agents,
       totalAgents,
       activeAgents,
       inactiveAgents,
-      servicesBought: agentTokensTransactions.count,
+      // servicesBought: agentTokensTransactions.count,
     };
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
@@ -760,10 +739,10 @@ export async function getSubscriptionFeaturesAnalytics(req, res) {
   }
 }
 
-export async function getTokenTransactionsAnalytics(req, res) {
+export async function getTokenTransactionsAnalytics(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  const where = {};
+  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -1081,13 +1060,13 @@ export async function getRequestsSent(req, res) {
   }
 }
 
-export async function getPropertyOffers(req, res) {
+export async function getPropertyOffers(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  const where = {
-    status: {
-      [Op.in]: ["accepted", "pending", "rejected"],
-    },
+  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+
+  where.status = {
+    [Op.in]: ["accepted", "pending", "rejected"],
   };
 
   if (startDate && endDate) {
@@ -1127,8 +1106,11 @@ export async function getPropertyOffers(req, res) {
       include: [
         {
           model: product,
-          as: "product",
+          // as: "product",
           attributes: ["id", "title", "price", "description"],
+          where: {
+            userId: userInstance.id,
+          },
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -1172,13 +1154,13 @@ export async function getCarbonFootprint(req, res) {
   res.json({ co2Saved, time });
 }
 
-export async function getPropertiesSoldRented(req, res) {
+export async function getPropertiesSoldRented(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  const where = {
-    status: {
-      [Op.in]: ['active'],
-    },
+  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+
+  where.status = {
+    [Op.in]: ['active'],
   };
 
   if (startDate && endDate) {
@@ -1362,13 +1344,13 @@ export async function getPropertiesSoldRented(req, res) {
   }
 }
 
-export async function getPropertiesListed(req, res) {
+export async function getPropertiesListed(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  const where = {
-    status: {
-      [Op.in]: ["active"],
-    },
+  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+
+  where.status = {
+    [Op.in]: ["active"],
   };
 
   if (startDate && endDate) {
