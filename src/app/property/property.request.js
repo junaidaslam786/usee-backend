@@ -18,6 +18,12 @@ export const customerOfferRequestRules = [
   body('notes').optional(),
 ];
 
+export const updateOfferStatusRequestRules = [
+  body('offerId').exists().withMessage('Please provide offer id').notEmpty().withMessage('Please provide offer id'),
+  body('status').exists().withMessage('Please provide status').notEmpty().withMessage('Please provide status'),
+  body('rejectReason').optional(),
+];
+
 export const createPropertyRules = [
   body('title').exists().withMessage('Please provide property title').notEmpty().withMessage('Please provide property title'),
   body('description').exists().withMessage('Please provide property description').notEmpty().withMessage('Please provide property description'),
