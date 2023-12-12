@@ -36,3 +36,8 @@ export const createPropertyRules = [
   body('longitude').exists().withMessage('Please provide property longitude').notEmpty().withMessage('Please provide property longitude'),
   body('virtualTourType').exists().withMessage('Please provide property virtual tour type').notEmpty().withMessage('Please provide property virtual tour type'),
 ];
+
+export const addPropertyLogRules = [
+  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('logType').exists().withMessage('Please provide log').notEmpty().withMessage('Please provide log'),
+];

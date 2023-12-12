@@ -480,6 +480,21 @@ export async function getAgentsAnalytics(req, res, userInstance) {
   }
 }
 
+async function getSubAgentIds(userId) {
+  try {
+    const subAgents = await agent.findAll({
+      where: { agentId: userId },
+      attributes: ['id'],
+    });
+
+    const subAgentIds = subAgents.map(subAgent => subAgent.id);
+    return subAgentIds;
+  } catch (error) {
+    console.error('Error retrieving sub-agent IDs:', error);
+    throw error;
+  }
+}
+
 export async function getActiveAgentsAnalytics(req, res) {
   const { startDate, endDate, search, page, limit } = req.query;
 
@@ -618,7 +633,7 @@ export async function getTokensAnalytics(req, res) {
     const { rows, count } = await token.findAndCountAll({
       where,
       order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
+      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
       limit: limit ? parseInt(limit) : 10,
     });
 
@@ -1063,7 +1078,9 @@ export async function getRequestsSent(req, res) {
 export async function getPropertyOffers(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+  const where = {};
+  let agentIds = await getSubAgentIds(userInstance.id)
+  agentIds.push(req.user.id)
 
   where.status = {
     [Op.in]: ["accepted", "pending", "rejected"],
@@ -1109,12 +1126,15 @@ export async function getPropertyOffers(req, res, userInstance) {
           // as: "product",
           attributes: ["id", "title", "price", "description"],
           where: {
-            userId: userInstance.id,
+            userId: {
+              [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
+            },
           },
         },
       ],
+      distinct: true,
       order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
+      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
       limit: limit ? parseInt(limit) : 10,
     });
 
@@ -1157,10 +1177,16 @@ export async function getCarbonFootprint(req, res) {
 export async function getPropertiesSoldRented(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+  let agentIds = await getSubAgentIds(userInstance.id)
+  agentIds.push(req.user.id)
 
-  where.status = {
-    [Op.in]: ['active'],
+  const where = {
+    status: {
+      [Op.in]: ['active'],
+    },
+  };
+  where.userId = {
+      [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
   };
 
   if (startDate && endDate) {
