@@ -1,4 +1,4 @@
-import { SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from '@/config/constants';
+import { AGENT_TYPE, SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from '@/config/constants';
 
 import { utilsHelper } from '@/helpers';
 import db from '@/database';
@@ -7,9 +7,24 @@ import { calculateDistance, calculateTime } from '@/helpers/googleMapHelper';
 
 const { Op } = Sequelize;
 
-const { user, userSubscription, agent, agentBranch, agentAvailability, product, productOffer, productLog, CustomerWishlist, CustomerLog, UserAlert, ProductAllocation, agentAccessLevel, UserCallBackgroundImage, token, tokenTransaction, UserSubscription, role, feature, subscriptionFeature } = db.models;
+const { user, userSubscriptions, agent, agentBranch, agentAvailability, product, productOffer, productLog, CustomerWishlist, customerLog, userAlert, productAllocation, agentAccessLevel, token, tokenTransaction, userSubscription, role, feature, subscriptionFeature } = db.models;
 
-export async function getUsersData(req, res) {
+async function getSubAgentIds(userId) {
+  try {
+    const subAgents = await agent.findAll({
+      where: { agentId: userId },
+      attributes: ['id'],
+    });
+
+    const subAgentIds = subAgents.map(subAgent => subAgent.id);
+    return subAgentIds;
+  } catch (error) {
+    console.error('Error retrieving sub-agent IDs:', error);
+    throw error;
+  }
+}
+
+export async function getUsersData(req, res, userInstance) {
   const { userCategories, startDate, endDate } = req.body;
 
   try {
@@ -20,7 +35,13 @@ export async function getUsersData(req, res) {
       
       if (userCategory === 'agent') {
         let whereClause = {};
-        whereClause.userType = 'agent';
+
+        if (userInstance.agent.agentType == AGENT_TYPE.AGENT) {
+          whereClause.agentId = userInstance.id;
+        } else {
+          whereClause.managerId = userInstance.id;
+        }
+        // const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
         if (startDate && endDate) {
           where.createdAt = {
@@ -28,28 +49,28 @@ export async function getUsersData(req, res) {
           };
         }
 
-        categoryData = await user.findAll({
+        categoryData = await agent.findAll({
           where: whereClause,
+          include: [
+            {
+              model: user,
+              include: [
+                {
+                  model: productAllocation,
+                },
+                {
+                  model: agentAccessLevel,
+                },
+              ],
+            },
+          ],
+          distinct: true,
+          order: [["id", "DESC"]],
+          // offset: limit * (page - 1),
+          // limit: limit,
         });
 
         userData.agents = categoryData;
-      }
-      
-      if (userCategory === 'customer') {
-        let whereClause = {};
-        whereClause.userType = 'customer';
-
-        if (startDate && endDate) {
-          where.createdAt = {
-            [Op.between]: [startDate, endDate],
-          };
-        }
-
-        categoryData = await user.findAll({
-          where: whereClause,
-        });
-
-        userData.customers = categoryData;
       }
     }
 
@@ -60,19 +81,24 @@ export async function getUsersData(req, res) {
   }
 }
 
-export async function getPropertiesData(req, res, userId) {
+export async function getPropertiesData(req, res, userInstance) {
   const { propertyCategories, startDate, endDate } = req.body;
-
-  console.log('userId', userId);
 
   try {
     let propertyData = {};
+
+    const where = {};
+    let agentIds = await getSubAgentIds(userInstance.id)
+    agentIds.push(req.user.id)
 
     for (const propertyCategory of propertyCategories) {
       let categoryData;
 
       if (propertyCategory === 'listed') {
         let whereClause = {};
+        whereClause.userId = {
+          [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
+        };
 
         if (startDate && endDate) {
           whereClause.createdAt = {
@@ -83,6 +109,28 @@ export async function getPropertiesData(req, res, userId) {
         categoryData = await product.findAll({
           where: whereClause,
           attributes: ['id', 'title', 'price', 'description', 'address', 'status'],
+          include: [
+            {
+              model: productOffer,
+              attributes: ['id', 'amount', 'status', 'rejectReason'],
+              include: [
+                {
+                  model: user,
+                  as: 'customer',
+                  attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
+                },
+              ],
+            },
+            {
+              model: productLog,
+              as: 'productViews',
+              attributes: ['id', 'log_type', 'createdAt'],
+              where: {
+                log_type: 'viewed',
+              },
+            }
+          ],
+          distinct: true,
           order: [['createdAt', 'DESC']],
         });
 
@@ -91,6 +139,9 @@ export async function getPropertiesData(req, res, userId) {
       
       if (propertyCategory === 'sold') {
         let whereClause = {};
+        whereClause.userId = {
+          [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
+        };
 
         if (startDate && endDate) {
           where.createdAt = {
@@ -116,7 +167,16 @@ export async function getPropertiesData(req, res, userId) {
                 },
               ],
             },
+            {
+              model: productLog,
+              as: 'productViews',
+              attributes: ['id', 'log_type', 'createdAt'],
+              where: {
+                log_type: 'viewed',
+              },
+            }
           ],
+          distinct: true,
           order: [['createdAt', 'DESC']],
         });
 
@@ -125,6 +185,9 @@ export async function getPropertiesData(req, res, userId) {
       
       if (propertyCategory === 'unsold') {
         let whereClause = {};
+        whereClause.userId = {
+          [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
+        };
 
         if (startDate && endDate) {
           where.createdAt = {
@@ -152,7 +215,16 @@ export async function getPropertiesData(req, res, userId) {
                 },
               ],
             },
+            {
+              model: productLog,
+              as: 'productViews',
+              attributes: ['id', 'log_type', 'createdAt'],
+              where: {
+                log_type: 'viewed',
+              },
+            }
           ],
+          distinct: true,
           order: [['createdAt', 'DESC']],
         });
 
@@ -167,7 +239,7 @@ export async function getPropertiesData(req, res, userId) {
   }
 }
 
-export async function getServicesData(req, res) {
+export async function getServicesData(req, res, userInstance) {
   const { serviceCategories, startDate, endDate } = req.body;
 
   try {

@@ -484,7 +484,7 @@ async function getSubAgentIds(userId) {
   try {
     const subAgents = await agent.findAll({
       where: { agentId: userId },
-      attributes: ['id'],
+      attributes: ['userId'],
     });
 
     const subAgentIds = subAgents.map(subAgent => subAgent.id);
