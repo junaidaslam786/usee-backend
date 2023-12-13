@@ -37,6 +37,36 @@ export const createPropertyRules = [
   body('virtualTourType').exists().withMessage('Please provide property virtual tour type').notEmpty().withMessage('Please provide property virtual tour type'),
 ];
 
+export const updatePropertyRules = [
+  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('title').optional(),
+  body('description').optional(),
+  body('price').optional(),
+  body('address').optional(),
+  body('city').optional(),
+  body('postalCode').optional(),
+  body('region').optional(),
+  body('latitude').optional(),
+  body('longitude').optional(),
+  body('virtualTourType').optional(),
+];
+
+export const uploadPropertyDocumentRules = [
+  body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('titles').exists().withMessage('Please provide titles').notEmpty().withMessage('Please provide titles'),
+  body('files').exists().withMessage('Please provide document files').notEmpty().withMessage('Please provide document files'),
+];
+
+export const deletePropertyDocumentRules = [
+  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('documentId').exists().withMessage('Please provide document id').notEmpty().withMessage('Please provide document id'),
+];
+
+export const uploadPropertyImageRules = [
+  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('image').exists().withMessage('Please provide image').notEmpty().withMessage('Please provide image'),
+];
+
 export const addPropertyLogRules = [
   body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
   body('logType').exists().withMessage('Please provide log').notEmpty().withMessage('Please provide log'),

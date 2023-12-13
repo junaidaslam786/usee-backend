@@ -13,10 +13,10 @@ async function getSubAgentIds(userId) {
   try {
     const subAgents = await agent.findAll({
       where: { agentId: userId },
-      attributes: ['id'],
+      attributes: ['userId'],
     });
 
-    const subAgentIds = subAgents.map(subAgent => subAgent.id);
+    const subAgentIds = subAgents.map(subAgent => subAgent.userId);
     return subAgentIds;
   } catch (error) {
     console.error('Error retrieving sub-agent IDs:', error);
@@ -244,6 +244,10 @@ export async function getServicesData(req, res, userInstance) {
 
   try {
     let serviceData = {};
+
+    let agentIds = await getSubAgentIds(userInstance.id)
+    agentIds.push(req.user.id)
+    console.log('agentIds', agentIds)
 
     for (const serviceCategory of serviceCategories) {
       let categoryData;

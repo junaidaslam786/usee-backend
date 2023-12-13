@@ -43,7 +43,7 @@ export const updateProperty = async (req, res, next) => {
  */
 export const uploadPropertyDocuments = async (req, res, next) => {
     try {
-        const result = await propertyService.uploadPropertyDocuments(req);
+        const result = await propertyService.uploadPropertyDocuments(req, res);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }
@@ -61,7 +61,7 @@ export const uploadPropertyDocuments = async (req, res, next) => {
  */
 export const uploadPropertyImages = async (req, res, next) => {
     try {
-        const result = await propertyService.uploadPropertyImages(req);
+        const result = await propertyService.uploadPropertyImages(req, res);
         if (result?.error && result?.message) {
             return next(createError(400, result.message));
         }

@@ -487,7 +487,7 @@ async function getSubAgentIds(userId) {
       attributes: ['userId'],
     });
 
-    const subAgentIds = subAgents.map(subAgent => subAgent.id);
+    const subAgentIds = subAgents.map(subAgent => subAgent.userId);
     return subAgentIds;
   } catch (error) {
     console.error('Error retrieving sub-agent IDs:', error);

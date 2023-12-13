@@ -306,8 +306,9 @@ export const updateProperty = async (reqBody, req) => {
   }
 }
 
-export const uploadPropertyDocuments = async (req) => {
+export const uploadPropertyDocuments = async (req, res) => {
   try {
+    console.log('FILES', req.files)
     const productDocuments = [];
     const files = req.files.files;
     const { titles, productId } = req.body;
@@ -377,7 +378,7 @@ export const chatAttachment = async (req) => {
   }
 }
 
-export const uploadPropertyImages = async (req) => {
+export const uploadPropertyImages = async (req, res) => {
   try {
     const productImages = [];
     const files = req.files.files;
