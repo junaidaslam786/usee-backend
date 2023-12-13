@@ -308,7 +308,6 @@ export const updateProperty = async (reqBody, req) => {
 
 export const uploadPropertyDocuments = async (req, res) => {
   try {
-    console.log('FILES', req.files)
     const productDocuments = [];
     const files = req.files.files;
     const { titles, productId } = req.body;
@@ -571,9 +570,9 @@ export const removePropertyRequest = async (reqUser, reqBody, dbInstance) => {
       return { error: true, message: 'You do not have permission to update property. ' }
     }
 
-    const { propertyId, reasonId, reason } = reqBody;
+    const { productId, reasonId, reason } = reqBody;
 
-    const property = await getPropertyById(propertyId, dbInstance);
+    const property = await getPropertyById(productId, dbInstance);
     if (!property) {
       return { error: true, message: 'Invalid property id or Property do not exist.' }
     }

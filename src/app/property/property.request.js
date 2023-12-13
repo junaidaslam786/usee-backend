@@ -2,7 +2,7 @@ import { body } from 'express-validator';
 import db from '@/database';
 
 export const removalRequestRules = [
-  body('propertyId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
   body('reasonId').exists().custom(async (value) => {
     return await db.models.productRemoveReason.findOne({ where: { id: value } }).then(reasonData => {
       if (!reasonData) {
@@ -38,7 +38,7 @@ export const createPropertyRules = [
 ];
 
 export const updatePropertyRules = [
-  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
   body('title').optional(),
   body('description').optional(),
   body('price').optional(),
@@ -54,20 +54,19 @@ export const updatePropertyRules = [
 export const uploadPropertyDocumentRules = [
   body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
   body('titles').exists().withMessage('Please provide titles').notEmpty().withMessage('Please provide titles'),
-  body('files').exists().withMessage('Please provide document files').notEmpty().withMessage('Please provide document files'),
 ];
 
 export const deletePropertyDocumentRules = [
-  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
   body('documentId').exists().withMessage('Please provide document id').notEmpty().withMessage('Please provide document id'),
 ];
 
 export const uploadPropertyImageRules = [
-  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
-  body('image').exists().withMessage('Please provide image').notEmpty().withMessage('Please provide image'),
+  body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  // body('image').exists().withMessage('Please provide image').notEmpty().withMessage('Please provide image'),
 ];
 
 export const addPropertyLogRules = [
-  body('id').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
+  body('productId').exists().withMessage('Please provide property id').notEmpty().withMessage('Please provide property id'),
   body('logType').exists().withMessage('Please provide log').notEmpty().withMessage('Please provide log'),
 ];
