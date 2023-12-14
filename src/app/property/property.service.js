@@ -837,6 +837,13 @@ export const getPropertyDetailById = async (propertyId, dbInstance) => {
           attributes: ['id', 'firstName', 'lastName']
         }]
       },
+      {
+        model: dbInstance.productLog,
+        as: "productViews",
+        // where: {
+        //   log_type: "viewed",
+        // },
+      },
     ],
   });
 
