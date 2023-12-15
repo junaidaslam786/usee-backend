@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import * as propertyController from './property.controller';
 import * as propertyValidations from './property.request';
-import { isAuthenticated, validate } from '@/middleware';
+import { isAuthenticated, propertySubscription, validate } from '@/middleware';
 
 const router = Router();
 
@@ -11,7 +11,7 @@ router.get('/to-allocate', isAuthenticated, propertyController.listPropertiesToA
 router.get('/to-allocate-customer', isAuthenticated, propertyController.listPropertiesAllocateToCustomer);
 router.get('/list-removal-reasons', isAuthenticated, propertyController.listRemovalReasons);
 router.get('/:id', isAuthenticated, propertyController.getProperty);
-router.post('/create', isAuthenticated, validate(propertyValidations.createPropertyRules), propertyController.createProperty);
+router.post('/create', isAuthenticated, propertySubscription, validate(propertyValidations.createPropertyRules), propertyController.createProperty);
 router.put('/update', isAuthenticated, validate(propertyValidations.updatePropertyRules), propertyController.updateProperty);
 router.post('/document', isAuthenticated, validate(propertyValidations.uploadPropertyDocumentRules), propertyController.uploadPropertyDocuments);
 router.delete('/document', isAuthenticated, validate(propertyValidations.deletePropertyDocumentRules), propertyController.deletePropertyDocument);

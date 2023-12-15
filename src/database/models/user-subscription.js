@@ -54,6 +54,14 @@ export default function (sequelize) {
       type: DataTypes.FLOAT,
       allowNull: false,
     },
+    autoRenew: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    autoRenewUnits: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+    },
     startDate: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

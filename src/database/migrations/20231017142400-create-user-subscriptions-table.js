@@ -47,6 +47,16 @@ module.exports = {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
+      autoRenew: {
+        field: 'auto_renew',
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      autoRenewUnits: {
+        field: 'auto_renew_units',
+        type: Sequelize.FLOAT,
+        defaultValue: 0,
+      },
       startDate: {
         field: 'start_date',
         type: Sequelize.DATE,

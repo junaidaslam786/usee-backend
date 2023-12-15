@@ -1,6 +1,9 @@
 import authenticationMiddleware from './authentication';
-import stripeSubscriptionMiddleware from './stripeSubscription';
-import userSubscriptionMiddleware from './userSubscription';
+import analyticsSubscription from './_analyticsSubscription';
+import apiSubscription from './_apiSubscription';
+import carbonFootprintSubscription from './_carbonFootprintSubscription';
+import propertySubscription from './_propertySubscription';
+import videoCallSubscription from './_videoCallSubscription';
 import isAuthenticated from './isAuthenticated';
 import sentryMiddleware from './sentry';
 import validate from './validate';
@@ -9,8 +12,11 @@ import verifyPermissions from './verifyPermissions';
 
 export {
   authenticationMiddleware,
-  stripeSubscriptionMiddleware,
-  userSubscriptionMiddleware,
+  analyticsSubscription,
+  apiSubscription,
+  carbonFootprintSubscription,
+  propertySubscription,
+  videoCallSubscription,
   isAuthenticated,
   sentryMiddleware,
   validate,

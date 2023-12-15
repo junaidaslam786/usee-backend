@@ -13,8 +13,7 @@ import Stripe from 'stripe';
 import db from "@/database";
 
 import * as configs from "@/config";
-import { authenticationMiddleware, stripeSubscriptionMiddleware, userSubscription, sentryMiddleware, userSubscriptionMiddleware } from "@/middleware";
-// import user from "./database/models/user";
+import { authenticationMiddleware, sentryMiddleware } from "@/middleware";
 
 const { NODE_ENV } = process.env;
 

@@ -79,6 +79,9 @@ export default function (sequelize) {
     status: {
       type: DataTypes.STRING,
     },
+    freeTimeSlots: {
+      type: DataTypes.FLOAT,
+    },
     apiCode: {
       type: DataTypes.STRING,
     },
