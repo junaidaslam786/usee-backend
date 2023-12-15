@@ -30,6 +30,7 @@ export async function getUsersData(req, res) {
 
         categoryData = await user.findAll({
           where: whereClause,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'userType', 'cityName', 'stripeCustomerId', 'active'],
         });
 
         userData.admins = categoryData;
@@ -47,6 +48,7 @@ export async function getUsersData(req, res) {
 
         categoryData = await user.findAll({
           where: whereClause,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'userType', 'cityName', 'stripeCustomerId', 'active'],
         });
 
         userData.agents = categoryData;
@@ -64,6 +66,7 @@ export async function getUsersData(req, res) {
 
         categoryData = await user.findAll({
           where: whereClause,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'userType', 'cityName', 'stripeCustomerId', 'active'],
         });
 
         userData.customers = categoryData;

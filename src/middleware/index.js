@@ -1,5 +1,6 @@
 import authenticationMiddleware from './authentication';
 import stripeSubscriptionMiddleware from './stripeSubscription';
+import userSubscriptionMiddleware from './userSubscription';
 import isAuthenticated from './isAuthenticated';
 import sentryMiddleware from './sentry';
 import validate from './validate';
@@ -9,6 +10,7 @@ import verifyPermissions from './verifyPermissions';
 export {
   authenticationMiddleware,
   stripeSubscriptionMiddleware,
+  userSubscriptionMiddleware,
   isAuthenticated,
   sentryMiddleware,
   validate,

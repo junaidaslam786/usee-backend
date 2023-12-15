@@ -18,7 +18,7 @@ export default async function (req, res, next) {
 
   // Extract token from header
   const token = authorization.substring(7);
-  const tokenData = await tokenHelper.verifyToken(token);
+  const tokenData = tokenHelper.verifyToken(token);
 
   // Check if token expired
   if (!tokenData) {

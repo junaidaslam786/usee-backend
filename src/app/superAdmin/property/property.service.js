@@ -35,7 +35,7 @@ export const createProperty = async (reqBody, req) => {
     const result = await db.transaction(async (transaction) => {
       // create product data
       const productData = {
-        userId: user?.agent?.agentType !== AGENT_TYPE.AGENT ? user?.agent?.agentId : user.id,
+        userId: user.id,
         categoryId: PRODUCT_CATEGORIES.PROPERTY,
         title,
         description,
@@ -509,6 +509,12 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
           [OP.iLike]: '%' + searchStr + '%'
         }
       },
+      include: [
+        {
+          model: dbInstance.productLog,
+          as: 'productViews',
+        },
+      ],
       order: [["createdAt", "DESC"]],
       offset: (itemPerPage * (page - 1)),
       limit: itemPerPage

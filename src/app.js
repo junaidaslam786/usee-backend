@@ -13,7 +13,7 @@ import Stripe from 'stripe';
 import db from "@/database";
 
 import * as configs from "@/config";
-import { authenticationMiddleware, stripeSubscriptionMiddleware, sentryMiddleware } from "@/middleware";
+import { authenticationMiddleware, stripeSubscriptionMiddleware, userSubscription, sentryMiddleware, userSubscriptionMiddleware } from "@/middleware";
 // import user from "./database/models/user";
 
 const { NODE_ENV } = process.env;
@@ -149,7 +149,7 @@ app.set("view engine", "ejs");
 
 // Custom middleware list
 app.use(authenticationMiddleware);
-// app.use(stripeSubscriptionMiddleware);
+// app.use(userSubscriptionMiddleware);
 if (NODE_ENV !== "development") {
   app.use(sentryMiddleware); // This should be loaded after authentication middleware.
 }

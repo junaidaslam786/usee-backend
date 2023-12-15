@@ -30,6 +30,13 @@ export const createProperty = async (reqBody, req) => {
       return { error: true, message: 'You do not have permission to add property. ' }
     }
 
+    const videoCallFeature = await dbInstance.feature.findOne({
+      where: {
+        id: "159c869a-1b24-4cd3-ac61-425645b730c7",
+      },
+      attributes: ['freeUnits']
+    });
+
     const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`, 4326);
     const result = await db.transaction(async (transaction) => {
       // create product data
@@ -49,6 +56,7 @@ export const createProperty = async (reqBody, req) => {
         status: PRODUCT_STATUS.ACTIVE,
         createdBy: user.id,
         geometry: point,
+        freeTimeSlots: videoCallFeature.freeUnits,
         apiCode: utilsHelper.generateRandomString(10, true)
       };
       const product = await dbInstance.product.create(productData, { transaction });
@@ -512,6 +520,12 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
           { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${selectedUser}')`) } }
         ]
       },
+      include: [
+        {
+          model: dbInstance.productLog,
+          as: 'productViews',
+        }
+      ],
       order: [["createdAt", "DESC"]],
       offset: (itemPerPage * (page - 1)),
       limit: itemPerPage
@@ -933,16 +947,22 @@ export const listHomePageProperties = async (reqBody, req) => {
 
     const { rows } = await req.dbInstance.product.findAndCountAll({
       where: whereClause,
-      include: [{
-        model: req.dbInstance.productMetaTag,
-        attributes: ["value"],
-        include: [
-          {
-            model: req.dbInstance.categoryField,
-            attributes: ["id", "label", "type", "options", "required"],
-          },
-        ]
-      }],
+      include: [
+        {
+          model: req.dbInstance.productLog,
+          as: 'productViews',
+        },
+        {
+          model: req.dbInstance.productMetaTag,
+          attributes: ["value"],
+          include: [
+            {
+              model: req.dbInstance.categoryField,
+              attributes: ["id", "label", "type", "options", "required"],
+            },
+          ]
+        }
+      ],
       order: [["id", "DESC"]],
     });
 
