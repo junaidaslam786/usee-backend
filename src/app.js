@@ -96,7 +96,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
       // You should provision the subscription and save the customer ID to your database.
 
       // Save the Stripe subscription ID to your database
-      const token = await db.models.tokens.findOne({
+      const token = await db.models.token.findOne({
         where: { stripe_checkout_session_id: checkoutSession.customer },
       });
 
