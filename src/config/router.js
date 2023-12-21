@@ -25,6 +25,7 @@ import agentUserRouter from '../app/agent/user/user.route';
 
 // Super Admin Routes
 import superAdminAgentRouter from '../app/superAdmin/agent/user/user.route';
+import superAdminAlertRouter from '../app/superAdmin/alert/alert.route';
 import superAdminAnalticsRouter from '../app/superAdmin/analytics/analytics.route';
 import superAdminAppConfigurationRouter from '../app/superAdmin/appConfiguration/appConfiguration.route';
 import superAdminAuthRouter from '../app/superAdmin/auth/auth.route';
@@ -87,6 +88,7 @@ export default function (app) {
   app.use('/superadmin', superAdminUserRouter);
 
   app.use('/superadmin/agent', superAdminAgentRouter);
+  app.use('/superadmin/alert', superAdminAlertRouter);
   app.use('/superadmin/analytics', superAdminAnalticsRouter);
   app.use('/superadmin/auth', superAdminAuthRouter);
   app.use('/superadmin/cms/community', superAdminCmsCommunityRouter);
