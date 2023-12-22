@@ -28,6 +28,7 @@ import superAdminAgentRouter from '../app/superAdmin/agent/user/user.route';
 import superAdminAlertRouter from '../app/superAdmin/alert/alert.route';
 import superAdminAnalticsRouter from '../app/superAdmin/analytics/analytics.route';
 import superAdminAppConfigurationRouter from '../app/superAdmin/appConfiguration/appConfiguration.route';
+import superAdminAppointmentRouter from '../app/superAdmin/appointment/appointment.route';
 import superAdminAuthRouter from '../app/superAdmin/auth/auth.route';
 import superAdminCmsCommunityRouter from '../app/superAdmin/cms/community/community.route';
 import superAdminFeatureRouter from '../app/superAdmin/feature/feature.route';
@@ -76,7 +77,6 @@ export default function (app) {
 
   // Login and Register
   app.use('/admin', adminUserRouter);
-
   app.use('/admin/auth', adminAuthRouter);
   app.use('/admin/agent', adminAgentRouter);
   app.use('/admin/cms/page', adminNewsRouter);
@@ -86,10 +86,10 @@ export default function (app) {
 
   // Super Admin Routes
   app.use('/superadmin', superAdminUserRouter);
-
   app.use('/superadmin/agent', superAdminAgentRouter);
   app.use('/superadmin/alert', superAdminAlertRouter);
   app.use('/superadmin/analytics', superAdminAnalticsRouter);
+  app.use('/superadmin/appointment', superAdminAppointmentRouter);
   app.use('/superadmin/auth', superAdminAuthRouter);
   app.use('/superadmin/cms/community', superAdminCmsCommunityRouter);
   app.use('/superadmin/cms/page', superAdminNewsRouter);
