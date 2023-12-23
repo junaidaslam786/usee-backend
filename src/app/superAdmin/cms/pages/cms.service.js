@@ -113,6 +113,7 @@ export const allCmsPages = async (reqBody, dbInstance) => {
       where: {pageType},
       include: [{
         model: dbInstance.cmsAsset,
+        required: false,
       }],
       order: [['id', 'DESC']],
     });
