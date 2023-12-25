@@ -1373,6 +1373,9 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
 export async function getPropertiesListed(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
+  let agentIds = await getSubAgentIds(userInstance.id)
+  agentIds.push(req.user.id)
+
   const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   where.status = {
@@ -1430,6 +1433,9 @@ export async function getPropertiesListed(req, res, userInstance) {
           // as: "products",
           attributes: ["id", "title", "price", "description", "address", "status"],
           where: {
+            userId: {
+              [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? agentIds : [userInstance.id],
+            },
             status: {
               [Op.in]: ["active"],
             },

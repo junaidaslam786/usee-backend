@@ -309,11 +309,15 @@ const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
         model: dbInstance.user,
         include: [
           {
+            model: dbInstance.product,
+            attributes: ["id", "title", "description", "status"],
+          },
+          {
             model: dbInstance.productAllocation,
             include: [
               {
                 model: dbInstance.product,
-                attributes: ["id", "title"],
+                attributes: ["id", "title", "description", "status"],
               },
             ],
           },
