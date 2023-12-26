@@ -61,23 +61,26 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
     switch (event.type) {
       case 'invoice.payment_succeeded':
         const invoice = event.data.object;
-        console.log("invoice: ", invoice);
+        // console.log("invoice: ", invoice);
   
         // find token by invoice id
-        // const token = await db.models.token.findOne({
-        //   where: { stripe_invoice_id: invoice.id },
-        // });
+        const token1 = await db.models.token.findOne({
+          where: { stripe_invoice_id: invoice.id },
+        });
   
-        // if (token) {
-        //   token.stripeInvoiceStatus = invoice.status;
-        //   token.valid = true;
-        //   await token.save();
-        // }
+        if (token1) {
+          token1.stripeInvoiceStatus = invoice.status;
+          if (invoice.status === "paid") {
+            token1.acquiredDate = new Date();
+            token1.valid = true;
+          }
+          await token.save();
+        }
         break;
   
       case 'customer.created':
         const customer = event.data.object;
-        console.log("customer: ", customer);
+        // console.log("customer: ", customer);
   
         // Save the Stripe customer ID to your database
         const user = await db.models.user.findOne({
@@ -85,7 +88,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
         });
   
         if (user) {
-          console.log("user: ", user);
+          // console.log("user: ", user);
           user.stripeCustomerId = customer.id;
           await user.save();
         }
@@ -94,23 +97,20 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
       case 'checkout.session.completed':
         const checkoutSession = event.data.object;
         console.log("checkoutSession: ", checkoutSession);
-        // Payment is successful and the subscription is created.
-        // You should provision the subscription and save the customer ID to your database.
-  
+        
         // Save the Stripe subscription ID to your database
         const token = await db.models.token.findOne({
-          where: { stripe_checkout_session_id: checkoutSession.customer },
+          where: { stripe_checkout_session_id: checkoutSession.id },
         });
   
         if (token) {
-          console.log("token: ", token);
-          // fetch invoice data from stripe
-          const invoice = await stripe.invoices.retrieve(checkoutSession.invoice);
-          token.stripeInvoiceData = invoice;
+          // console.log("token: ", token);
           token.stripeInvoiceId = checkoutSession.invoice;
           token.stripeInvoiceStatus = checkoutSession.payment_status;
-          token.acquiredDate = new Date();
-          token.valid = true;
+          if (checkoutSession.payment_status === "paid") {
+            token.acquiredDate = new Date();
+            token.valid = true;
+          }
           await token.save();
         }
         break;
