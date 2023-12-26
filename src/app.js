@@ -74,7 +74,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
             token1.acquiredDate = new Date();
             token1.valid = true;
           }
-          await token.save();
+          await token1.save();
         }
         break;
   
