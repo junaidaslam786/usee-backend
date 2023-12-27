@@ -565,10 +565,15 @@ export const getUserTokens = async (userId, dbInstance, valid = true, available)
       return { error: true, message: "User ID is required." };
     }
 
-    const whereClause = { userId, valid };
+    const whereClause = { 
+      userId,
+      valid,
+      refundStatus: { [OP.or]: [null] },
+      refundAmount: { [OP.or]: [null] }
+    };
 
     if (available !== undefined) {
-      whereClause.remainingAmount = available ? { [OP.gt]: 0 } : { [OP.gte]: 0 };
+      whereClause.remainingAmount = available ? { [OP.gt]: 0 } : { [OP.gte]: 0 };      
     }
 
     const tokens = await dbInstance.token.findAll({
