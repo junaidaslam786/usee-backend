@@ -70,6 +70,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
   
         if (token1) {
           token1.stripeInvoiceStatus = invoice.status;
+          token1.stripeInvoiceData = invoice;
           if (invoice.status === "paid") {
             token1.acquiredDate = new Date();
             token1.valid = true;
@@ -179,7 +180,7 @@ app.get('/config/:configKey', async (req, res) => {
 // ROUTES THAT INTERACT WITH THE STRIPE API
 // Create a checkout session on stripe
 app.post('/create-checkout-session', async (req, res) => {
-  const { customerId, priceId, quantity } = req.body;
+  const { customerId, priceId, quantity, couponId } = req.body;
 
   try {
     // Fetch config value from app configurations table using stripe price id
@@ -198,7 +199,11 @@ app.post('/create-checkout-session', async (req, res) => {
     // Retrieve customer's Stripe ID from your database
     const customer = await db.models.user.findOne({ where: { stripe_customer_id: customerId } })
 
-    const session = await stripe.checkout.sessions.create({
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    const checkoutSessionOptions = {
       customer: customer.stripeCustomerId,
       payment_method_types: ['card'],
       line_items: [{
@@ -211,7 +216,15 @@ app.post('/create-checkout-session', async (req, res) => {
       },
       success_url: `${process.env.HOME_PANEL_URL}/agent/wallet`,
       cancel_url: `${process.env.HOME_PANEL_URL}/agent/wallet`,
-    });
+    }
+
+    if (couponId) {
+      checkoutSessionOptions.discounts = [{
+        coupon: couponId,
+      }];
+    }
+
+    const session = await stripe.checkout.sessions.create(checkoutSessionOptions);
     // console.log("SESSION: ", session);
 
     const totalAmount = quantity * appConfiguration.configValue;
@@ -229,10 +242,10 @@ app.post('/create-checkout-session', async (req, res) => {
       updatedBy: customer.id,
     });
 
-    res.json({ session: session });
+    res.json({ success: true, message: 'Checkout session created successfully', session: session, token: token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to create checkout session' });
+    res.status(500).json({ error: 'Failed to create checkout session', message: err?.raw?.message });
   }
 });
 
@@ -488,40 +501,62 @@ app.post('/send-invoice', async (req, res) => {
 
 // Endpoint to process refunds
 app.post('/refund', async (req, res) => {
-  const { body: { customerId, invoiceId, paymentIntentId } } = req;
+  const { body: { customerId, invoiceId, paymentIntentId, amountToRefund, refundStatus } } = req;
 
   if (!customerId || !invoiceId || !paymentIntentId) {
-    return res.status(400).json({ error: "Bad Request", message: "customerId, invoiceId and paymentIntentId are required." });
+    return res.status(400).json({ error: "Bad Request", message: "customerId, invoiceId, paymentIntentId and refundStatus are required." });
   }
 
   const customer = await db.models.user.findOne({ where: { stripe_customer_id: customerId } })
 
   if (!customer) {
-    return res.status(403).json({ error: true, message: "user does not exist." });
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+
+  const invoice = await db.models.token.findOne({ where: { stripe_invoice_id: invoiceId } })
+  console.log("INVOICE: ", invoice);
+
+  if (!invoice) {
+    return res.status(404).json({ error: 'Invoice not found' });
   }
 
   try {
+    let calculatedRefundAmount = null;
+    let percentageUsed = parseFloat(invoice.remainingAmount / invoice.quantity);
+    calculatedRefundAmount = invoice.totalAmount * percentageUsed;
+
     // Refund the PaymentIntent
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
+      amount: ( amountToRefund ? amountToRefund : calculatedRefundAmount ) * 100,
     });
+    console.log("REFUND: ", refund);
+
+    if (!refund) {
+      return res.status(404).json({ error: 'Refund is unsuccessful' });
+    }
+
+    invoice.refundStatus = refundStatus;
+    invoice.refundAmount = calculatedRefundAmount;
+    await invoice.save();
 
     // Add the tokens to the user's account in your database
-    const token = await db.models.token.create({
-      userId: customer.id,
-      quantity: quantity, // from invoice
-      price: appConfiguration.configValue, // from inoive
-      totalAmount: -totalAmount, // from invoice
-      remainingAmount: 0, // from invoice
-      stripeCheckoutSessionId: session.id, // from invoice
-      createdBy: customer.id,
-      updatedBy: customer.id,
-    });
+    // const token = await db.models.token.create({
+    //   userId: customer.id,
+    //   quantity: invoice.quantity, // from invoice
+    //   price: appConfiguration.configValue, // from inoive
+    //   totalAmount: -to, // from invoice
+    //   remainingAmount: 0, // from invoice
+    //   refundStatus: refundStatus,
+    //   refundAmount: refund.amount,
+    //   createdBy: customer.id,
+    //   updatedBy: customer.id,
+    // });
 
-    res.json({ success: true, message: 'Refund successful', refund });
+    res.json({ success: true, message: 'Refund successful', data: refund });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: error.raw.message });
+    res.status(500).json({ error: 'Failed to refund payment', message: error?.raw?.message });
   }
 });
 
