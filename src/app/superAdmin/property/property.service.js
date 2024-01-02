@@ -546,6 +546,11 @@ export const listAllProperties = async (userId, reqBody, dbInstance) => {
           [OP.iLike]: '%' + searchStr + '%'
         }
       },
+      include: [
+        {
+          model: dbInstance.user,
+        },
+      ],
       order: [["createdAt", "DESC"]]
     });
 
