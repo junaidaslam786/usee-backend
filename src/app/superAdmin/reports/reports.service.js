@@ -12,6 +12,10 @@ const { user, userSubscription, agent, agentBranch, agentAvailability, product, 
 export async function getUsersData(req, res) {
   const { userCategories, startDate, endDate } = req.body;
 
+  if (!userCategories) {
+    return res.status(400).json({ message: 'User categories are required' });
+  }
+
   try {
     let userData = {};
 
