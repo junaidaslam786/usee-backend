@@ -21,7 +21,7 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
     const appointmentType = (reqBody && reqBody.type) ? reqBody.type : APPOINTMENT_TYPES.UPCOMING;
 
-    const selectedUser = (reqBody && reqBody?.selectedUser) ? reqBody.selectedUser : agentInfo.id;
+    const selectedUser = (reqBody && reqBody?.selectedUser) ? reqBody?.selectedUser : agentInfo.id;
     const whereClause = {
       [OP.or]: [
         { agentId: selectedUser },
@@ -415,6 +415,30 @@ export const getSessionDetails = async (appointmentId, dbInstance) => {
     return sessionDetails;
   } catch (err) {
     console.log('getSessionDetailsServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
+export const downloadSessionRecording = async (archiveId, dbInstance) => {
+  try {
+    // const appointment = await dbInstance.appointment.findOne({
+    //   where: { id: appointmentId },
+    //   attributes: ['id', 'sessionId']
+    // });
+
+    // if (!appointment) {
+    //   return { error: true, message: 'Invalid appointment id or Appointment do not exist.' }
+    // }
+
+    // if (appointment && !appointment.sessionId) {
+    //   return { error: true, message: 'Session id not available for this meeting' }
+    // }
+
+    const archive = await opentokHelper.downloadArchive(archiveId);
+
+    return archive;
+  } catch (err) {
+    console.log('downloadSessionRecordingServiceError', err)
     return { error: true, message: 'Server not responding, please try again later.' }
   }
 }

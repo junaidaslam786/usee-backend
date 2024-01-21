@@ -7,5 +7,5 @@ export {
   mailHelper,
   tokenHelper,
   utilsHelper,
-  opentokHelper
+  opentokHelper,
 };

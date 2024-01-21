@@ -127,6 +127,24 @@ export const getSessionDetails = async (req, res, next) => {
   }
 }
 
+export const downloadSessionRecording = async (req, res, next) => {
+  try {
+    const result = await appointmentService.downloadSessionRecording((req.params?.archiveId ? req.params?.archiveId : 0), req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json(result);
+  } catch (err) {
+    console.log('downloadSessionRecordingError', err);
+    next(err);
+  }
+}
+
 /**
  * PUT /agent/appointment/status
  * Update status of the appointment

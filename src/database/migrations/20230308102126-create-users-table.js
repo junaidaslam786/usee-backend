@@ -4,47 +4,47 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     field: 'id',
     primaryKey: true,
     unique: true,
-    defaultValue: Sequelize.UUIDV4
+    defaultValue: Sequelize.UUIDV4,
   },
   firstName: {
-    type:Sequelize.STRING,
+    type: Sequelize.STRING,
     field: 'first_name',
-    allowNull: false
+    allowNull: false,
   },
   lastName: {
-    type:Sequelize.STRING,
-    field: 'last_name'
+    type: Sequelize.STRING,
+    field: 'last_name',
   },
   phoneNumber: {
-    type:Sequelize.STRING,
-    field: 'phone_number'
+    type: Sequelize.STRING,
+    field: 'phone_number',
   },
   email: {
     type: Sequelize.STRING,
-    allowNull: false
+    allowNull: false,
   },
   password: {
     type: Sequelize.STRING,
-    allowNull: false
+    allowNull: false,
   },
   status: Sequelize.BOOLEAN,
   rememberToken: {
-    type:Sequelize.STRING,
-    field: 'remember_token'
+    type: Sequelize.STRING,
+    field: 'remember_token',
   },
   rememberTokenExpire: {
-    type:Sequelize.DATE,
-    field: 'remember_token_expire'
+    type: Sequelize.DATE,
+    field: 'remember_token_expire',
   },
   userType: {
     field: 'user_type',
     type: Sequelize.ENUM,
-    defaultValue: "agent",
-    values: ["superadmin", "admin", "agent", "customer"]
+    defaultValue: 'agent',
+    values: ['superadmin', 'admin', 'agent', 'customer'],
   },
-  profileImage:{
-    type:Sequelize.STRING,
-    field: 'profile_image'
+  profileImage: {
+    type: Sequelize.STRING,
+    field: 'profile_image',
   },
   roleId: {
     field: 'role_id',
@@ -52,8 +52,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     onDelete: 'CASCADE',
     references: {
       model: 'roles',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   cityId: {
     field: 'city_id',
@@ -62,35 +62,35 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     onDelete: 'CASCADE',
     references: {
       model: 'cities',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   createdBy: {
     allowNull: true,
-    type:Sequelize.UUID,
-    field: 'created_by'
+    type: Sequelize.UUID,
+    field: 'created_by',
   },
   updatedBy: {
     allowNull: true,
-    type:Sequelize.UUID,
-    field: 'updated_by'
+    type: Sequelize.UUID,
+    field: 'updated_by',
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   deletedAt: {
     allowNull: true,
     type: Sequelize.DATE,
     field: 'deleted_at',
-    defaultValue: null
-  }
+    defaultValue: null,
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('users');

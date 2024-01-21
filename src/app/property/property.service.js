@@ -1349,11 +1349,11 @@ export const getPropertyOffer = async (offerId, dbInstance) => {
 
 export const addLog = async (reqBody, req) => {
   try {
-    const { id, logType } = reqBody;
+    const { productId, logType } = reqBody;
     const { user: userInfo, dbInstance } = req;
 
     const product = await dbInstance.product.findOne({
-      where: { id },
+      where: { id: productId },
       attributes: ['id']
     });
 
@@ -1367,7 +1367,7 @@ export const addLog = async (reqBody, req) => {
 
     const productLogObject = {
       userId: userInfo.id,
-      productId: id,
+      productId: productId,
       userType: userInfo.userType,
       logType,
     };

@@ -22,7 +22,7 @@ export default function (sequelize) {
         profileImage: this.profileImage,
         email: this.email,
         agent: agentProfile || this.agent,
-        agentAccessLevels: this.agentAccessLevels
+        agentAccessLevels: this.agentAccessLevels,
       };
       return tokenHelper.generateToken(data, expiresIn);
     }
@@ -32,30 +32,30 @@ export default function (sequelize) {
     }
 
     static associate(models) {
-      User.belongsTo(models.role, { foreignKey: 'roleId' })
-      User.hasOne(models.agent, { foreignKey: 'userId' })
-      User.hasMany(models.agentBranch, { foreignKey: 'userId' })
-      User.hasMany(models.agentAvailability, { foreignKey: 'userId' })
-      User.hasMany(models.product, { foreignKey: 'userId' })
-      User.hasMany(models.customerWishlist, { foreignKey: 'customerId' })
-      User.hasMany(models.customerLog, { foreignKey: 'userId' })
-      User.hasMany(models.userAlert, { foreignKey: 'customerId' })
-      User.hasMany(models.productAllocation, { foreignKey: 'userId' })
-      User.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
-      User.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' })
-      User.hasMany(models.token, { foreignKey: 'userId' })
-      User.hasMany(models.tokenTransaction, { foreignKey: 'userId' })
-      User.hasMany(models.userSubscription, { foreignKey: 'userId' })
+      User.belongsTo(models.role, { foreignKey: 'roleId' });
+      User.hasOne(models.agent, { foreignKey: 'userId' });
+      User.hasMany(models.agentBranch, { foreignKey: 'userId' });
+      User.hasMany(models.agentAvailability, { foreignKey: 'userId' });
+      User.hasMany(models.product, { foreignKey: 'userId' });
+      User.hasMany(models.customerWishlist, { foreignKey: 'customerId' });
+      User.hasMany(models.customerLog, { foreignKey: 'userId' });
+      User.hasMany(models.userAlert, { foreignKey: 'customerId' });
+      User.hasMany(models.productAllocation, { foreignKey: 'userId' });
+      User.hasMany(models.agentAccessLevel, { foreignKey: 'userId' });
+      User.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' });
+      User.hasMany(models.token, { foreignKey: 'userId' });
+      User.hasMany(models.tokenTransaction, { foreignKey: 'userId' });
+      User.hasMany(models.userSubscription, { foreignKey: 'userId' });
     }
   }
 
   User.init({
     id: {
       type: DataTypes.UUID,
-      field: "id",
+      field: 'id',
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     firstName: {
       type: DataTypes.STRING,
@@ -77,7 +77,7 @@ export default function (sequelize) {
     },
     userType: {
       type: DataTypes.STRING,
-      enum: ['superadmin', 'admin', "agent", "customer"]
+      enum: ['superadmin', 'admin', 'agent', 'customer'],
     },
     profileImage: {
       type: DataTypes.STRING,
@@ -102,64 +102,68 @@ export default function (sequelize) {
       references: {
         model: 'roles',
         key: 'id',
-      }
+      },
     },
     otpVerified: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: false,
     },
     otpCode: {
       type: DataTypes.INTEGER,
-      defaultValue: null
+      defaultValue: null,
     },
     otpExpiry: {
       type: DataTypes.DATE,
-      defaultValue: null
+      defaultValue: null,
     },
     signupStep: {
       type: DataTypes.INTEGER,
-      defaultValue: 0
+      defaultValue: 0,
     },
     stripeCustomerId: {
       type: DataTypes.STRING,
-      field: "stripe_customer_id",
+      field: 'stripe_customer_id',
     },
     stripePaymentMethodId: {
       type: DataTypes.STRING,
-      field: "stripe_payment_method_id",
+      field: 'stripe_payment_method_id',
     },
     timezone: {
       type: DataTypes.STRING,
     },
     createdBy: {
       type: DataTypes.UUID,
-      field: "created_by",
+      field: 'created_by',
     },
     updatedBy: {
       type: DataTypes.UUID,
-      field: "updated_by",
+      field: 'updated_by',
     },
   }, {
     modelName: 'user',
     tableName: 'users',
     sequelize,
-    paranoid: true
+    paranoid: true,
   });
 
   User.addHook('beforeSave', async (instance) => {
     if (instance.changed('password')) {
+      // eslint-disable-next-line no-param-reassign
       instance.password = await hash(instance.password, 10);
     }
 
     if (!instance.profileImage) {
+      // eslint-disable-next-line no-param-reassign
       instance.profileImage = '/dummy.png';
     }
   });
 
+  // eslint-disable-next-line no-unused-vars
   User.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   User.addHook('afterDestroy', (instance) => {
     //
   });
