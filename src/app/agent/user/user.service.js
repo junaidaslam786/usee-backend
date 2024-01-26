@@ -265,11 +265,62 @@ export const deleteAgentUser = async (userId, dbInstance) => {
     }
 
     await db.transaction(async (transaction) => {
+      await dbInstance.agentAccessLevel.destroy(
+        {
+          where: {
+            userId,
+          },
+          force: true,
+        },
+        { transaction }
+      );
+
+      await dbInstance.agentAvailability.destroy(
+        {
+          where: {
+            userId,
+          },
+          force: true,
+        },
+        { transaction }
+      );
+
+      await dbInstance.agentTimeSlot.destroy(
+        {
+          where: {
+            userId,
+          },
+          force: true,
+        },
+        { transaction }
+      );
+
+      await dbInstance.productAllocation.destroy(
+        {
+          where: {
+            userId,
+          },
+          force: true,
+        },
+        { transaction }
+      );
+
+      await dbInstance.userCallBackgroundImage.destroy(
+        {
+          where: {
+            userId,
+          },
+          force: true,
+        },
+        { transaction }
+      );
+      
       await dbInstance.agent.destroy(
         {
           where: {
             userId,
           },
+          force: true,
         },
         { transaction }
       );
@@ -279,6 +330,7 @@ export const deleteAgentUser = async (userId, dbInstance) => {
           where: {
             id: userId,
           },
+          force: true,
         },
         { transaction }
       );

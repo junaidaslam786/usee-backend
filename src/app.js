@@ -34,21 +34,30 @@ if (NODE_ENV !== "development") {
   app.use(Sentry.Handlers.tracingHandler());
 }
 
-const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
+// Enviroment variables
+// const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+// const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+const TWITTER_CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
+const TWITTER_CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
+const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
+const LINEDIN_PRIMARY_CLIENT_SECRET = process.env.LINEDIN_PRIMARY_CLIENT_SECRET;
+const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_ENDPOINT_SECRET;
 
 // Webhook endpoint to handle events from Stripe
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (request, response) => {
   let event = request.body;
   // Only verify the event if you have an endpoint secret defined.
   // Otherwise use the basic event deserialized with JSON.parse
-  if (endpointSecret) {
+  if (STRIPE_ENDPOINT_SECRET) {
     // Get the signature sent by Stripe
     const signature = request.headers['stripe-signature'];
     try {
       event = stripe.webhooks.constructEvent(
         request.body,
         signature,
-        endpointSecret
+        STRIPE_ENDPOINT_SECRET
       );
     } catch (err) {
       console.log(`⚠️  Webhook signature verification failed.`, err.message);
@@ -163,6 +172,54 @@ if (NODE_ENV !== "development") {
 
 // Load router paths
 configs.routerConfig(app);
+
+// SOCIAL MEDIA AUTHENTICATION ROUTES
+// Facebook authentication route
+app.get('/auth/facebook', (req, res) => {
+  const redirectUrl = `${process.env.HOME_PANEL_URL}/auth/facebook/callback`;
+  const scope = 'email';
+  const state = 'facebook';
+  const url = `https://www.facebook.com/v15.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+  console.log("URL: ", url);
+  res.redirect(url);
+});
+
+// Facebook authentication callback route
+app.get('/auth/facebook/callback', async (req, res) => {
+  const { code, state } = req.query;
+
+  console.log("FACEBOOK CALLBACK");
+  if (state !== 'facebook') {
+    return res.status(400).json({ error: 'Invalid state parameter' });
+  }
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/v11.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&redirect_uri=${process.env.HOME_PANEL_URL}/auth/facebook/callback&client_secret=${FACEBOOK_APP_SECRET}&code=${code}`);
+    const data = await response.json();
+
+    const { access_token } = data;
+
+    const userResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${access_token}`);
+    const userData = await userResponse.json();
+
+    const { id, name, email } = userData;
+
+    const user = await db.models.user.findOne({
+      where: { email: email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const token = await user.generateAuthToken();
+
+    res.json({ success: true, user: user, token: token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to authenticate user' });
+  }
+});
 
 // TRADER ROUTES
 // Get app configuration by key 

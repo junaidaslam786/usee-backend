@@ -20,7 +20,7 @@ export default function (sequelize) {
       references: {
         model: 'users',
         key: 'id',
-      }
+      },
     },
     name: {
       type: DataTypes.TEXT,
@@ -32,17 +32,20 @@ export default function (sequelize) {
     modelName: 'userCallBackgroundImage',
     tableName: 'user_call_background_images',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
+  // eslint-disable-next-line no-unused-vars
   UserCallBackgroundImage.addHook('beforeSave', async (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   UserCallBackgroundImage.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   UserCallBackgroundImage.addHook('afterDestroy', (instance) => {
     //
   });
