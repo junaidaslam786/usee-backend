@@ -179,10 +179,12 @@ app.get('/auth/facebook', (req, res) => {
   const redirectUrl = `${process.env.HOME_PANEL_URL}/auth/facebook/callback`;
   const scope = 'email';
   const state = 'facebook';
-  const url = `https://www.facebook.com/v15.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+  const url = `https://www.facebook.com/v15.0/dialog/oauth?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
   console.log("URL: ", url);
-  res.redirect(url);
+
+  res.json({ url });
 });
+
 
 // Facebook authentication callback route
 app.get('/auth/facebook/callback', async (req, res) => {
