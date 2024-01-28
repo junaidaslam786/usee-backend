@@ -1,8 +1,8 @@
-import { AGENT_TYPE, SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from "@/config/constants";
-import { utilsHelper } from "@/helpers";
-import db from "@/database";
-import { Sequelize } from "sequelize";
-import { calculateDistance, calculateTime } from "@/helpers/googleMapHelper";
+import { AGENT_TYPE, SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from '@/config/constants';
+// import { utilsHelper } from '@/helpers';
+import db from '@/database';
+import { Sequelize } from 'sequelize';
+import { calculateDistance, calculateTime } from '@/helpers/googleMapHelper';
 const { Op } = Sequelize;
 const {
   categoryField,
@@ -91,7 +91,7 @@ export async function getUsersAnalytics(req, res, userInstance) {
       },
     ],
     distinct: true,
-    order: [["id", "DESC"]],
+    order: [['id', 'DESC']],
     // offset: limit * (page - 1),
     // limit: limit,
   });
@@ -117,7 +117,7 @@ export async function getUsersAnalytics(req, res, userInstance) {
   };
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -126,7 +126,7 @@ export async function getActiveUsersAnalytics(req, res) {
 
   const where = {
     userType: {
-      [Op.in]: userType ? userType.split(",") : Object.values(USER_TYPE),
+      [Op.in]: userType ? userType.split(',') : Object.values(USER_TYPE),
     },
     active: true,
   };
@@ -168,23 +168,23 @@ export async function getActiveUsersAnalytics(req, res) {
       include: [
         {
           model: agent,
-          as: "agent",
-          attributes: ["id", "companyName"],
+          as: 'agent',
+          attributes: ['id', 'companyName'],
         },
         {
           model: role,
-          as: "role",
-          attributes: ["id", "name"],
+          as: 'role',
+          attributes: ['id', 'name'],
         },
         {
           model: agentAccessLevel,
-          as: "agentAccessLevels",
-          attributes: ["id", "accessLevel"],
+          as: 'agentAccessLevels',
+          attributes: ['id', 'accessLevel'],
         },
       ],
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -193,7 +193,7 @@ export async function getActiveUsersAnalytics(req, res) {
     };
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -202,7 +202,7 @@ export async function getNonActiveUsersAnalytics(req, res) {
 
   const where = {
     userType: {
-      [Op.in]: userType ? userType.split(",") : Object.values(USER_TYPE),
+      [Op.in]: userType ? userType.split(',') : Object.values(USER_TYPE),
     },
     active: false,
   };
@@ -244,23 +244,23 @@ export async function getNonActiveUsersAnalytics(req, res) {
       include: [
         {
           model: agent,
-          as: "agent",
-          attributes: ["id", "companyName"],
+          as: 'agent',
+          attributes: ['id', 'companyName'],
         },
         {
           model: role,
-          as: "role",
-          attributes: ["id", "name"],
+          as: 'role',
+          attributes: ['id', 'name'],
         },
         {
           model: agentAccessLevel,
-          as: "agentAccessLevels",
-          attributes: ["id", "accessLevel"],
+          as: 'agentAccessLevels',
+          attributes: ['id', 'accessLevel'],
         },
       ],
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -269,7 +269,7 @@ export async function getNonActiveUsersAnalytics(req, res) {
     };
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -317,24 +317,24 @@ export async function getCustomersAnalytics(req, res) {
       include: [
         {
           model: agent,
-          as: "agent",
-          attributes: ["id", "companyName"],
+          as: 'agent',
+          attributes: ['id', 'companyName'],
         },
         {
           model: role,
-          as: "role",
-          attributes: ["id", "name"],
+          as: 'role',
+          attributes: ['id', 'name'],
         },
         {
           model: agentAccessLevel,
-          as: "agentAccessLevels",
-          attributes: ["id", "accessLevel"],
+          as: 'agentAccessLevels',
+          attributes: ['id', 'accessLevel'],
         },
       ],
       distinct: true,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     const propertiesBought = await productOffer.findAndCountAll({});
@@ -348,8 +348,8 @@ export async function getCustomersAnalytics(req, res) {
       customer.active ? activeCustomers++ : nonActiveCustomers++;
     }
     for (const productOffer of propertiesBought.rows) {
-      productOffer.status === "accepted" ? (revenue_generated += Number(productOffer.amount)) : false;
-      productOffer.status === "pending" ? propertiesUnderOffer++ : false;
+      productOffer.status === 'accepted' ? (revenue_generated += Number(productOffer.amount)) : false;
+      productOffer.status === 'pending' ? propertiesUnderOffer++ : false;
     }
 
     return {
@@ -364,7 +364,7 @@ export async function getCustomersAnalytics(req, res) {
     };
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -400,9 +400,9 @@ export async function getActiveCustomersAnalytics(req, res) {
   try {
     const { rows, count } = await user.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -410,7 +410,7 @@ export async function getActiveCustomersAnalytics(req, res) {
       count,
     };
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -446,12 +446,12 @@ export async function getAgentsAnalytics(req, res, userInstance) {
       include: [
         {
           model: user,
-          attributes: ["id", "active"],
+          attributes: ['id', 'active'],
         },
       ],
-      order: [["createdAt", "DESC"]],
-      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page && limit ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     // const agentTokensTransactions = await getTokenTransactionsAnalytics(req, res, userInstance);
@@ -476,7 +476,7 @@ export async function getAgentsAnalytics(req, res, userInstance) {
       // servicesBought: agentTokensTransactions.count,
     };
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -527,16 +527,16 @@ export async function getActiveAgentsAnalytics(req, res) {
       include: [
         {
           model: user,
-          as: "user",
-          attributes: ["id", "active"],
+          as: 'user',
+          attributes: ['id', 'active'],
           where: {
             active: true,
           },
         },
       ],
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -544,7 +544,7 @@ export async function getActiveAgentsAnalytics(req, res) {
       count,
     };
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -577,18 +577,18 @@ export async function getSubscriptionsAnalytics(req, res) {
   try {
     const { rows, count } = await userSubscription.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     let activeSubscriptions = 2,
       cancelledSubscriptions = 1,
       expiredSubscriptions = 0;
     for (const subscription of rows) {
-      if (subscription.status === "active") activeSubscriptions++;
-      if (subscription.status === "cancelled") cancelledSubscriptions++;
-      if (subscription.status === "expired") expiredSubscriptions++;
+      if (subscription.status === 'active') activeSubscriptions++;
+      if (subscription.status === 'cancelled') cancelledSubscriptions++;
+      if (subscription.status === 'expired') expiredSubscriptions++;
     }
 
     return {
@@ -599,7 +599,7 @@ export async function getSubscriptionsAnalytics(req, res) {
       expiredSubscriptions,
     };
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -632,9 +632,9 @@ export async function getTokensAnalytics(req, res) {
   try {
     const { rows, count } = await token.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page && limit ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     let totalTokens = 0,
@@ -664,7 +664,7 @@ export async function getTokensAnalytics(req, res) {
       revenue_generated,
     };
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -697,9 +697,9 @@ export async function getFeaturesAnalytics(req, res) {
   try {
     const { rows, count } = await feature.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -707,7 +707,7 @@ export async function getFeaturesAnalytics(req, res) {
       count,
     };
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -740,9 +740,9 @@ export async function getSubscriptionFeaturesAnalytics(req, res) {
   try {
     const { rows, count } = await subscriptionFeature.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -750,7 +750,7 @@ export async function getSubscriptionFeaturesAnalytics(req, res) {
       count,
     };
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -788,9 +788,9 @@ export async function getTokenTransactionsAnalytics(req, res, userInstance) {
   try {
     const { rows, count } = await tokenTransaction.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
-      // limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page && limit ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      // limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -798,7 +798,7 @@ export async function getTokenTransactionsAnalytics(req, res, userInstance) {
       count,
     };
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -831,9 +831,9 @@ export async function getPropertyVisits(req, res) {
   try {
     const { rows, count } = await tokenTransaction.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -841,7 +841,7 @@ export async function getPropertyVisits(req, res) {
       count,
     };
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -876,24 +876,24 @@ export async function getPropertyVisitsAlt(req, res) {
   try {
     const rows = await product.findAll({
       where,
-      attributes: ["id", "title", "price", "description"],
+      attributes: ['id', 'title', 'price', 'description'],
       include: [
         {
           model: productLog,
-          as: "productViews",
+          as: 'productViews',
           where: {
-            log_type: "viewed",
+            log_type: 'viewed',
           },
         },
       ],
       // order: [['created_at', 'DESC']],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     const allProductsViews = await productLog.findAndCountAll({
       where: {
-        log_type: "viewed",
+        log_type: 'viewed',
       },
     });
 
@@ -902,7 +902,7 @@ export async function getPropertyVisitsAlt(req, res) {
       allProductsViews: allProductsViews.count,
     };
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -935,9 +935,9 @@ export async function getCallDuration(req, res) {
   try {
     const { rows, count } = await tokenTransaction.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -945,7 +945,7 @@ export async function getCallDuration(req, res) {
       count,
     };
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -991,16 +991,16 @@ export async function getUnresponsiveAgents(req, res) {
       include: [
         {
           model: agentBranch,
-          attributes: ["id", "name"],
+          attributes: ['id', 'name'],
         },
         {
           model: agentAvailability,
-          attributes: ["id", "timeSlotId", "dayId", "status"],
+          attributes: ['id', 'timeSlotId', 'dayId', 'status'],
         },
       ],
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -1008,7 +1008,7 @@ export async function getUnresponsiveAgents(req, res) {
       count,
     };
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -1054,16 +1054,16 @@ export async function getRequestsSent(req, res) {
       include: [
         {
           model: agentBranch,
-          attributes: ["id", "name"],
+          attributes: ['id', 'name'],
         },
         {
           model: agentAvailability,
-          attributes: ["id", "timeSlotId", "dayId", "status"],
+          attributes: ['id', 'timeSlotId', 'dayId', 'status'],
         },
       ],
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -1071,7 +1071,7 @@ export async function getRequestsSent(req, res) {
       count,
     };
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -1079,11 +1079,11 @@ export async function getPropertyOffers(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
   const where = {};
-  let agentIds = await getSubAgentIds(userInstance.id)
-  agentIds.push(req.user.id)
+  let agentIds = await getSubAgentIds(userInstance.id);
+  agentIds.push(req.user.id);
 
   where.status = {
-    [Op.in]: ["accepted", "pending", "rejected"],
+    [Op.in]: ['accepted', 'pending', 'rejected'],
   };
 
   if (startDate && endDate) {
@@ -1124,7 +1124,7 @@ export async function getPropertyOffers(req, res, userInstance) {
         {
           model: product,
           // as: "product",
-          attributes: ["id", "title", "price", "description"],
+          attributes: ['id', 'title', 'price', 'description'],
           where: {
             userId: {
               [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
@@ -1133,18 +1133,18 @@ export async function getPropertyOffers(req, res, userInstance) {
         },
       ],
       distinct: true,
-      order: [["createdAt", "DESC"]],
-      offset: page && limit ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page && limit ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     let acceptedOffers = 0,
       rejectedOffers = 0,
       pendingOffers = 0;
     for (const offer of rows) {
-      if (offer.status === "accepted") acceptedOffers++;
-      if (offer.status === "rejected") rejectedOffers++;
-      if (offer.status === "pending") pendingOffers++;
+      if (offer.status === 'accepted') acceptedOffers++;
+      if (offer.status === 'rejected') rejectedOffers++;
+      if (offer.status === 'pending') pendingOffers++;
     }
 
     return {
@@ -1156,15 +1156,15 @@ export async function getPropertyOffers(req, res, userInstance) {
     };
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getCarbonFootprint(req, res) {
   const { agentLocation, propertyLocation } = req.body;
 
-  const distance = calculateDistance(agentLocation, propertyLocation);
-  const time = calculateTime(agentLocation, propertyLocation);
+  const distance = await calculateDistance(agentLocation, propertyLocation);
+  const time = await calculateTime(agentLocation, propertyLocation);
 
   // Assuming average CO2 emissions per mile
   const co2EmissionsPerMile = 0.404; // in kilograms
@@ -1177,8 +1177,8 @@ export async function getCarbonFootprint(req, res) {
 export async function getPropertiesSoldRented(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  let agentIds = await getSubAgentIds(userInstance.id)
-  agentIds.push(req.user.id)
+  let agentIds = await getSubAgentIds(userInstance.id);
+  agentIds.push(req.user.id);
 
   const where = {
     status: {
@@ -1232,44 +1232,44 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
       include: [
         {
           model: user,
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
         {
           model: productDocument,
-          attributes: ["id", "title", "file"],
+          attributes: ['id', 'title', 'file'],
         },
         {
           model: productImage,
-          attributes: ["id", "image", "sort_order"],
+          attributes: ['id', 'image', 'sort_order'],
         },
         {
           model: productMetaTag,
-          attributes: ["value"],
+          attributes: ['value'],
           where: {
             key: 2,
-            value: "sale",
+            value: 'sale',
           },
         },
         {
           model: productOffer,
-          attributes: ["id", "amount", "notes", "status", "rejectReason"],
+          attributes: ['id', 'amount', 'notes', 'status', 'rejectReason'],
           where: {
             status: {
-              [Op.in]: ["accepted"],
+              [Op.in]: ['accepted'],
             },
           },
           include: [
             {
               model: user,
-              attributes: ["id", "firstName", "lastName", "email"],
+              attributes: ['id', 'firstName', 'lastName', 'email'],
             },
             {
               model: productSnagList,
-              attributes: ["id", "agentApproved", "customerApproved"],
+              attributes: ['id', 'agentApproved', 'customerApproved'],
               include: [
                 {
                   model: productSnagListItem,
-                  attributes: ["snagKey", "snagValue", ["customer_comment", "cc"], ["agent_comment", "ac"]],
+                  attributes: ['snagKey', 'snagValue', ['customer_comment', 'cc'], ['agent_comment', 'ac']],
                 },
               ],
             },
@@ -1277,19 +1277,19 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
         },
         {
           model: productAllocation,
-          attributes: ["id"],
+          attributes: ['id'],
           include: [
             {
               model: user,
-              attributes: ["id", "firstName", "lastName"],
+              attributes: ['id', 'firstName', 'lastName'],
             },
           ],
         },
       ],
       distinct: true,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     const propertiesForRent = await product.findAndCountAll({
@@ -1298,44 +1298,44 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
       include: [
         {
           model: user,
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
         {
           model: productDocument,
-          attributes: ["id", "title", "file"],
+          attributes: ['id', 'title', 'file'],
         },
         {
           model: productImage,
-          attributes: ["id", "image", "sort_order"],
+          attributes: ['id', 'image', 'sort_order'],
         },
         {
           model: productMetaTag,
-          attributes: ["value"],
+          attributes: ['value'],
           where: {
             key: 2,
-            value: "rent",
+            value: 'rent',
           },
         },
         {
           model: productOffer,
-          attributes: ["id", "amount", "notes", "status", "rejectReason"],
+          attributes: ['id', 'amount', 'notes', 'status', 'rejectReason'],
           where: {
             status: {
-              [Op.in]: ["accepted"],
+              [Op.in]: ['accepted'],
             },
           },
           include: [
             {
               model: user,
-              attributes: ["id", "firstName", "lastName", "email"],
+              attributes: ['id', 'firstName', 'lastName', 'email'],
             },
             {
               model: productSnagList,
-              attributes: ["id", "agentApproved", "customerApproved"],
+              attributes: ['id', 'agentApproved', 'customerApproved'],
               include: [
                 {
                   model: productSnagListItem,
-                  attributes: ["snagKey", "snagValue", ["customer_comment", "cc"], ["agent_comment", "ac"]],
+                  attributes: ['snagKey', 'snagValue', ['customer_comment', 'cc'], ['agent_comment', 'ac']],
                 },
               ],
             },
@@ -1343,19 +1343,19 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
         },
         {
           model: productAllocation,
-          attributes: ["id"],
+          attributes: ['id'],
           include: [
             {
               model: user,
-              attributes: ["id", "firstName", "lastName"],
+              attributes: ['id', 'firstName', 'lastName'],
             },
           ],
         },
       ],
       distinct: true,
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -1366,20 +1366,20 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
     };
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getPropertiesListed(req, res, userInstance) {
   const { startDate, endDate, search, page, limit } = req.query;
 
-  let agentIds = await getSubAgentIds(userInstance.id)
-  agentIds.push(req.user.id)
+  let agentIds = await getSubAgentIds(userInstance.id);
+  agentIds.push(req.user.id);
 
   const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   where.status = {
-    [Op.in]: ["active"],
+    [Op.in]: ['active'],
   };
 
   if (startDate && endDate) {
@@ -1426,27 +1426,27 @@ export async function getPropertiesListed(req, res, userInstance) {
       include: [
         {
           model: agent,
-          attributes: ["id", "agentType", "companyName", "companyPosition", "branchId", "job_title"],
+          attributes: ['id', 'agentType', 'companyName', 'companyPosition', 'branchId', 'job_title'],
         },
         {
           model: product,
           // as: "products",
-          attributes: ["id", "title", "price", "description", "address", "status"],
+          attributes: ['id', 'title', 'price', 'description', 'address', 'status'],
           where: {
             userId: {
               [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? agentIds : [userInstance.id],
             },
             status: {
-              [Op.in]: ["active"],
+              [Op.in]: ['active'],
             },
           },
         },
       ],
       distinct: true,
-      group: ["user.id", "agent.id", "products.id", "agent.job_title"],
-      order: [["createdAt", "DESC"]],
-      offset: page ? parseInt(page) * parseInt(limit) : 0,
-      // limit: limit ? parseInt(limit) : 10,
+      group: ['user.id', 'agent.id', 'products.id', 'agent.job_title'],
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      // limit: limit ? parseInt(limit, 10) : 10,
     });
 
     const propertiesOffers = await productOffer.findAndCountAll({});
@@ -1458,8 +1458,8 @@ export async function getPropertiesListed(req, res, userInstance) {
     // }
 
     for (const productOffer of propertiesOffers.rows) {
-      productOffer.status === "accepted" ? (revenue_generated += Number(productOffer.amount)) : false;
-      productOffer.status === "pending" ? propertiesUnderOffer++ : false;
+      productOffer.status === 'accepted' ? (revenue_generated += Number(productOffer.amount)) : false;
+      productOffer.status === 'pending' ? propertiesUnderOffer++ : false;
     }
 
     return {
@@ -1470,7 +1470,7 @@ export async function getPropertiesListed(req, res, userInstance) {
     };
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -1519,12 +1519,12 @@ export async function getAgentDetails(req, res) {
       include: [
         {
           model: agentBranch,
-          attributes: ["id", "name"],
+          attributes: ['id', 'name'],
         },
       ],
-      order: [["createdAt", "DESC"]],
-      // offset: page ? parseInt(page) * parseInt(limit) : 0,
-      // limit: limit ? parseInt(limit) : 10,
+      order: [['createdAt', 'DESC']],
+      // offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      // limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
@@ -1534,6 +1534,6 @@ export async function getAgentDetails(req, res) {
     };
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }

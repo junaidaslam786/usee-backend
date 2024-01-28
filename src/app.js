@@ -15,6 +15,7 @@ import db from "@/database";
 import * as configs from "@/config";
 import { authenticationMiddleware, sentryMiddleware } from "@/middleware";
 
+const axios = require('axios');
 const { NODE_ENV } = process.env;
 
 const app = express();
@@ -71,12 +72,12 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
       case 'invoice.payment_succeeded':
         const invoice = event.data.object;
         // console.log("invoice: ", invoice);
-  
+
         // find token by invoice id
         const token1 = await db.models.token.findOne({
           where: { stripe_invoice_id: invoice.id },
         });
-  
+
         if (token1) {
           token1.stripeInvoiceStatus = invoice.status;
           token1.stripeInvoiceData = invoice;
@@ -87,32 +88,32 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
           await token1.save();
         }
         break;
-  
+
       case 'customer.created':
         const customer = event.data.object;
         // console.log("customer: ", customer);
-  
+
         // Save the Stripe customer ID to your database
         const user = await db.models.user.findOne({
           where: { email: customer.email },
         });
-  
+
         if (user) {
           // console.log("user: ", user);
           user.stripeCustomerId = customer.id;
           await user.save();
         }
         break;
-  
+
       case 'checkout.session.completed':
         const checkoutSession = event.data.object;
         console.log("checkoutSession: ", checkoutSession);
-        
+
         // Save the Stripe subscription ID to your database
         const token = await db.models.token.findOne({
           where: { stripe_checkout_session_id: checkoutSession.id },
         });
-  
+
         if (token) {
           // console.log("token: ", token);
           token.stripeInvoiceId = checkoutSession.invoice;
@@ -124,12 +125,12 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
           await token.save();
         }
         break;
-  
+
       default:
         // Unexpected event type
         console.log(`Unhandled event type ${event.type}.`);
     }
-  
+
     // Return a 200 response to acknowledge receipt of the event
     response.status(200).end();
   } catch (error) {
@@ -176,11 +177,11 @@ configs.routerConfig(app);
 // SOCIAL MEDIA AUTHENTICATION ROUTES
 // Facebook authentication route
 app.get('/auth/facebook', (req, res) => {
-  const redirectUrl = `${process.env.HOME_PANEL_URL}/auth/facebook/callback`;
+  const redirectUrl = `${process.env.APP_URL}/auth/facebook/callback`;
   const scope = 'email';
   const state = 'facebook';
-  const url = `https://www.facebook.com/v15.0/dialog/oauth?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
-  console.log("URL: ", url);
+  const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+  // console.log("URL: ", url);
 
   res.json({ url });
 });
@@ -190,18 +191,99 @@ app.get('/auth/facebook', (req, res) => {
 app.get('/auth/facebook/callback', async (req, res) => {
   const { code, state } = req.query;
 
-  console.log("FACEBOOK CALLBACK");
+  // console.log("FACEBOOK CALLBACK");
+  // console.log("CODE: ", code);
   if (state !== 'facebook') {
     return res.status(400).json({ error: 'Invalid state parameter' });
   }
 
   try {
-    const response = await fetch(`https://graph.facebook.com/v11.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&redirect_uri=${process.env.HOME_PANEL_URL}/auth/facebook/callback&client_secret=${FACEBOOK_APP_SECRET}&code=${code}`);
+    const access_token_response = `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&redirect_uri=${process.env.APP_URL}/auth/facebook/callback&client_secret=${FACEBOOK_APP_SECRET}&code=${code}`;
+
+    await axios.get(access_token_response)
+      .then(async (response) => {
+        const { data } = response;
+        // eslint-disable-next-line no-console
+        // console.log('DATA', data);
+
+        const { access_token } = data;
+
+        const detailsResponse = `https://graph.facebook.com/me?fields=id,name,email&access_token=${access_token}`;
+        await axios.get(detailsResponse).then(async (response) => {
+          const { id, name, email } = response.data;
+
+          console.log("RESPONSE: ", response.data);
+
+          const user = await db.models.user.findOne({
+            where: { email: email },
+          });
+
+          if (!user) {
+            // return res.status(404).json({ error: 'User not found' });
+
+            const nameArray = name.split(" ");
+            const firstName = nameArray[0];
+            const lastName = nameArray[1];
+            const password = null;
+
+            const user = await db.models.user.create({
+              firstName: firstName,
+              lastName: lastName,
+              email: email,
+              password: 'Password@123',
+              signupStep: -1,
+              facebookId: id,
+            }, {
+              // validate: {
+              //   password: password !== undefined ? { notEmpty: true } : false, // Only validate password if it's present
+              // }
+            });
+            // });
+          }
+
+          const token = await user.generateToken();
+
+          res.json({ success: true, user: user, token: token });
+        }).catch((error) => {
+          // eslint-disable-next-line no-console
+          console.error(error);
+        });
+      }).catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error(error);
+      });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to authenticate user' });
+  }
+});
+
+// Twitter authentication route
+app.get('/auth/twitter', (req, res) => {
+  const redirectUrl = `${process.env.HOME_PANEL_URL}/auth/twitter/callback`;
+  const scope = 'email';
+  const state = 'twitter';
+  // const url = `https://api.twitter.com/oauth/authenticate?client_id=${TWITTER_CONSUMER_KEY}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+  const url = `https://api.twitter.com/oauth/authenticate?oauth_token=your-oauth-token`
+  console.log("URL: ", url);
+  res.redirect(url);
+});
+
+// Twitter authentication callback route
+app.get('/auth/twitter/callback', async (req, res) => {
+  const { code, state } = req.query;
+
+  if (state !== 'twitter') {
+    return res.status(400).json({ error: 'Invalid state parameter' });
+  }
+
+  try {
+    const response = await fetch(`https://api.twitter.com/oauth/access_token?client_id=${TWITTER_CONSUMER_KEY}&redirect_uri=${process.env.HOME_PANEL_URL}/auth/twitter/callback&client_secret=${TWITTER_CONSUMER_SECRET}&code=${code}`);
     const data = await response.json();
 
     const { access_token } = data;
 
-    const userResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${access_token}`);
+    const userResponse = await fetch(`https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true&oauth_token=${access_token}`);
     const userData = await userResponse.json();
 
     const { id, name, email } = userData;
@@ -214,7 +296,53 @@ app.get('/auth/facebook/callback', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const token = await user.generateAuthToken();
+    const token = await user.generateToken();
+
+    res.json({ success: true, user: user, token: token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to authenticate user' });
+  }
+});
+
+// LinkedIn authentication route
+app.get('/auth/linkedin', (req, res) => {
+  const redirectUrl = `${process.env.HOME_PANEL_URL}/auth/linkedin/callback`;
+  const scope = 'email';
+  const state = 'linkedin';
+  const url = `https://www.linkedin.com/oauth/v2/authorization?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+  console.log("URL: ", url);
+  res.redirect(url);
+});
+
+// LinkedIn authentication callback route
+app.get('/auth/linkedin/callback', async (req, res) => {
+  const { code, state } = req.query;
+
+  if (state !== 'linkedin') {
+    return res.status(400).json({ error: 'Invalid state parameter' });
+  }
+
+  try {
+    const response = await fetch(`https://www.linkedin.com/oauth/v2/accessToken?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.HOME_PANEL_URL}/auth/linkedin/callback&client_secret=${LINEDIN_PRIMARY_CLIENT_SECRET}&code=${code}&grant_type=authorization_code`);
+    const data = await response.json();
+
+    const { access_token } = data;
+
+    const userResponse = await fetch(`https://api.linkedin.com/v2/me?oauth2_access_token=${access_token}`);
+    const userData = await userResponse.json();
+
+    const { id, name, email } = userData;
+
+    const user = await db.models.user.findOne({
+      where: { email: email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const token = await user.generateToken();
 
     res.json({ success: true, user: user, token: token });
   } catch (error) {
@@ -587,7 +715,7 @@ app.post('/refund', async (req, res) => {
     // Refund the PaymentIntent
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
-      amount: ( amountToRefund ? amountToRefund : calculatedRefundAmount ) * 100,
+      amount: (amountToRefund ? amountToRefund : calculatedRefundAmount) * 100,
     });
     console.log("REFUND: ", refund);
 

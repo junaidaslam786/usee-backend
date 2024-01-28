@@ -22,7 +22,6 @@ router.post('/active-agents', isAuthenticated, analyticsController.getActiveAgen
 // // Freelancer analytics
 // router.post('/freelancers', isAuthenticated, analyticsController.getFreelancersAnalytics);
 
-
 // Subscription analytics
 router.post('/subscriptions', isAuthenticated, analyticsController.getSubscriptionsAnalytics);
 // Token analytics
