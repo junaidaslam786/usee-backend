@@ -20,5 +20,6 @@ router.post('/call-background-image', isAuthenticated, validate(userValidations.
   userController.uploadCallBackgroundImages);
 router.delete('/call-background-image', isAuthenticated, validate(userValidations.deleteCallBackgroundImageRules),
   userController.deleteCallBackgroundImage);
+router.delete('/:id', isAuthenticated, userController.deleteUser);
 
 export default router;

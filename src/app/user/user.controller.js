@@ -152,3 +152,21 @@ export const deleteCallBackgroundImage = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * DELETE /user/:id
+ * Delete user by id
+ */
+export const deleteUser = async (req, res, next) => {
+  try {
+    const result = await userService.deleteUser(req.params?.id ? req.params?.id : 0, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    console.log('deleteUserError', err);
+    next(err);
+  }
+}

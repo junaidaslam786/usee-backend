@@ -21,5 +21,5 @@ export {
   sentryMiddleware,
   validate,
   cache,
-  verifyPermissions
+  verifyPermissions,
 };

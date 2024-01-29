@@ -12,7 +12,7 @@ export default async function (req, res, next) {
     });
 
     if (!subscription) {
-      return res.status(403).json({ error: 'No subscription found for this feature.' });
+      return res.status(403).json({ error: true, message: 'No subscription found for this feature.' });
     }
 
     if (subscription.freeRemainingUnits > 0) {
@@ -20,7 +20,7 @@ export default async function (req, res, next) {
     } else if (subscription.paidRemainingUnits > 0) {
       subscription.paidRemainingUnits -= 1; // Deduct one unit from paidRemainingUnits
     } else {
-      return res.status(403).json({ error: 'Not enough units to access this feature.' });
+      return res.status(403).json({ error: true, message: 'Not enough units to access this feature.' });
     }
 
     await subscription.save();

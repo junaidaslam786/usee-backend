@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class AgentAccessLevel extends Model {
     static associate(models) {
-      AgentAccessLevel.belongsTo(models.user, { foreignKey: 'userId' })
+      AgentAccessLevel.belongsTo(models.user, { foreignKey: 'userId' });
     }
   }
 
@@ -20,7 +20,7 @@ export default function (sequelize) {
       references: {
         model: 'users',
         key: 'id',
-      }
+      },
     },
     accessLevel: {
       type: DataTypes.STRING,
@@ -29,17 +29,20 @@ export default function (sequelize) {
     modelName: 'agentAccessLevel',
     tableName: 'agent_access_levels',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
+  // eslint-disable-next-line no-unused-vars
   AgentAccessLevel.addHook('beforeSave', async (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   AgentAccessLevel.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   AgentAccessLevel.addHook('afterDestroy', (instance) => {
     //
   });
