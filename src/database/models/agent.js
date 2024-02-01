@@ -3,14 +3,14 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class Agent extends Model {
     static associate(models) {
-      Agent.belongsTo(models.user, { foreignKey: 'userId' })
-      Agent.belongsTo(models.appointment, { foreignKey: 'userId' })
-      Agent.belongsTo(models.agentBranch, { foreignKey: 'branchId' })
-      Agent.hasMany(models.agentAvailability, { foreignKey: 'userId' })
-      Agent.hasMany(models.product, { foreignKey: 'userId' })
-      Agent.hasMany(models.productAllocation, { foreignKey: 'userId' })
-      Agent.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
-      Agent.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' })
+      Agent.belongsTo(models.user, { foreignKey: 'userId' });
+      Agent.belongsTo(models.appointment, { foreignKey: 'userId' });
+      Agent.belongsTo(models.agentBranch, { foreignKey: 'branchId' });
+      Agent.hasMany(models.agentAvailability, { foreignKey: 'userId' });
+      Agent.hasMany(models.product, { foreignKey: 'userId' });
+      Agent.hasMany(models.productAllocation, { foreignKey: 'userId' });
+      Agent.hasMany(models.agentAccessLevel, { foreignKey: 'userId' });
+      Agent.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' });
       Agent.hasMany(models.userSubscription, { foreignKey: 'userId' });
       Agent.hasMany(models.agent, { foreignKey: 'agentId' });
       Agent.hasMany(models.agent, { foreignKey: 'managerId' });
@@ -21,41 +21,41 @@ export default function (sequelize) {
   Agent.init({
     id: {
       type: DataTypes.UUID,
-      field: "id",
+      field: 'id',
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     userId: {
       allowNull: true,
       type: DataTypes.UUID,
       references: {
-        model: "users",
-        key: "id"
+        model: 'users',
+        key: 'id',
       },
-      onUpdate: "CASCADE",
+      onUpdate: 'CASCADE',
     },
     agentId: {
       allowNull: true,
       type: DataTypes.UUID,
       references: {
-        model: "users",
-        key: "id"
+        model: 'users',
+        key: 'id',
       },
-      onUpdate: "CASCADE",
+      onUpdate: 'CASCADE',
     },
     managerId: {
       allowNull: true,
       type: DataTypes.UUID,
       references: {
-        model: "users",
-        key: "id"
+        model: 'users',
+        key: 'id',
       },
-      onUpdate: "CASCADE",
+      onUpdate: 'CASCADE',
     },
     agentType: {
       type: DataTypes.STRING,
-      enum: ["agent", "manager", "staff"]
+      enum: ['agent', 'manager', 'staff'],
     },
     companyName: {
       type: DataTypes.STRING,
@@ -84,14 +84,17 @@ export default function (sequelize) {
     licenseNo: {
       type: DataTypes.STRING,
     },
+    ornNumber: {
+      type: DataTypes.STRING,
+    },
     branchId: {
       allowNull: true,
       type: DataTypes.UUID,
       references: {
-        model: "agent_branches",
-        key: "id"
+        model: 'agent_branches',
+        key: 'id',
       },
-      onUpdate: "CASCADE",
+      onUpdate: 'CASCADE',
     },
     apiCode: {
       type: DataTypes.STRING,
@@ -101,15 +104,15 @@ export default function (sequelize) {
     },
     documentUrl: {
       type: DataTypes.STRING,
-      defaultValue: null
+      defaultValue: null,
     },
     createdBy: {
       type: DataTypes.UUID,
-      field: "created_by",
+      field: 'created_by',
     },
     updatedBy: {
       type: DataTypes.UUID,
-      field: "updated_by",
+      field: 'updated_by',
     },
   }, {
     modelName: 'agent',
@@ -118,14 +121,17 @@ export default function (sequelize) {
     paranoid: true,
   });
 
+  // eslint-disable-next-line no-unused-vars
   Agent.addHook('beforeSave', async (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   Agent.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   Agent.addHook('afterDestroy', (instance) => {
     //
   });

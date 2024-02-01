@@ -17,10 +17,17 @@ export const registerAgentRules = [
     .withMessage('Please provide company name'),
   body('companyPosition').exists().withMessage('Please provide company position').notEmpty()
     .withMessage('Please provide company position'),
+  body('cityName').exists().withMessage('Please provide city name').notEmpty()
+    .withMessage('Please provide city name'),
+  body('countryName').exists().withMessage('Please provide country name').notEmpty()
+    .withMessage('Please provide country name'),
   body('jobTitle').exists().withMessage('Please provide job title').notEmpty()
     .withMessage('Please provide job title'),
   body('licenseNo').exists().withMessage('Please provide company registration # or deed title').notEmpty()
     .withMessage('Please provide company registration # or deed title'),
+  body('ornNumber')
+    .if((value, { req }) => req.body.countryName === 'United Arab Emirates' && req.body.cityName === 'Dubai')
+    .exists().withMessage('Please provide ORN number'),
   body('phoneNumber')
     .exists().withMessage('Please provide phone number')
     .notEmpty()

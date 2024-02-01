@@ -105,6 +105,11 @@ export default function (sequelize) {
     },
     cityName: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+    countryName: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     roleId: {
       type: DataTypes.INTEGER,

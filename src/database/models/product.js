@@ -45,6 +45,7 @@ export default function (sequelize) {
     },
     description: {
       type: DataTypes.TEXT,
+      allowNull: false,
     },
     price: {
       type: DataTypes.STRING,
