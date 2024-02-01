@@ -66,6 +66,20 @@ export const fileUpload = async (file, destPath, fileName) => {
     }
 }
 
+export const checkFileType = (file, allowedFileTypes) => {
+    const fileExtension = path.extname(file.name);
+    return allowedFileTypes.includes(fileExtension);
+}
+
+export const isValidUrl = (url) => {
+    try {
+        new URL(url);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
 export const generateUrl = (type, userType) => {
     let url = (userType && userType == 'admin' ? ADMIN_PANEL_URL : HOME_PANEL_URL);
     switch (type) {

@@ -28,6 +28,14 @@ router.post('/removal-request', isAuthenticated, validate(propertyValidations.re
 router.delete('/allocated', isAuthenticated, validate(propertyValidations.deleteAllocatedPropertyRules),
   propertyController.deleteAllocatedProperty);
 
+// post route to add featuredImage to product table
+router.post('/featured-image', isAuthenticated,
+  propertyController.uploadFeaturedImage);
+
+// route to post virtual tour video / virtual tour url to the product
+router.post('/virtual-tour', isAuthenticated,
+  propertyController.uploadVirtualTour);
+
 // offer
 router.get('/offer/:id', isAuthenticated, propertyController.getPropertyOffer);
 router.post('/customer/make-offer', isAuthenticated, validate(propertyValidations.customerOfferRequestRules),

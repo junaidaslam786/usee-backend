@@ -51,8 +51,8 @@ export const createPropertyRules = [
     .withMessage('Please provide property latitude'),
   body('longitude').exists().withMessage('Please provide property longitude').notEmpty()
     .withMessage('Please provide property longitude'),
-  body('virtualTourType').exists().withMessage('Please provide property virtual tour type').notEmpty()
-    .withMessage('Please provide property virtual tour type'),
+  // body('virtualTourType').exists().withMessage('Please provide property virtual tour type').notEmpty()
+  // .withMessage('Please provide property virtual tour type'),
 ];
 
 export const updatePropertyRules = [
@@ -102,4 +102,23 @@ export const deletePropertyImageRules = [
     .withMessage('Please provide property id'),
   body('imageId').exists().withMessage('Please provide image id').notEmpty()
     .withMessage('Please provide image id'),
+];
+
+export const uploadFeaturedImageRules = [
+  body('productId').exists().withMessage('Please provide property id').notEmpty()
+    .withMessage('Please provide property id'),
+  body('featuredImage').exists().withMessage('Please provide image file').notEmpty()
+    .withMessage('Please provide image'),
+];
+
+export const uploadVirtualTourRules = [
+  body('productId').exists().withMessage('Please provide property id').notEmpty()
+    .withMessage('Please provide property id'),
+  body('virtualTourType').exists().withMessage('Please provide virtual tour type').notEmpty()
+    .withMessage('Please provide virtual tour type'),
+  body('virtualTourVideo').exists().withMessage('Please provide virtual tour video').notEmpty()
+    .withMessage('Please provide virtual tour video'),
+  // body('virtualTourUrl').exists().withMessage('Please provide virtual tour url').notEmpty()
+  //   .if(body('virtualTourType').equals('url'))
+  //   .withMessage('Please provide virtual tour url'),
 ];

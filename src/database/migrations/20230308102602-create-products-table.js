@@ -4,7 +4,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     field: 'id',
     primaryKey: true,
     unique: true,
-    defaultValue: Sequelize.UUIDV4
+    defaultValue: Sequelize.UUIDV4,
   },
   userId: {
     field: 'user_id',
@@ -12,8 +12,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   categoryId: {
     field: 'category_id',
@@ -21,95 +21,95 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'categories',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   title: {
-    type:Sequelize.STRING,
+    type: Sequelize.STRING,
     field: 'title',
-    allowNull: false
+    allowNull: false,
   },
   description: {
-    type:Sequelize.TEXT,
-    field: 'description'
+    type: Sequelize.TEXT,
+    field: 'description',
   },
   price: {
-    type:Sequelize.STRING,
-    field: 'price'
+    type: Sequelize.STRING,
+    field: 'price',
   },
   featuredImage: {
     type: Sequelize.STRING,
-    field: 'featured_image'
+    field: 'featured_image',
   },
   virtualTourType: {
     field: 'virtual_tour_type',
     type: Sequelize.ENUM,
-    defaultValue: "video",
-    values: ["video", "url", "slideshow"]
+    defaultValue: 'video',
+    values: ['video', 'url', 'slideshow'],
   },
   virtualTourUrl: {
     type: Sequelize.STRING,
-    field: 'virtual_tour_url'
+    field: 'virtual_tour_url',
   },
   address: {
     type: Sequelize.TEXT,
-    field: 'address'
+    field: 'address',
   },
   city: {
     type: Sequelize.STRING,
-    field: 'city'
+    field: 'city',
   },
   postalCode: {
     type: Sequelize.STRING,
-    field: 'postal_code'
+    field: 'postal_code',
   },
   region: {
     type: Sequelize.STRING,
-    field: 'region'
+    field: 'region',
   },
   latitude: {
     type: Sequelize.STRING,
-    field: 'latitude'
+    field: 'latitude',
   },
   longitude: {
     type: Sequelize.STRING,
-    field: 'longitude'
+    field: 'longitude',
   },
   status: {
     field: 'status',
     type: Sequelize.STRING,
-    defaultValue: "active",
+    defaultValue: 'active',
   },
   apiCode: {
     type: Sequelize.STRING,
-    field: 'api_code'
+    field: 'api_code',
   },
   createdBy: {
     allowNull: true,
-    type:Sequelize.UUID,
-    field: 'created_by'
+    type: Sequelize.UUID,
+    field: 'created_by',
   },
   updatedBy: {
     allowNull: true,
-    type:Sequelize.UUID,
-    field: 'updated_by'
+    type: Sequelize.UUID,
+    field: 'updated_by',
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   deletedAt: {
     allowNull: true,
     type: Sequelize.DATE,
     field: 'deleted_at',
-    defaultValue: null
-  }
+    defaultValue: null,
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('products');

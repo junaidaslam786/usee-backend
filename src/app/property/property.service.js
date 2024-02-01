@@ -1469,3 +1469,85 @@ function haversine(lat1, lon1, lat2, lon2) {
 function degToRad(degrees) {
   return degrees * (Math.PI / 180);
 }
+
+export const uploadFeaturedImage = async (req) => {
+  try {
+    const { productId } = req.body;
+    const featuredImage = req.files.featuredImage;
+
+    const product = await req.dbInstance.product.findOne({
+      where: { id: productId }
+    });
+
+    if (!product) {
+      return { error: true, message: 'Invalid property id or property do not exist.' };
+    }
+
+    const newFileName = `${Date.now()}_${featuredImage.name.replace(/ +/g, "")}`;
+    const result = await utilsHelper.fileUpload(featuredImage, PROPERTY_ROOT_PATHS.FEATURE_IMAGE, newFileName);
+    if (result?.error) {
+      return { error: true, message: result?.error }
+    }
+
+    product.featuredImage = '/' + result.split('/').pop();
+    product.save();
+
+    return { success: true, message: 'Featured image saved successfully.', file_path: result }
+  } catch (err) {
+    console.log('uploadFeaturedImageServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
+export const uploadVirtualTour = async (req) => {
+  try {
+    const { productId, virtualTourType, virtualTourUrl } = req.body;
+    const virtualTour = req?.files?.virtualTourVideo;
+
+    const product = await req.dbInstance.product.findOne({
+      where: { id: productId }
+    });
+
+    if (!product) {
+      return { error: true, message: 'Invalid property id or property do not exist.' };
+    }
+
+    if (!Object.values(VIRTUAL_TOUR_TYPE).includes(virtualTourType)) {
+      return { error: true, message: 'Invalid virtual tour type.' };
+    }
+
+    if (virtualTourType === VIRTUAL_TOUR_TYPE.URL && !utilsHelper.isValidUrl(virtualTourUrl)) {
+      return { error: true, message: 'Invalid virtual tour url.' };
+    }
+
+    if (virtualTour !== undefined && virtualTour === null) {
+      if (!utilsHelper.checkFileType(virtualTour, ['.mp4', '.mov', '.mkv'])) {
+        return { error: true, message: 'Invalid virtual tour file.' };
+      }
+    }
+
+    if (virtualTourType === VIRTUAL_TOUR_TYPE.URL) {
+      product.virtualTourType = virtualTourType;
+      product.virtualTourUrl = virtualTourUrl;
+      product.save();
+
+      return { success: true, message: 'Virtual tour saved successfully.' }
+    }
+
+    const newFileName = `${Date.now()}_${virtualTour.name.replace(/ +/g, "")}`;
+    console.log('newFileName', newFileName)
+    const result = await utilsHelper.fileUpload(virtualTour, PROPERTY_ROOT_PATHS.VIDEO_TOUR, newFileName);
+    if (result?.error) {
+      return { error: true, message: result?.error }
+    }
+
+    product.virtualTourType = virtualTourType;
+    product.virtualTour = '/' + result.split('/').pop();
+    product.save();
+
+    return { success: true, message: 'Virtual tour saved successfully.', file_path: result }
+  } catch (err) {
+    console.log('uploadVirtualTourServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
