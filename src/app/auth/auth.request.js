@@ -25,18 +25,26 @@ export const registerAgentRules = [
     .withMessage('Please provide job title'),
   body('licenseNo').exists().withMessage('Please provide company registration # or deed title').notEmpty()
     .withMessage('Please provide company registration # or deed title'),
-  body('ornNumber')
-    .if((value, { req }) => req.body.countryName === 'United Arab Emirates' && req.body.cityName === 'Dubai')
-    .exists().withMessage('Please provide ORN number')
-    .notEmpty()
-    .withMessage('Please provide ORN number'),
+  body('ornNumber').custom((value, { req }) => {
+    const isDubaiUAE = req.body.cityName === 'Dubai' && req.body.countryName === 'United Arab Emirates';
+
+    const isDeveloper = req.body.jobTitle.toLowerCase() === 'developer';
+
+    if (isDubaiUAE && isDeveloper) {
+      if (!value) {
+        throw new Error('ORN number is required for developers in Dubai, United Arab Emirates');
+      }
+    }
+
+    return true;
+  }),
   body('phoneNumber')
     .exists().withMessage('Please provide phone number')
     .notEmpty()
     .withMessage('Please provide phone number')
     // eslint-disable-next-line arrow-body-style
     .custom(async (value) => {
-    // eslint-disable-next-line consistent-return
+      // eslint-disable-next-line consistent-return
       return await db.models.user.findOne({ where: { phoneNumber: value } }).then((userData) => {
         if (userData) {
           // eslint-disable-next-line prefer-promise-reject-errors
@@ -52,7 +60,7 @@ export const registerAgentRules = [
     .withMessage('Please provide valid email address')
     // eslint-disable-next-line arrow-body-style
     .custom(async (value) => {
-    // eslint-disable-next-line consistent-return
+      // eslint-disable-next-line consistent-return
       return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then((userData) => {
         if (userData) {
           // eslint-disable-next-line prefer-promise-reject-errors
