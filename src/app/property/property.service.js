@@ -1,29 +1,16 @@
 import { Sequelize } from 'sequelize';
-const OP = Sequelize.Op;
-import {
-  PRODUCT_STATUS,
-  PRODUCT_CATEGORIES,
-  PROPERTY_ROOT_PATHS,
-  VIRTUAL_TOUR_TYPE,
-  USER_ALERT_MODE,
-  USER_ALERT_TYPE,
-  OFFER_STATUS,
-  EMAIL_SUBJECT,
-  EMAIL_TEMPLATE_PATH,
-  PRODUCT_LOG_TYPE,
-  AGENT_TYPE,
-  AGENT_USER_ACCESS_TYPE_VALUE
-} from '../../config/constants';
 import { utilsHelper, mailHelper } from '@/helpers';
 import db from '@/database';
-import * as userService from '../user/user.service'
-const path = require("path")
-const ejs = require("ejs");
 import { calculateDistance } from '@/helpers/utils';
+import { AGENT_TYPE, AGENT_USER_ACCESS_TYPE_VALUE, PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, PRODUCT_LOG_TYPE } from '../../config/constants';
+import * as userService from '../user/user.service';
+const path = require("path");
+const ejs = require("ejs");
+const OP = Sequelize.Op;
 
 export const createProperty = async (reqBody, req) => {
   try {
-    const { title, description, price, address, city, country, permitNumber, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
+    const { title, description, price, address, city, permitNumber, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
     const { user, dbInstance } = req;
 
     if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.ADD_PROPERTY))) {
@@ -49,7 +36,6 @@ export const createProperty = async (reqBody, req) => {
         virtualTourType,
         address,
         city,
-        country: country,
         permitNumber: permitNumber ? permitNumber : null,
         postalCode,
         region,
@@ -167,7 +153,7 @@ export const createProperty = async (reqBody, req) => {
       }
 
       // qrcode upload
-      if (city == 'Dubai' && country == 'United Arab Emirates' && req.files && req.files.qrCode) {
+      if (city == 'Dubai' && region == 'United Arab Emirates' && req.files && req.files.qrCode) {
         const qrCodeFile = req.files.qrCode;
         const newFileName = `${Date.now()}_${qrCodeFile.name.replace(/ +/g, "")}`;
         const result = await utilsHelper.fileUpload(qrCodeFile, PROPERTY_ROOT_PATHS.QR_CODE, newFileName);
@@ -193,7 +179,7 @@ export const createProperty = async (reqBody, req) => {
 
 export const updateProperty = async (reqBody, req) => {
   try {
-    const { productId, title, description, price, address, city, country, permitNumber, region, latitude, longitude, virtualTourType } = reqBody;
+    const { productId, title, description, price, address, city, permitNumber, region, latitude, longitude, virtualTourType } = reqBody;
     const { user, dbInstance } = req;
 
     if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.EDIT_PROPERTY))) {
@@ -211,7 +197,6 @@ export const updateProperty = async (reqBody, req) => {
       product.virtualTourType = virtualTourType;
       product.address = address;
       product.city = city;
-      product.country = country;
       product.permitNumber = permitNumber;
       product.region = region;
       product.latitude = latitude;
@@ -320,7 +305,7 @@ export const updateProperty = async (reqBody, req) => {
       }
 
       // qrcode upload
-      if (city == 'Dubai' && country == 'United Arab Emirates' && req.files && req.files.qrCode) {
+      if (city == 'Dubai' && region == 'United Arab Emirates' && req.files && req.files.qrCode) {
         const qrCodeFile = req.files.qrCode;
         const newFileName = `${Date.now()}_${qrCodeFile.name.replace(/ +/g, "")}`;
         const result = await utilsHelper.fileUpload(qrCodeFile, PROPERTY_ROOT_PATHS.QR_CODE, newFileName);
@@ -1501,10 +1486,10 @@ function degToRad(degrees) {
   return degrees * (Math.PI / 180);
 }
 
-export const uploadFeaturedImage = async (req) => {
+export const uploadFeaturedImage = async (req, res) => {
   try {
     const { productId } = req.body;
-    const featuredImage = req.files.featuredImage;
+    const featuredImage = req?.files?.featuredImage;
 
     const product = await req.dbInstance.product.findOne({
       where: { id: productId }
@@ -1530,7 +1515,7 @@ export const uploadFeaturedImage = async (req) => {
   }
 }
 
-export const uploadVirtualTour = async (req) => {
+export const uploadVirtualTour = async (req, res) => {
   try {
     const { productId, virtualTourType, virtualTourUrl } = req.body;
     const virtualTour = req?.files?.virtualTourVideo;
@@ -1562,7 +1547,7 @@ export const uploadVirtualTour = async (req) => {
       product.virtualTourUrl = virtualTourUrl;
       product.save();
 
-      return { success: true, message: 'Virtual tour saved successfully.' }
+      return { success: true, message: 'Virtual tour url saved successfully.' }
     }
 
     const newFileName = `${Date.now()}_${virtualTour.name.replace(/ +/g, "")}`;
@@ -1576,7 +1561,7 @@ export const uploadVirtualTour = async (req) => {
     product.virtualTour = '/' + result.split('/').pop();
     product.save();
 
-    return { success: true, message: 'Virtual tour saved successfully.', file_path: result }
+    return { success: true, message: 'Virtual tour video saved successfully.', file_path: result }
   } catch (err) {
     console.log('uploadVirtualTourServiceError', err)
     return { error: true, message: 'Server not responding, please try again later.' }

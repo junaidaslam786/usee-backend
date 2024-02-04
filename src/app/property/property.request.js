@@ -43,20 +43,26 @@ export const createPropertyRules = [
     .withMessage('Please provide property address'),
   body('city').exists().withMessage('Please provide property city').notEmpty()
     .withMessage('Please provide property city'),
-  body('country').exists().withMessage('Please provide property country').notEmpty()
-    .withMessage('Please provide property country'),
   body('permitNumber')
-    .if((value, { req }) => req.body.country === 'United Arab Emirates' && req.body.city === 'Dubai')
-    .exists().withMessage('Please provide permit number')
-    .notEmpty()
-    .withMessage('Permit number cannot be empty'),
-
-  // Commenting because the validation does not work as qrcode is uploaded during the property creation
-  // body('qrCode')
-  //   .if((value, { req }) => req.body.country === 'United Arab Emirates' && req.body.city === 'Dubai')
-  //   .exists().withMessage('Please provide QR code')
-  //   .notEmpty()
-  //   .withMessage('Please provide QR code'),
+    .custom((value, { req }) => {
+      if (req.body.region === 'United Arab Emirates' && req.body.city === 'Dubai') {
+        if (!value) {
+          throw new Error('Please provide permit number');
+        } else if (value.trim() === '') {
+          throw new Error('Permit number cannot be empty');
+        }
+      }
+      return true;
+    }),
+  body('qrCode')
+    .custom((value, { req }) => {
+      if (req.body.region === 'United Arab Emirates' && req.body.city === 'Dubai') {
+        if (!req.files || !req.files.qrCode) {
+          throw new Error('Please provide QR code');
+        }
+      }
+      return true;
+    }),
   body('postalCode').exists().withMessage('Please provide property postal code').notEmpty()
     .withMessage('Please provide property postal code'),
   body('region').exists().withMessage('Please provide property region').notEmpty()
@@ -121,18 +127,30 @@ export const deletePropertyImageRules = [
 export const uploadFeaturedImageRules = [
   body('productId').exists().withMessage('Please provide property id').notEmpty()
     .withMessage('Please provide property id'),
-  body('featuredImage').exists().withMessage('Please provide image file').notEmpty()
-    .withMessage('Please provide image'),
+  body('featuredImage')
+    .custom((value, { req }) => {
+      if (!req.files || !req.files.featuredImage) {
+        throw new Error('Please provide featured image file');
+      }
+      return true;
+    }),
 ];
 
 export const uploadVirtualTourRules = [
   body('productId').exists().withMessage('Please provide property id').notEmpty()
     .withMessage('Please provide property id'),
   body('virtualTourType').exists().withMessage('Please provide virtual tour type').notEmpty()
-    .withMessage('Please provide virtual tour type'),
-  body('virtualTourVideo').exists().withMessage('Please provide virtual tour video').notEmpty()
-    .withMessage('Please provide virtual tour video'),
-  // body('virtualTourUrl').exists().withMessage('Please provide virtual tour url').notEmpty()
-  //   .if(body('virtualTourType').equals('url'))
-  //   .withMessage('Please provide virtual tour url'),
+    .withMessage('Please provide virtual tour type')
+    .custom((value, { req }) => {
+      if (value === 'url') {
+        if (!req.body.virtualTourUrl) {
+          throw new Error('Please provide virtual tour url');
+        }
+      } else if (value === 'video') {
+        if (!req.files || !req.files.virtualTourVideo) {
+          throw new Error('Please provide virtual tour video');
+        }
+      }
+      return true;
+    }),
 ];

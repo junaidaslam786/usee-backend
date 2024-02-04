@@ -23,20 +23,14 @@ router.post('/image', isAuthenticated, validate(propertyValidations.uploadProper
   propertyController.uploadPropertyImages);
 router.delete('/image', isAuthenticated, validate(propertyValidations.deletePropertyImageRules),
   propertyController.deletePropertyImage);
+router.post('/featured-image', isAuthenticated, validate(propertyValidations.uploadFeaturedImageRules),
+  propertyController.uploadFeaturedImage);
+router.post('/virtual-tour', isAuthenticated, validate(propertyValidations.uploadVirtualTourRules),
+  propertyController.uploadVirtualTour);
 router.post('/removal-request', isAuthenticated, validate(propertyValidations.removalRequestRules),
   propertyController.removePropertyRequest);
 router.delete('/allocated', isAuthenticated, validate(propertyValidations.deleteAllocatedPropertyRules),
   propertyController.deleteAllocatedProperty);
-
-// post route to add featuredImage to product table
-router.post('/featured-image', isAuthenticated,
-  propertyController.uploadFeaturedImage);
-
-// route to post virtual tour video / virtual tour url to the product
-router.post('/virtual-tour', isAuthenticated,
-  propertyController.uploadVirtualTour);
-
-// offer
 router.get('/offer/:id', isAuthenticated, propertyController.getPropertyOffer);
 router.post('/customer/make-offer', isAuthenticated, validate(propertyValidations.customerOfferRequestRules),
   propertyController.addCustomerOffer);
