@@ -38,6 +38,7 @@ export const CMS_STATUS = {
 export const PROPERTY_ROOT_PATHS = {
   FEATURE_IMAGE: 'properties/images',
   VIDEO_TOUR: 'properties/vrvideos',
+  QR_CODE: 'properties/qrcodes',
   DOCUMENT: 'properties/documents',
   PROFILE_LOGO: 'user/images',
   PROFILE_DOCUMENT: 'user/document',
@@ -117,13 +118,14 @@ export const EMAIL_SUBJECT = {
   WISHLIST_REMOVE: 'Customer has removed your property to wishlist',
   OFFER: 'Customer has made an offer to the property',
   OFFER_UPDATE: 'Trader has made an update on your offer',
-  JOIN_APPOINTMENT: 'Usee 360 Appointment',
-  BOOK_DEMO: 'Usee 360 Demo',
+  JOIN_APPOINTMENT: 'Usee-360 Appointment',
+  BOOK_DEMO: 'Usee-360 Demo',
   SNAGLIST_UPDATE: 'Trader has made an update in the snaglist',
   SNAGLIST_APPROVE: 'Trader has approved the snaglist',
-  COMPLETED_APPOINTMENT: 'Usee 360 Appointment Completed',
-  CANCELLED_APPOINTMENT: 'Usee 360 Appointment Cancelled',
-  SEND_OTP: 'Usee 360 One Time Passcode (OTP)',
+  COMPLETED_APPOINTMENT: 'Usee-360 Appointment Completed',
+  CANCELLED_APPOINTMENT: 'Usee-360 Appointment Cancelled',
+  SEND_OTP: 'Usee-360 One Time Passcode (OTP)',
+  AGENT_ACCOUNT_DELETION: 'Account Deletion Confirmation',
 };
 
 export const EMAIL_TEMPLATE_PATH = {
@@ -149,6 +151,7 @@ export const EMAIL_TEMPLATE_PATH = {
   AGENT_STATUS_UPDATE_APPOINTMENT: 'email-template/agent-status-update-appointment.ejs',
   CUSTOMER_STATUS_UPDATE_APPOINTMENT: 'email-template/customer-status-update-appointment.ejs',
   SEND_OTP: 'email-template/send-otp.ejs',
+  AGENT_ACCOUNT_DELETION: 'email-template/agent-account-deletion.ejs',
 };
 
 export const DASHBOARD_FILTER = {

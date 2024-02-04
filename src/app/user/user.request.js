@@ -70,3 +70,8 @@ export const deleteCallBackgroundImageRules = [
       });
   }),
 ];
+
+export const verifyPasswordRules = [
+  body('password').exists().withMessage('Please provide password').notEmpty()
+    .withMessage('Please provide password'),
+];

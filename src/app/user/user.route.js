@@ -8,9 +8,8 @@ const router = Router();
 
 router.route('/profile')
   .get(isAuthenticated, userController.getCurrentUser)
-  .put(isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser)
-  .delete(isAuthenticated, userController.deleteCurrentUser);
-
+  .put(isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser);
+// .delete(isAuthenticated, userController.deleteCurrentUser);
 router.put('/update-password', isAuthenticated, validate(userValidations.changePasswordRules),
   userController.updatePassword);
 router.put('/update-timezone', isAuthenticated, userController.updateTimezone);
@@ -20,6 +19,8 @@ router.post('/call-background-image', isAuthenticated, validate(userValidations.
   userController.uploadCallBackgroundImages);
 router.delete('/call-background-image', isAuthenticated, validate(userValidations.deleteCallBackgroundImageRules),
   userController.deleteCallBackgroundImage);
-router.delete('/:id', isAuthenticated, userController.deleteUser);
+router.post('/verify-password', isAuthenticated, validate(userValidations.verifyPasswordRules),
+  userController.verifyPassword);
+router.delete('/delete', isAuthenticated, userController.deleteUser);
 
 export default router;

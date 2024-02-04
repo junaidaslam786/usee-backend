@@ -43,6 +43,20 @@ export const createPropertyRules = [
     .withMessage('Please provide property address'),
   body('city').exists().withMessage('Please provide property city').notEmpty()
     .withMessage('Please provide property city'),
+  body('country').exists().withMessage('Please provide property country').notEmpty()
+    .withMessage('Please provide property country'),
+  body('permitNumber')
+    .if((value, { req }) => req.body.country === 'United Arab Emirates' && req.body.city === 'Dubai')
+    .exists().withMessage('Please provide permit number')
+    .notEmpty()
+    .withMessage('Permit number cannot be empty'),
+
+  // Commenting because the validation does not work as qrcode is uploaded during the property creation
+  // body('qrCode')
+  //   .if((value, { req }) => req.body.country === 'United Arab Emirates' && req.body.city === 'Dubai')
+  //   .exists().withMessage('Please provide QR code')
+  //   .notEmpty()
+  //   .withMessage('Please provide QR code'),
   body('postalCode').exists().withMessage('Please provide property postal code').notEmpty()
     .withMessage('Please provide property postal code'),
   body('region').exists().withMessage('Please provide property region').notEmpty()
@@ -51,8 +65,6 @@ export const createPropertyRules = [
     .withMessage('Please provide property latitude'),
   body('longitude').exists().withMessage('Please provide property longitude').notEmpty()
     .withMessage('Please provide property longitude'),
-  // body('virtualTourType').exists().withMessage('Please provide property virtual tour type').notEmpty()
-  // .withMessage('Please provide property virtual tour type'),
 ];
 
 export const updatePropertyRules = [
@@ -63,6 +75,8 @@ export const updatePropertyRules = [
   body('price').optional(),
   body('address').optional(),
   body('city').optional(),
+  body('country').optional(),
+  body('permitNumber').optional(),
   body('postalCode').optional(),
   body('region').optional(),
   body('latitude').optional(),

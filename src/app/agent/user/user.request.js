@@ -2,26 +2,38 @@ import { body } from 'express-validator';
 import db from '@/database';
 
 export const createAgentUserRules = [
-  body('firstName').exists().withMessage('Please provide first name').notEmpty().withMessage('Please provide first name'),
-  body('lastName').exists().withMessage('Please provide last name').notEmpty().withMessage('Please provide last name'),
-  body('role').exists().withMessage('Please provide user role').notEmpty().withMessage('Please provide user role'),
-  body('email').isEmail().withMessage('Please provide valid email').exists().withMessage('Please provide email').custom(async (value) => {
-    return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then(emailData => {
-      if (emailData) {
-        return Promise.reject('Email address already exist.');
-      }
-    });
-  }),
+  body('firstName').exists().withMessage('Please provide first name').notEmpty()
+    .withMessage('Please provide first name'),
+  body('lastName').exists().withMessage('Please provide last name').notEmpty()
+    .withMessage('Please provide last name'),
+  body('role').exists().withMessage('Please provide user role').notEmpty()
+    .withMessage('Please provide user role'),
+  body('email').isEmail().withMessage('Please provide valid email').exists()
+    .withMessage('Please provide email')
+    // eslint-disable-next-line arrow-body-style
+    .custom(async (value) => {
+      // eslint-disable-next-line no-return-await, consistent-return
+      return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then((emailData) => {
+        if (emailData) {
+          // eslint-disable-next-line prefer-promise-reject-errors
+          return Promise.reject('Email address already exist.');
+        }
+      });
+    }),
   body('phoneNumber')
     .exists().withMessage('Please provide phone number')
-    .notEmpty().withMessage('Please provide phone number')
+    .notEmpty()
+    .withMessage('Please provide phone number')
+    // eslint-disable-next-line arrow-body-style
     .custom(async (value) => {
-    return await db.models.user.findOne({ where: { phoneNumber: value } }).then(userData => {
-      if (userData) {
-        return Promise.reject('Phone number already exist.');
-      }
-    });
-  }),
+      // eslint-disable-next-line no-return-await, consistent-return
+      return await db.models.user.findOne({ where: { phoneNumber: value } }).then((userData) => {
+        if (userData) {
+          // eslint-disable-next-line prefer-promise-reject-errors
+          return Promise.reject('Phone number already exist.');
+        }
+      });
+    }),
   // body('branch').exists().custom(async (value) => {
   //   return await db.models.agentBranch.findOne({ where: { id: value } }).then(agentBranchData => {
   //     if (!agentBranchData) {
@@ -32,27 +44,37 @@ export const createAgentUserRules = [
 ];
 
 export const updateAgentUserRules = [
+  // eslint-disable-next-line arrow-body-style
   body('userId').exists().custom(async (value) => {
-    return await db.models.user.findOne({ where: { id: value } }).then(agentUserData => {
+    // eslint-disable-next-line no-return-await, consistent-return
+    return await db.models.user.findOne({ where: { id: value } }).then((agentUserData) => {
       if (!agentUserData) {
+        // eslint-disable-next-line prefer-promise-reject-errors
         return Promise.reject('Invalid user id or user do not exist.');
       }
     });
   }),
-  body('role').exists().withMessage('Please provide user role').notEmpty().withMessage('Please provide user role'),
+  body('role').exists().withMessage('Please provide user role').notEmpty()
+    .withMessage('Please provide user role'),
 ];
 
 export const updateAgentUserBranchRules = [
+  // eslint-disable-next-line arrow-body-style
   body('userId').exists().custom(async (value) => {
-    return await db.models.user.findOne({ where: { id: value } }).then(agentUserData => {
+    // eslint-disable-next-line no-return-await, consistent-return
+    return await db.models.user.findOne({ where: { id: value } }).then((agentUserData) => {
       if (!agentUserData) {
+        // eslint-disable-next-line prefer-promise-reject-errors
         return Promise.reject('Invalid user id or user do not exist.');
       }
     });
   }),
+  // eslint-disable-next-line arrow-body-style
   body('branchId').exists().custom(async (value) => {
-    return await db.models.agentBranch.findOne({ where: { id: value } }).then(agentBranchData => {
+    // eslint-disable-next-line no-return-await, consistent-return
+    return await db.models.agentBranch.findOne({ where: { id: value } }).then((agentBranchData) => {
       if (!agentBranchData) {
+        // eslint-disable-next-line prefer-promise-reject-errors
         return Promise.reject('Invalid branch id or branch do not exist.');
       }
     });
@@ -60,9 +82,12 @@ export const updateAgentUserBranchRules = [
 ];
 
 export const updateAgentUserSortingRules = [
+  // eslint-disable-next-line arrow-body-style
   body('userId').exists().custom(async (value) => {
-    return await db.models.user.findOne({ where: { id: value } }).then(agentUserData => {
+    // eslint-disable-next-line no-return-await, consistent-return
+    return await db.models.user.findOne({ where: { id: value } }).then((agentUserData) => {
       if (!agentUserData) {
+        // eslint-disable-next-line prefer-promise-reject-errors
         return Promise.reject('Invalid user id or user do not exist.');
       }
     });

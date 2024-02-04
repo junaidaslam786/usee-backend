@@ -154,17 +154,34 @@ export const deleteCallBackgroundImage = async (req, res, next) => {
 };
 
 /**
+ * POST /user/verify-password
+ * Verify user password
+ */
+export const verifyPassword = async (req, res, next) => {
+  try {
+    const result = await userService.verifyPassword(req.user, req.body);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json({ success: true, message: "Password verified successfully"});
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/**
  * DELETE /user/:id
  * Delete user by id
  */
 export const deleteUser = async (req, res, next) => {
   try {
-    const result = await userService.deleteUser(req.params?.id ? req.params?.id : 0, req.dbInstance);
+    const result = await userService.deleteUser(req.dbInstance, req);
     if (result?.error && result?.message) {
-      return next(createError(400, result.message));
+      return next(createError(400, result));
     }
 
-    return res.json({ success: true, message: "User deleted successfully" });
+    return res.json({ success: true, message: "User deleted successfully"});
   } catch (err) {
     console.log('deleteUserError', err);
     next(err);

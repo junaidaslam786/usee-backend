@@ -1,8 +1,11 @@
-import { utilsHelper } from "@/helpers";
-import { PROPERTY_ROOT_PATHS, USER_TYPE } from '../../config/constants';
+import { mailHelper, utilsHelper } from "@/helpers";
+import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, PROPERTY_ROOT_PATHS, USER_TYPE } from '../../config/constants';
 import db from '@/database';
 import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
+const path = require("path");
+const ejs = require("ejs");
+import { listAgentUsers } from "../agent/user/user.service";
 
 export const updateCurrentUser = async (reqBody, req) => {
   try {
@@ -316,50 +319,88 @@ export const deleteCallBackgroundImage = async (reqBody, dbInstance) => {
   }
 }
 
-export const deleteUser = async (userId, dbInstance) => {
+export const verifyPassword = async (user, reqBody) => {
   try {
-    const appointment = await getUserById(userId);
-    if (!appointment) {
-      g
+    const { password } = reqBody;
+
+    const isValidPassword = await user.validatePassword(password);
+    if (!isValidPassword) {
+      return { error: true, message: 'Password is incorrect!' }
+    }
+
+    return true;
+  } catch (err) {
+    console.log('verifyPasswordServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
+export const deleteUser = async (dbInstance, req) => {
+  try {
+    const user = req.user;
+    if (!user) {
       return { error: true, message: "Invalid user id or user does not exist." };
     }
 
-    await db.transaction(async (transaction) => {
+    const agentUsers = await listAgentUsers(req.user, req.body, dbInstance);
+    
+    if (agentUsers.data.length > 0) {
+      const transactionResult = await db.transaction(async (transaction) => {
+        for (const agentUser of agentUsers.data) {
+          await deleteUserAndResources(agentUser.id, dbInstance, transaction);
+        }
+        await deleteUserAndResources(user.id, dbInstance, transaction);
+        await sendDeleteUserEmail(user, dbInstance);
+      });
 
-      await dbInstance.productAllocation.destroy(
-        {
-          where: {
-            userId,
-          },
-          force: true,
-        },
-        { transaction }
-      );
+      return transactionResult;
+    } else {
+      const transactionResult = await db.transaction(async (transaction) => {
+        await deleteUserAndResources(user.id, dbInstance, transaction);
+        await sendDeleteUserEmail(user, dbInstance);
+      });
 
-      await dbInstance.userCallBackgroundImage.destroy(
-        {
-          where: {
-            userId,
-          },
-          force: true,
-        },
-        { transaction }
-      );
-
-      await dbInstance.user.destroy(
-        {
-          where: {
-            id: userId,
-          },
-          force: true,
-        },
-        { transaction }
-      );
-    });
-
-    return true;
+      return transactionResult;
+    }
   } catch (err) {
     console.log("deleteUserServiceError", err);
     return { error: true, message: "Server not responding, please try again later." };
   }
+}
+
+const sendDeleteUserEmail = async (user, dbInstance) => {
+  const emailData = [];
+  emailData.name = user.fullName;
+  emailData.companyName = user.agent.companyName;
+  const htmlData = await ejs.renderFile(
+    path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_ACCOUNT_DELETION),
+    emailData
+  );
+  const payload = {
+    to: user.email,
+    subject: `${EMAIL_SUBJECT.AGENT_ACCOUNT_DELETION}`,
+    html: htmlData,
+  };
+  mailHelper.sendMail(payload);
+}
+
+export const deleteUserAndResources = async (userId, dbInstance, transaction) => {
+  const destroyOperations = [
+    dbInstance.userSubscription.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.tokenTransaction.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.token.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.userAlert.destroy({ where: { agentId: userId }, force: true }, { transaction }),
+    dbInstance.customerLog.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.customerWishlist.destroy({ where: { customerId: userId }, force: true }, { transaction }),
+    dbInstance.product.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.agentAvailability.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.agentBranch.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.productAllocation.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.userCallBackgroundImage.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.agentAccessLevel.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.agent.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.user.destroy({ where: { id: userId }, force: true }, { transaction }),
+  ];
+
+  return await Promise.all(destroyOperations);
 }

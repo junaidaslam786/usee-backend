@@ -27,7 +27,9 @@ export const registerAgentRules = [
     .withMessage('Please provide company registration # or deed title'),
   body('ornNumber')
     .if((value, { req }) => req.body.countryName === 'United Arab Emirates' && req.body.cityName === 'Dubai')
-    .exists().withMessage('Please provide ORN number'),
+    .exists().withMessage('Please provide ORN number')
+    .notEmpty()
+    .withMessage('Please provide ORN number'),
   body('phoneNumber')
     .exists().withMessage('Please provide phone number')
     .notEmpty()

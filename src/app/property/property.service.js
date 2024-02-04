@@ -23,7 +23,7 @@ import { calculateDistance } from '@/helpers/utils';
 
 export const createProperty = async (reqBody, req) => {
   try {
-    const { title, description, price, address, city, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
+    const { title, description, price, address, city, country, permitNumber, postalCode, region, latitude, longitude, virtualTourType } = reqBody;
     const { user, dbInstance } = req;
 
     if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.ADD_PROPERTY))) {
@@ -49,6 +49,8 @@ export const createProperty = async (reqBody, req) => {
         virtualTourType,
         address,
         city,
+        country: country,
+        permitNumber: permitNumber ? permitNumber : null,
         postalCode,
         region,
         latitude,
@@ -164,6 +166,19 @@ export const createProperty = async (reqBody, req) => {
         product.virtualTourUrl = result;
       }
 
+      // qrcode upload
+      if (city == 'Dubai' && country == 'United Arab Emirates' && req.files && req.files.qrCode) {
+        const qrCodeFile = req.files.qrCode;
+        const newFileName = `${Date.now()}_${qrCodeFile.name.replace(/ +/g, "")}`;
+        const result = await utilsHelper.fileUpload(qrCodeFile, PROPERTY_ROOT_PATHS.QR_CODE, newFileName);
+
+        if (result?.error) {
+          return { error: true, message: result?.error }
+        }
+
+        product.qrCode = result;
+      }
+
       await product.save({ transaction });
 
       return product;
@@ -178,7 +193,7 @@ export const createProperty = async (reqBody, req) => {
 
 export const updateProperty = async (reqBody, req) => {
   try {
-    const { productId, title, description, price, address, city, region, latitude, longitude, virtualTourType } = reqBody;
+    const { productId, title, description, price, address, city, country, permitNumber, region, latitude, longitude, virtualTourType } = reqBody;
     const { user, dbInstance } = req;
 
     if (!(user?.agent?.agentType === AGENT_TYPE.AGENT || user?.agentAccessLevels?.find((level) => level.accessLevel === AGENT_USER_ACCESS_TYPE_VALUE.EDIT_PROPERTY))) {
@@ -196,6 +211,8 @@ export const updateProperty = async (reqBody, req) => {
       product.virtualTourType = virtualTourType;
       product.address = address;
       product.city = city;
+      product.country = country;
+      product.permitNumber = permitNumber;
       product.region = region;
       product.latitude = latitude;
       product.longitude = longitude;
@@ -301,6 +318,20 @@ export const updateProperty = async (reqBody, req) => {
 
         product.virtualTourUrl = result;
       }
+
+      // qrcode upload
+      if (city == 'Dubai' && country == 'United Arab Emirates' && req.files && req.files.qrCode) {
+        const qrCodeFile = req.files.qrCode;
+        const newFileName = `${Date.now()}_${qrCodeFile.name.replace(/ +/g, "")}`;
+        const result = await utilsHelper.fileUpload(qrCodeFile, PROPERTY_ROOT_PATHS.QR_CODE, newFileName);
+
+        if (result?.error) {
+          return { error: true, message: result?.error }
+        }
+
+        product.qrCode = result;
+      }
+
 
       await product.save({ transaction });
 
