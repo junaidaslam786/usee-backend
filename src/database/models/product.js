@@ -66,9 +66,6 @@ export default function (sequelize) {
     city: {
       type: DataTypes.STRING,
     },
-    country: {
-      type: DataTypes.STRING,
-    },
     permitNumber: {
       type: DataTypes.STRING,
     },
