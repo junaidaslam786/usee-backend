@@ -396,3 +396,21 @@ export const uploadVirtualTour = async (req, res, next) => {
     next(err);
   }
 }
+
+/**
+ * POST /property/qrcode
+ * Upload QR code of the property
+ */
+export const uploadQrCode = async (req, res, next) => {
+  try {
+    const result = await propertyService.uploadQrCode(req, res);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('uploadQrCodeError', err);
+    next(err);
+  }
+}

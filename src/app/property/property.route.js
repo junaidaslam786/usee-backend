@@ -29,6 +29,8 @@ router.post('/virtual-tour', isAuthenticated, validate(propertyValidations.uploa
   propertyController.uploadVirtualTour);
 router.post('/removal-request', isAuthenticated, validate(propertyValidations.removalRequestRules),
   propertyController.removePropertyRequest);
+router.post('/qrcode', isAuthenticated, validate(propertyValidations.uploadQrCodeRules),
+  propertyController.uploadQrCode);
 router.delete('/allocated', isAuthenticated, validate(propertyValidations.deleteAllocatedPropertyRules),
   propertyController.deleteAllocatedProperty);
 router.get('/offer/:id', isAuthenticated, propertyController.getPropertyOffer);

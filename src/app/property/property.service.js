@@ -1567,3 +1567,38 @@ export const uploadVirtualTour = async (req, res) => {
     return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
+
+export const uploadQrCode = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const qrCode = req?.files?.qrCode;
+
+    const product = await req.dbInstance.product.findOne({
+      where: { id: productId }
+    });
+
+    if (!product) {
+      return { error: true, message: 'Invalid property id or property do not exist.' };
+    }
+
+    if (qrCode !== undefined && qrCode === null) {
+      if (!utilsHelper.checkFileType(qrCode, ['.png', '.jpg', '.jpeg'])) {
+        return { error: true, message: 'Invalid qr code file.' };
+      }
+    }
+
+    const newFileName = `${Date.now()}_${qrCode.name.replace(/ +/g, "")}`;
+    const result = await utilsHelper.fileUpload(qrCode, PROPERTY_ROOT_PATHS.QR_CODE, newFileName);
+    if (result?.error) {
+      return { error: true, message: result?.error }
+    }
+
+    product.qrCode = '/' + result.split('/').pop();
+    product.save();
+
+    return { success: true, message: 'Qr code saved successfully.', file_path: result }
+  } catch (err) {
+    console.log('uploadQrCodeServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}

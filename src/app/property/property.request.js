@@ -154,3 +154,15 @@ export const uploadVirtualTourRules = [
       return true;
     }),
 ];
+
+export const uploadQrCodeRules = [
+  body('productId').exists().withMessage('Please provide property id').notEmpty()
+    .withMessage('Please provide property id'),
+  body('qrCode')
+    .custom((value, { req }) => {
+      if (!req.files || !req.files.qrCode) {
+        throw new Error('Please provide QR code file');
+      }
+      return true;
+    }),
+];
