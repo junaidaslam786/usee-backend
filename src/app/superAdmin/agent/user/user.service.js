@@ -5,7 +5,6 @@ import db from '@/database';
 // import { where } from 'sequelize';
 
 const getAgentUserByUserId = async (agentUserId, dbInstance) => {
-
   const agentUser = await dbInstance.user.findOne({ where: { id: agentUserId } });
 
   if (!agentUser) {
@@ -16,7 +15,6 @@ const getAgentUserByUserId = async (agentUserId, dbInstance) => {
 };
 
 const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
-
   const agentUser = await dbInstance.agent.findOne({
 
     where: { userId: agentUserId },
@@ -59,6 +57,7 @@ export const listAgents = async (dbInstance) => {
       totalItems: count,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('listAgentUsersServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
@@ -80,6 +79,7 @@ export const listAgentUsers = async (params, dbInstance) => {
       totalItems: count,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('listAgentUsersServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
@@ -100,6 +100,7 @@ export const listBlockedAgentUsers = async (dbInstance) => {
       totalItems: count,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('listAgentUsersServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
@@ -119,13 +120,13 @@ export const updateAgentUserStatus = async (reqBody, req) => {
 
     return true;
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('updateAgentUserSortingServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
 
 export const getAgentUser = async (agentUserId, dbInstance) => {
-
   try {
     const agentUser = await getAgentUserDetailByUserId(agentUserId, dbInstance);
     if (!agentUser) {
@@ -134,6 +135,7 @@ export const getAgentUser = async (agentUserId, dbInstance) => {
 
     return agentUser;
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('getAgentUserServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
@@ -162,6 +164,7 @@ export const deleteAgentUser = async (userId, dbInstance) => {
 
     return true;
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('deleteAgentUserServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }

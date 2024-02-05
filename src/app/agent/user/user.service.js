@@ -56,7 +56,7 @@ export const listAgentUsersToAllocate = async (req) => {
   try {
     const { user: agentInfo, dbInstance } = req;
 
-    const selectedUser = req?.query?.user ? req.query.user : agentInfo.id;
+    const selectedUser = req.query.user ? req.query.user : agentInfo.id;
     return await dbInstance.agent.findAll({
       where: {
         [OP.or]: [{ agentId: selectedUser }, { managerId: selectedUser }],
@@ -285,16 +285,6 @@ export const deleteAgentUser = async (userId, dbInstance) => {
         { transaction }
       );
 
-      await dbInstance.agentTimeSlot.destroy(
-        {
-          where: {
-            userId,
-          },
-          force: true,
-        },
-        { transaction }
-      );
-
       await dbInstance.productAllocation.destroy(
         {
           where: {
@@ -314,7 +304,7 @@ export const deleteAgentUser = async (userId, dbInstance) => {
         },
         { transaction }
       );
-      
+
       await dbInstance.agent.destroy(
         {
           where: {
@@ -617,7 +607,7 @@ export const getUserTokens = async (userId, dbInstance, valid = true, available)
       return { error: true, message: "User ID is required." };
     }
 
-    const whereClause = { 
+    const whereClause = {
       userId,
       valid,
       refundStatus: { [OP.or]: [null] },
@@ -625,7 +615,7 @@ export const getUserTokens = async (userId, dbInstance, valid = true, available)
     };
 
     if (available !== undefined) {
-      whereClause.remainingAmount = available ? { [OP.gt]: 0 } : { [OP.gte]: 0 };      
+      whereClause.remainingAmount = available ? { [OP.gt]: 0 } : { [OP.gte]: 0 };
     }
 
     const tokens = await dbInstance.token.findAll({

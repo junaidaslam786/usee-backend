@@ -2,7 +2,44 @@ import {
   USER_TYPE,
 } from '@/config/constants';
 import db from '@/database';
-import { where } from 'sequelize';
+// import { where } from 'sequelize';
+
+const getAgentUserByUserId = async (agentUserId, dbInstance) => {
+  const agentUser = await dbInstance.user.findOne({ where: { id: agentUserId } });
+
+  if (!agentUser) {
+    return false;
+  }
+
+  return agentUser;
+};
+
+const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
+  const agentUser = await dbInstance.agent.findOne({
+
+    where: { userId: agentUserId },
+    include: [
+      {
+        model: dbInstance.user,
+        include: [{
+          model: dbInstance.productAllocation,
+          include: [{
+            model: dbInstance.product,
+            attributes: ['id'],
+          }],
+        }],
+      },
+      {
+        model: dbInstance.user,
+      }],
+  });
+
+  if (!agentUser) {
+    return false;
+  }
+
+  return agentUser;
+};
 
 export const listAgents = async (dbInstance) => {
   try {
@@ -10,7 +47,7 @@ export const listAgents = async (dbInstance) => {
       where: { user_type: USER_TYPE.AGENT, status: true },
       include: [{
         model: dbInstance.agent,
-        where: {agent_id: null}
+        where: { agent_id: null },
       }],
       order: [['id', 'DESC']],
     });
@@ -20,6 +57,7 @@ export const listAgents = async (dbInstance) => {
       totalItems: count,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('listAgentUsersServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
@@ -28,10 +66,10 @@ export const listAgents = async (dbInstance) => {
 export const listAgentUsers = async (params, dbInstance) => {
   try {
     const { count, rows } = await dbInstance.user.findAndCountAll({
-      where: { status: true},
+      where: { status: true },
       include: [{
         model: dbInstance.agent,
-        where: {agent_id: params.id}
+        where: { agent_id: params.id },
       }],
       order: [['id', 'DESC']],
     });
@@ -41,6 +79,7 @@ export const listAgentUsers = async (params, dbInstance) => {
       totalItems: count,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('listAgentUsersServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
@@ -61,11 +100,11 @@ export const listBlockedAgentUsers = async (dbInstance) => {
       totalItems: count,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('listAgentUsersServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
-
 
 export const updateAgentUserStatus = async (reqBody, req) => {
   try {
@@ -81,13 +120,13 @@ export const updateAgentUserStatus = async (reqBody, req) => {
 
     return true;
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('updateAgentUserSortingServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
 };
 
 export const getAgentUser = async (agentUserId, dbInstance) => {
-
   try {
     const agentUser = await getAgentUserDetailByUserId(agentUserId, dbInstance);
     if (!agentUser) {
@@ -96,6 +135,7 @@ export const getAgentUser = async (agentUserId, dbInstance) => {
 
     return agentUser;
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('getAgentUserServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
@@ -124,46 +164,8 @@ export const deleteAgentUser = async (userId, dbInstance) => {
 
     return true;
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log('deleteAgentUserServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' };
   }
-};
-
-const getAgentUserByUserId = async (agentUserId, dbInstance) => {
-
-  const agentUser = await dbInstance.user.findOne({ where: { id: agentUserId } });
-
-  if (!agentUser) {
-    return false;
-  }
-
-  return agentUser;
-};
-
-const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
-
-  const agentUser = await dbInstance.agent.findOne({
-    
-    where: { userId: agentUserId },
-    include: [
-      {
-        model: dbInstance.user,
-        include: [{
-          model: dbInstance.productAllocation,
-          include: [{
-            model: dbInstance.product,
-            attributes: ['id'],
-          }],
-        }],
-      },
-      {
-        model: dbInstance.user,
-      }],
-  });
-
-  if (!agentUser) {
-    return false;
-  }
-
-  return agentUser;
 };
