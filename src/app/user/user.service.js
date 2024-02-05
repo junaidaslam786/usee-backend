@@ -394,6 +394,7 @@ export const deleteUserAndResources = async (userId, dbInstance, transaction) =>
     dbInstance.customerWishlist.destroy({ where: { customerId: userId }, force: true }, { transaction }),
     dbInstance.product.destroy({ where: { userId }, force: true }, { transaction }),
     dbInstance.agentAvailability.destroy({ where: { userId }, force: true }, { transaction }),
+    dbInstance.agentTimeSlot.destroy({ where: { userId }, transaction }),
     dbInstance.agentBranch.destroy({ where: { userId }, force: true }, { transaction }),
     dbInstance.productAllocation.destroy({ where: { userId }, force: true }, { transaction }),
     dbInstance.userCallBackgroundImage.destroy({ where: { userId }, force: true }, { transaction }),

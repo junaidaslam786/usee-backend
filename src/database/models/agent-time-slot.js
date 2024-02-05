@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class AgentTimeSlot extends Model {
     static associate(models) {
-      AgentTimeSlot.hasMany(models.agentAvailability, { foreignKey: 'timeSlotId' })
+      AgentTimeSlot.hasMany(models.agentAvailability, { foreignKey: 'timeSlotId' });
     }
   }
 
@@ -16,13 +16,13 @@ export default function (sequelize) {
       autoIncrement: true,
     },
     fromTime: {
-        type: DataTypes.TIME,
+      type: DataTypes.TIME,
     },
     toTime: {
-        type: DataTypes.TIME,
+      type: DataTypes.TIME,
     },
     textShow: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
   }, {
     modelName: 'agentTimeSlot',
@@ -30,14 +30,17 @@ export default function (sequelize) {
     sequelize,
   });
 
+  // eslint-disable-next-line no-unused-vars
   AgentTimeSlot.addHook('beforeSave', async (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   AgentTimeSlot.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   AgentTimeSlot.addHook('afterDestroy', (instance) => {
     //
   });
