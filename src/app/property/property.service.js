@@ -1558,7 +1558,7 @@ export const uploadVirtualTour = async (req, res) => {
     }
 
     product.virtualTourType = virtualTourType;
-    product.virtualTour = result;
+    product.virtualTourUrl = result;
     product.save();
 
     return { success: true, message: 'Virtual tour video saved successfully.', file_path: result }
