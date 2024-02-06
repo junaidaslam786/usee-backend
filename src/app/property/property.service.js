@@ -1505,7 +1505,7 @@ export const uploadFeaturedImage = async (req, res) => {
       return { error: true, message: result?.error }
     }
 
-    product.featuredImage = '/' + result.split('/').pop();
+    product.featuredImage = result;
     product.save();
 
     return { success: true, message: 'Featured image saved successfully.', file_path: result }
@@ -1558,7 +1558,7 @@ export const uploadVirtualTour = async (req, res) => {
     }
 
     product.virtualTourType = virtualTourType;
-    product.virtualTour = '/' + result.split('/').pop();
+    product.virtualTour = result;
     product.save();
 
     return { success: true, message: 'Virtual tour video saved successfully.', file_path: result }
@@ -1593,7 +1593,7 @@ export const uploadQrCode = async (req, res) => {
       return { error: true, message: result?.error }
     }
 
-    product.qrCode = '/' + result.split('/').pop();
+    product.qrCode = result;
     product.save();
 
     return { success: true, message: 'Qr code saved successfully.', file_path: result }

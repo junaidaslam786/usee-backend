@@ -54,7 +54,7 @@
       "required": false
     },
     "DEFAULT_MAIL_SENDER": {
-      "description": "Default mail sander profile",
+      "description": "Default mail sender profile",
       "value": "Usee360 <mail@example.com>"
     }
   },
