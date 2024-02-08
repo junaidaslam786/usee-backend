@@ -73,16 +73,7 @@ export default function (sequelize) {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        // Validate the password only if skipPasswordValidation option is not set
-        passwordValidation(value) {
-          console.log('PASSWORD-VALIDATION', value);
-          if (!this.skipPasswordValidation && (value === null || value === undefined || value === '')) {
-            throw new Error('Password is required');
-          }
-        },
-      },
+      // allowNull: false,
     },
     userType: {
       type: DataTypes.STRING,
@@ -161,17 +152,6 @@ export default function (sequelize) {
     sequelize,
     paranoid: true,
   });
-
-  // Update the validation logic to skip the password requirement for Facebook login
-  // User.addHook('beforeValidate', async (user, options) => {
-  //   // Check if it's a Facebook login by verifying the presence of facebookId
-  //   console.log('BEFORE-VALIDATE', user, options);
-  //   if (user.facebookId) {
-  //     // Skip the password validation
-  //     // eslint-disable-next-line no-param-reassign
-  //     options.skipPasswordValidation = true;
-  //   }
-  // });
 
   User.addHook('beforeSave', async (instance) => {
     if (instance.changed('password')) {
