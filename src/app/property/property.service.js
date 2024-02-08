@@ -820,6 +820,12 @@ export const getPropertyDetailById = async (propertyId, dbInstance) => {
       {
         model: dbInstance.user,
         attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+        include: [
+          {
+            model: dbInstance.agent,
+            attributes: ["id", "ornNumber"],
+          },
+        ],
       },
       {
         model: dbInstance.productDocument,
