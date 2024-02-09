@@ -54,15 +54,6 @@ export const createPropertyRules = [
       }
       return true;
     }),
-  body('qrCode')
-    .custom((value, { req }) => {
-      if (req.body.region === 'United Arab Emirates' && req.body.city === 'Dubai') {
-        if (!req.files || !req.files.qrCode) {
-          throw new Error('Please provide QR code');
-        }
-      }
-      return true;
-    }),
   body('postalCode').exists().withMessage('Please provide property postal code').notEmpty()
     .withMessage('Please provide property postal code'),
   body('region').exists().withMessage('Please provide property region').notEmpty()
