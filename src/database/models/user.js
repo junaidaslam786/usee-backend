@@ -76,8 +76,9 @@ export default function (sequelize) {
       // allowNull: false,
     },
     userType: {
-      type: DataTypes.STRING,
-      enum: ['superadmin', 'admin', 'agent', 'customer'],
+      type: DataTypes.ENUM,
+      defaultValue: 'customer',
+      values: ['superadmin', 'admin', 'agent', 'customer'],
     },
     profileImage: {
       type: DataTypes.STRING,

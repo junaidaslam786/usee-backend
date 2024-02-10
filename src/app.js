@@ -14,8 +14,13 @@ import db from "@/database";
 
 import * as configs from "@/config";
 import { authenticationMiddleware, sentryMiddleware } from "@/middleware";
+import { utilsHelper, mailHelper } from '@/helpers';
+
+import { AGENT_TYPE, USER_TYPE, AGENT_USER_ACCESS_TYPE_VALUE, PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, PRODUCT_LOG_TYPE } from '@/config/constants';
 
 const axios = require('axios');
+const crypto = require('crypto');
+const OAuth = require('oauth-1.0a');
 const { NODE_ENV } = process.env;
 
 const app = express();
@@ -40,8 +45,8 @@ if (NODE_ENV !== "development") {
 // const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
-const TWITTER_CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
-const TWITTER_CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
+const TWITTER_CONSUMER_KEY = process.env.TWITTER_API_KEY;
+const TWITTER_CONSUMER_SECRET = process.env.TWITTER_API_SECRET;
 const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const LINEDIN_PRIMARY_CLIENT_SECRET = process.env.LINEDIN_PRIMARY_CLIENT_SECRET;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_ENDPOINT_SECRET;
@@ -160,7 +165,7 @@ app.use(express.static("uploads"));
 app.use(compression(configs.compressionConfig));
 app.use(cookieParser());
 app.use(fileUpload());
-app.use(bodyParser.json({ limit: "20mb" }));
+app.use(bodyParser.json({ limit: "150mb" }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set("view engine", "ejs");
 
@@ -176,16 +181,25 @@ configs.routerConfig(app);
 
 // SOCIAL MEDIA AUTHENTICATION ROUTES
 // Facebook authentication route
-app.get('/auth/facebook', (req, res) => {
-  const redirectUrl = `${process.env.APP_URL}/auth/facebook/callback`;
-  const scope = 'email';
-  const state = 'facebook';
-  const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
-  // console.log("URL: ", url);
+app.post('/auth/facebook', (req, res) => {
+  const { userType } = req.body;
 
-  res.json({ url });
+  if (!userType) {
+    return res.status(400).json({ error: 'User type is required' });
+  }
+
+  try {
+    const redirectUrl = `${process.env.APP_URL}/auth/facebook/callback`;
+    const scope = 'email';
+    const state = userType;
+    const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+  
+    res.json({ url });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Facebook authentication failure' });
+  }
 });
-
 
 // Facebook authentication callback route
 app.get('/auth/facebook/callback', async (req, res) => {
@@ -193,8 +207,12 @@ app.get('/auth/facebook/callback', async (req, res) => {
 
   // console.log("FACEBOOK CALLBACK");
   // console.log("CODE: ", code);
-  if (state !== 'facebook') {
-    return res.status(400).json({ error: 'Invalid state parameter' });
+  switch (state) {
+    case 'agent':
+    case 'customer':
+      break;
+    default:
+      return res.status(400).json({ error: 'Invalid state parameter' });
   }
 
   try {
@@ -214,36 +232,31 @@ app.get('/auth/facebook/callback', async (req, res) => {
 
           console.log("RESPONSE: ", response.data);
 
-          const user = await db.models.user.findOne({
+          let user = await db.models.user.findOne({
             where: { email: email },
           });
 
           if (!user) {
-            // return res.status(404).json({ error: 'User not found' });
-
             const nameArray = name.split(" ");
             const firstName = nameArray[0];
             const lastName = nameArray[1];
-            const password = null;
 
-            const user = await db.models.user.create({
+            user = await db.models.user.create({
               firstName: firstName,
               lastName: lastName,
               email: email,
-              password: 'Password@123',
+              userType: state,
               signupStep: -1,
+              status: false,
+              active: false,
               facebookId: id,
-            }, {
-              // validate: {
-              //   password: password !== undefined ? { notEmpty: true } : false, // Only validate password if it's present
-              // }
             });
-            // });
           }
 
           const token = await user.generateToken();
+          const refreshToken = await user.generateToken('4h');
 
-          res.json({ success: true, user: user, token: token });
+          res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
         }).catch((error) => {
           // eslint-disable-next-line no-console
           console.error(error);
@@ -259,18 +272,68 @@ app.get('/auth/facebook/callback', async (req, res) => {
 });
 
 // Twitter authentication route
-app.get('/auth/twitter', (req, res) => {
-  const redirectUrl = `${process.env.HOME_PANEL_URL}/auth/twitter/callback`;
+app.get('/auth/twitter', async (req, res) => {
+  const callbackUrl = `${process.env.APP_URL}/auth/twitter/callback`;
   const scope = 'email';
   const state = 'twitter';
   // const url = `https://api.twitter.com/oauth/authenticate?client_id=${TWITTER_CONSUMER_KEY}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
-  const url = `https://api.twitter.com/oauth/authenticate?oauth_token=your-oauth-token`
-  console.log("URL: ", url);
-  res.redirect(url);
+
+  const oauth = new OAuth({
+    consumer: {
+      key: TWITTER_CONSUMER_KEY,
+      secret: TWITTER_CONSUMER_SECRET,
+    },
+    signature_method: 'HMAC-SHA1',
+    hash_function: (baseString, key) => crypto.createHmac('sha1', key).update(baseString).digest('base64'),
+  });
+
+  console.log("oauth: ", oauth);
+
+  const requestData = {
+    url: 'https://api.twitter.com/oauth/request_token',
+    method: 'POST',
+    data: {
+      oauth_callback: callbackUrl,
+    },
+  };
+
+  console.log("requestData: ", requestData);
+
+  const authHeader = oauth.toHeader(oauth.authorize(requestData));
+
+  console.log("authHeader: ", authHeader);
+
+  // Note: Use the "Authorization" key instead of "headers.Authorization" for axios POST requests
+  const axiosOptions = {
+    url: requestData.url,
+    method: requestData.method,
+    data: requestData.data,
+    headers: { "Authorization": authHeader },
+  };
+
+  console.log("axiosOptions: ", axiosOptions);
+  await axios(axiosOptions)
+    .then((response) => {
+      // Handle successful response and extract the request token
+      console.log(response.data);
+      res.json(response.data);
+    })
+    .catch((error) => {
+      console.error(error.response.data);
+      res.json(error.response.data);
+    });
+
+  // const url = `https://api.twitter.com/oauth/request_token`;
+
+  // console.log("URL: ", url);
+  // res.json(response.data);
 });
 
 // Twitter authentication callback route
 app.get('/auth/twitter/callback', async (req, res) => {
+  console.log("TWITTER CALLBACK");
+  console.log("REQ: ", req);
+  console.log("RES: ", res);
   const { code, state } = req.query;
 
   if (state !== 'twitter') {
@@ -307,30 +370,34 @@ app.get('/auth/twitter/callback', async (req, res) => {
 
 // LinkedIn authentication route
 app.get('/auth/linkedin', (req, res) => {
-  const redirectUrl = `${process.env.HOME_PANEL_URL}/auth/linkedin/callback`;
+  const redirectUrl = `${process.env.APP_URL}/auth/linkedin/callback`;
   const scope = 'email';
   const state = 'linkedin';
   const url = `https://www.linkedin.com/oauth/v2/authorization?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
-  console.log("URL: ", url);
-  res.redirect(url);
+  // console.log("URL: ", url);
+  res.json({ url });
+  // res.redirect(url);
 });
 
 // LinkedIn authentication callback route
-app.get('/auth/linkedin/callback', async (req, res) => {
+app.post('/auth/linkedin/callback', async (req, res) => {
   const { code, state } = req.query;
+  console.log("req.query: ", req.query);
 
   if (state !== 'linkedin') {
     return res.status(400).json({ error: 'Invalid state parameter' });
   }
 
   try {
-    const response = await fetch(`https://www.linkedin.com/oauth/v2/accessToken?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.HOME_PANEL_URL}/auth/linkedin/callback&client_secret=${LINEDIN_PRIMARY_CLIENT_SECRET}&code=${code}&grant_type=authorization_code`);
-    const data = await response.json();
+    const linkedinUrl = `https://www.linkedin.com/oauth/v2/accessToken?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.APP_URL}/auth/linkedin/callback&client_secret=${LINEDIN_PRIMARY_CLIENT_SECRET}&code=${code}&grant_type=authorization_code`;
+    console.log("linkedinUrl: ", linkedinUrl);
+    const response = await axios.get(linkedinUrl);
+    const data = response.data;
 
     const { access_token } = data;
 
-    const userResponse = await fetch(`https://api.linkedin.com/v2/me?oauth2_access_token=${access_token}`);
-    const userData = await userResponse.json();
+    const userResponse = await axios.get(`https://api.linkedin.com/v2/me?oauth2_access_token=${access_token}`);
+    const userData = userResponse.data;
 
     const { id, name, email } = userData;
 
