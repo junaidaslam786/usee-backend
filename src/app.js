@@ -21,6 +21,7 @@ import { AGENT_TYPE, USER_TYPE, AGENT_USER_ACCESS_TYPE_VALUE, PRODUCT_STATUS, PR
 const axios = require('axios');
 const crypto = require('crypto');
 const OAuth = require('oauth-1.0a');
+const qs = require('qs');
 const { NODE_ENV } = process.env;
 
 const app = express();
@@ -48,7 +49,7 @@ const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 const TWITTER_CONSUMER_KEY = process.env.TWITTER_API_KEY;
 const TWITTER_CONSUMER_SECRET = process.env.TWITTER_API_SECRET;
 const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
-const LINEDIN_PRIMARY_CLIENT_SECRET = process.env.LINEDIN_PRIMARY_CLIENT_SECRET;
+const LINKEDIN_PRIMARY_CLIENT_SECRET = process.env.LINKEDIN_PRIMARY_CLIENT_SECRET;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_ENDPOINT_SECRET;
 
 // Webhook endpoint to handle events from Stripe
@@ -374,27 +375,13 @@ app.get('/auth/twitter/callback', async (req, res) => {
   }
 });
 
-// LinkedIn authentication route
-app.post('/auth/linkedin', (req, res) => {
-  const { userType } = req.body;
-
-  if (!userType) {
-    return res.status(400).json({ error: 'User type is required' });
-  }
-
-  const redirectUrl = `${process.env.APP_URL}/auth/linkedin/callback`;
-  const scope = 'profile email';
-  const state = userType;
-  const url = encodeURI(`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`);
-  // console.log("URL: ", url);
-  res.json({ url });
-  // res.redirect(url);
-});
-
 // LinkedIn authentication callback route
 app.get('/auth/linkedin/callback', async (req, res) => {
-  const { code, state } = req.query;
-  console.log("req: ", req);
+  const { code, state, error, error_description } = req.query;
+
+  if (error) {
+    return res.status(400).json({ error: true, error_description: error_description });
+  }
 
   switch (state) {
     case 'agent':
@@ -405,19 +392,29 @@ app.get('/auth/linkedin/callback', async (req, res) => {
   }
 
   try {
-    const linkedinUrl = `https://www.linkedin.com/oauth/v2/accessToken?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.APP_URL}/auth/linkedin/callback&client_secret=${LINKEDIN_PRIMARY_CLIENT_SECRET}&code=${code}&grant_type=authorization_code`;
-    console.log("linkedinUrl: ", linkedinUrl);
-    const response = await axios.post(linkedinUrl);
-    const data = response.data;
+    const linkedinUrl = `https://www.linkedin.com/oauth/v2/accessToken?grant_type=authorization_code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.APP_URL}/auth/linkedin/callback&client_secret=${LINKEDIN_PRIMARY_CLIENT_SECRET}&code=${code}`;
 
+    const response = await axios.post(linkedinUrl);
+    // const response = await axios.post(linkedinUrl, {}, {
+    //   headers: {
+    //     'Content-Type': 'application/x-www-form-urlencoded'
+    //   }
+    // });
+
+    if (response.data.error) {
+      return res.status(400).json({ error: true, error_description: decodeURI(response.data.error_description) });
+    }
+
+    const data = response.data;
     const { access_token } = data;
 
-    const userResponse = await axios.get(`https://api.linkedin.com/v2/me?oauth2_access_token=${access_token}`);
+    const userResponse = await axios.get(`https://api.linkedin.com/v2/userinfo?oauth2_access_token=${access_token}`);
     const userData = userResponse.data;
 
-    const { id, name, email } = userData;
+    const { sub, name, email } = userData;
+    console.log("USER DATA: ", userData);
 
-    const user = await db.models.user.findOne({
+    let user = await db.models.user.findOne({
       where: { email: email },
     });
 
@@ -434,7 +431,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         signupStep: -1,
         status: false,
         active: false,
-        facebookId: id,
+        linkedinId: sub,
       });
     }
 
@@ -446,6 +443,23 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
   }
+});
+
+// LinkedIn authentication route
+app.post('/auth/linkedin', (req, res) => {
+  const { userType } = req.body;
+
+  if (!userType) {
+    return res.status(400).json({ error: 'User type is required' });
+  }
+
+  const redirectUrl = `${process.env.APP_URL}/auth/linkedin/callback`;
+  const scope = 'openid profile email';
+  const state = userType;
+  const url = encodeURI(`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&state=${state}&scope=${scope}`);
+  // console.log("URL: ", url);
+  res.json({ url });
+  // res.redirect(url);
 });
 
 // TRADER ROUTES
