@@ -193,7 +193,7 @@ app.post('/auth/facebook', (req, res) => {
     const scope = 'email';
     const state = userType;
     const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
-  
+
     res.json({ url });
   } catch (error) {
     console.error(error);
@@ -272,7 +272,13 @@ app.get('/auth/facebook/callback', async (req, res) => {
 });
 
 // Twitter authentication route
-app.get('/auth/twitter', async (req, res) => {
+app.post('/auth/twitter', async (req, res) => {
+  const { userType } = req.body;
+
+  if (!userType) {
+    return res.status(400).json({ error: 'User type is required' });
+  }
+
   const callbackUrl = `${process.env.APP_URL}/auth/twitter/callback`;
   const scope = 'email';
   const state = 'twitter';
@@ -369,29 +375,39 @@ app.get('/auth/twitter/callback', async (req, res) => {
 });
 
 // LinkedIn authentication route
-app.get('/auth/linkedin', (req, res) => {
+app.post('/auth/linkedin', (req, res) => {
+  const { userType } = req.body;
+
+  if (!userType) {
+    return res.status(400).json({ error: 'User type is required' });
+  }
+
   const redirectUrl = `${process.env.APP_URL}/auth/linkedin/callback`;
-  const scope = 'email';
-  const state = 'linkedin';
-  const url = `https://www.linkedin.com/oauth/v2/authorization?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+  const scope = 'profile email';
+  const state = userType;
+  const url = encodeURI(`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`);
   // console.log("URL: ", url);
   res.json({ url });
   // res.redirect(url);
 });
 
 // LinkedIn authentication callback route
-app.post('/auth/linkedin/callback', async (req, res) => {
+app.get('/auth/linkedin/callback', async (req, res) => {
   const { code, state } = req.query;
-  console.log("req.query: ", req.query);
+  console.log("req: ", req);
 
-  if (state !== 'linkedin') {
-    return res.status(400).json({ error: 'Invalid state parameter' });
+  switch (state) {
+    case 'agent':
+    case 'customer':
+      break;
+    default:
+      return res.status(400).json({ error: 'Invalid state parameter' });
   }
 
   try {
-    const linkedinUrl = `https://www.linkedin.com/oauth/v2/accessToken?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.APP_URL}/auth/linkedin/callback&client_secret=${LINEDIN_PRIMARY_CLIENT_SECRET}&code=${code}&grant_type=authorization_code`;
+    const linkedinUrl = `https://www.linkedin.com/oauth/v2/accessToken?client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.APP_URL}/auth/linkedin/callback&client_secret=${LINKEDIN_PRIMARY_CLIENT_SECRET}&code=${code}&grant_type=authorization_code`;
     console.log("linkedinUrl: ", linkedinUrl);
-    const response = await axios.get(linkedinUrl);
+    const response = await axios.post(linkedinUrl);
     const data = response.data;
 
     const { access_token } = data;
@@ -406,12 +422,26 @@ app.post('/auth/linkedin/callback', async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      const nameArray = name.split(" ");
+      const firstName = nameArray[0];
+      const lastName = nameArray[1];
+
+      user = await db.models.user.create({
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        userType: state,
+        signupStep: -1,
+        status: false,
+        active: false,
+        facebookId: id,
+      });
     }
 
     const token = await user.generateToken();
+    const refreshToken = await user.generateToken('4h');
 
-    res.json({ success: true, user: user, token: token });
+    res.json({ success: true, user: user, token: token, refreshToken: refreshToken, access_token: access_token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
@@ -465,6 +495,7 @@ app.post('/create-checkout-session', async (req, res) => {
         quantity: quantity,
       }],
       mode: 'payment',
+      allow_promotion_codes: true,
       invoice_creation: {
         enabled: true,
       },
