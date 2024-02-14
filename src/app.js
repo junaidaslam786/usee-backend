@@ -259,7 +259,8 @@ app.get('/auth/facebook/callback', async (req, res) => {
           const token = await user.generateToken();
           const refreshToken = await user.generateToken('4h');
 
-          res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+          // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+          res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
         }).catch((error) => {
           // eslint-disable-next-line no-console
           console.error(error);
@@ -440,7 +441,8 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     const token = await user.generateToken();
     const refreshToken = await user.generateToken('4h');
 
-    res.json({ success: true, user: user, token: token, refreshToken: refreshToken, access_token: access_token });
+    // res.json({ success: true, user: user, token: token, refreshToken: refreshToken, access_token: access_token });
+    res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Failed to authenticate user' });
@@ -526,7 +528,8 @@ app.get('/auth/google/callback', async (req, res) => {
     const token = await user.generateToken();
     const refreshToken = await user.generateToken('4h');
 
-    res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+    // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+    res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
