@@ -140,6 +140,10 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       unique: true,
     },
+    googleId: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
     timezone: {
       type: DataTypes.STRING,
     },

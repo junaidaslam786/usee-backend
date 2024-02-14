@@ -50,6 +50,8 @@ const TWITTER_CONSUMER_KEY = process.env.TWITTER_API_KEY;
 const TWITTER_CONSUMER_SECRET = process.env.TWITTER_API_SECRET;
 const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const LINKEDIN_PRIMARY_CLIENT_SECRET = process.env.LINKEDIN_PRIMARY_CLIENT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_ENDPOINT_SECRET;
 
 // Webhook endpoint to handle events from Stripe
@@ -186,7 +188,7 @@ app.post('/auth/facebook', (req, res) => {
   const { userType } = req.body;
 
   if (!userType) {
-    return res.status(400).json({ error: 'User type is required' });
+    return res.status(400).json({ error: true, message: 'User type is required' });
   }
 
   try {
@@ -198,7 +200,7 @@ app.post('/auth/facebook', (req, res) => {
     res.json({ url });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Facebook authentication failure' });
+    res.status(500).json({ error: true, message: 'Facebook authentication failure' });
   }
 });
 
@@ -213,7 +215,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
     case 'customer':
       break;
     default:
-      return res.status(400).json({ error: 'Invalid state parameter' });
+      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
   }
 
   try {
@@ -268,7 +270,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
       });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to authenticate user' });
+    res.status(500).json({ error: true, message: 'Failed to authenticate user' });
   }
 });
 
@@ -380,7 +382,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
   const { code, state, error, error_description } = req.query;
 
   if (error) {
-    return res.status(400).json({ error: true, error_description: error_description });
+    return res.status(400).json({ error: true, message: error_description });
   }
 
   switch (state) {
@@ -388,7 +390,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     case 'customer':
       break;
     default:
-      return res.status(400).json({ error: 'Invalid state parameter' });
+      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
   }
 
   try {
@@ -402,7 +404,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     // });
 
     if (response.data.error) {
-      return res.status(400).json({ error: true, error_description: decodeURI(response.data.error_description) });
+      return res.status(400).json({ error: true, message: decodeURI(response.data.error_description) });
     }
 
     const data = response.data;
@@ -441,7 +443,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     res.json({ success: true, user: user, token: token, refreshToken: refreshToken, access_token: access_token });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to authenticate user' });
+    res.status(500).json({ error: true, message: 'Failed to authenticate user' });
   }
 });
 
@@ -450,16 +452,106 @@ app.post('/auth/linkedin', (req, res) => {
   const { userType } = req.body;
 
   if (!userType) {
-    return res.status(400).json({ error: 'User type is required' });
+    return res.status(400).json({ error: true, message: 'User type is required' });
   }
 
-  const redirectUrl = `${process.env.APP_URL}/auth/linkedin/callback`;
-  const scope = 'openid profile email';
-  const state = userType;
-  const url = encodeURI(`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&state=${state}&scope=${scope}`);
-  // console.log("URL: ", url);
-  res.json({ url });
-  // res.redirect(url);
+  try {
+    const redirectUrl = `${process.env.APP_URL}/auth/linkedin/callback`;
+    const scope = 'openid profile email';
+    const state = userType;
+    const url = encodeURI(`https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${redirectUrl}&state=${state}&scope=${scope}`);
+    // console.log("URL: ", url);
+    res.json({ url });
+    // res.redirect(url);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: true, message: 'LinkedIn authentication failure' });
+  }
+});
+
+// Google authentication callback route
+app.get('/auth/google/callback', async (req, res) => {
+  const { code, state } = req.query;
+
+  switch (state) {
+    case 'agent':
+    case 'customer':
+      break;
+    default:
+      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
+  }
+
+  try {
+    const redirectUrl = `${process.env.APP_URL}/auth/google/callback`;
+    // const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}&response_type=code`;
+
+    const response = await axios.post('https://oauth2.googleapis.com/token', {
+      code: code,
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      redirect_uri: redirectUrl,
+      grant_type: 'authorization_code',
+    });
+
+    const data = response.data;
+    const { access_token } = data;
+
+    const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${access_token}`);
+    const userData = userResponse.data;
+
+    const { id, name, email } = userData;
+    console.log("USER DATA: ", userData);
+
+    let user = await db.models.user.findOne({
+      where: { email: email },
+    });
+
+    if (!user) {
+      const nameArray = name ? name.split(" ") : ["", ""];
+      const firstName = nameArray[0];
+      const lastName = nameArray[1];
+
+      user = await db.models.user.create({
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        userType: state,
+        signupStep: -1,
+        status: false,
+        active: false,
+        googleId: id,
+      });
+    }
+
+    const token = await user.generateToken();
+    const refreshToken = await user.generateToken('4h');
+
+    res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to authenticate user' });
+  }
+});
+
+// Google authentication route
+app.post('/auth/google', (req, res) => {
+  const { userType } = req.body;
+
+  if (!userType) {
+    return res.status(400).json({ error: true, message: 'User type is required' });
+  }
+
+  try {
+    const redirectUrl = `${process.env.APP_URL}/auth/google/callback`;
+    const scope = 'email';
+    const state = userType;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}&response_type=code`;
+
+    res.json({ url });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: true, message: 'Google authentication failure' });
+  }
 });
 
 // TRADER ROUTES
