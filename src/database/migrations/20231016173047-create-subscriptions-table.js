@@ -1,5 +1,3 @@
-'use strict';
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -20,23 +18,24 @@ module.exports = {
       createdAt: {
         type: Sequelize.DATE,
         field: 'created_at',
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         type: Sequelize.DATE,
         field: 'updated_at',
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       deletedAt: {
         allowNull: true,
         type: Sequelize.DATE,
         field: 'deleted_at',
-        defaultValue: null
+        defaultValue: null,
       },
     });
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('subscriptions');
-  }
+  },
 };

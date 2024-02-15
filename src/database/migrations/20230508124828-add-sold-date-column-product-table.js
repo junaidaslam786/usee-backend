@@ -5,7 +5,8 @@ module.exports = {
     });
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.removeColumn('products', 'sold_date');
-  }
+  },
 };

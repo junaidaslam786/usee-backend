@@ -10,18 +10,18 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
   reason: {
     type: Sequelize.STRING,
     field: 'reason',
-    allowNull: false
+    allowNull: false,
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('product_remove_reasons');

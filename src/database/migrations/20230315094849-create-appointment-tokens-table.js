@@ -5,7 +5,7 @@ module.exports = {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4
+        defaultValue: Sequelize.UUIDV4,
       },
       appointmentId: {
         field: 'appointment_id',
@@ -13,8 +13,8 @@ module.exports = {
         onDelete: 'CASCADE',
         references: {
           model: 'appointments',
-          key: 'id'
-        }
+          key: 'id',
+        },
       },
       userId: {
         field: 'user_id',
@@ -22,23 +22,24 @@ module.exports = {
         onDelete: 'CASCADE',
         references: {
           model: 'users',
-          key: 'id'
-        }
+          key: 'id',
+        },
       },
       token: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('appointment_tokens');
-  }
+  },
 };

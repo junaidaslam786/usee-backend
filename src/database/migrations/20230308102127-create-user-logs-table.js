@@ -13,12 +13,12 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
-  subject:{
+  subject: {
     type: Sequelize.TEXT,
-    field: 'subject'
+    field: 'subject',
   },
   url: {
     type: Sequelize.STRING,
@@ -32,20 +32,20 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     type: Sequelize.STRING,
     field: 'ip_address',
   },
-  browser:{
+  browser: {
     type: Sequelize.TEXT,
-    field: 'browser'
+    field: 'browser',
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('user_logs');

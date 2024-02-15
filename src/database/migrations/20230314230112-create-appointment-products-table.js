@@ -5,7 +5,7 @@ module.exports = {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4
+        defaultValue: Sequelize.UUIDV4,
       },
       appointmentId: {
         field: 'appointment_id',
@@ -13,8 +13,8 @@ module.exports = {
         onDelete: 'CASCADE',
         references: {
           model: 'appointments',
-          key: 'id'
-        }
+          key: 'id',
+        },
       },
       productId: {
         field: 'product_id',
@@ -22,27 +22,28 @@ module.exports = {
         onDelete: 'CASCADE',
         references: {
           model: 'products',
-          key: 'id'
-        }
+          key: 'id',
+        },
       },
       interest: {
         field: 'interest',
         type: Sequelize.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
       },
       createdAt: {
         type: Sequelize.DATE,
         field: 'created_at',
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         field: 'updated_at',
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-      }
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('appointment_products');
-  }
+  },
 };

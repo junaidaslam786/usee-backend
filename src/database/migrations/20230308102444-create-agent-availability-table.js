@@ -13,8 +13,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   dayId: {
     type: Sequelize.INTEGER,
@@ -26,8 +26,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
     onDelete: 'CASCADE',
     references: {
       model: 'agent_time_slots',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   status: {
     type: Sequelize.BOOLEAN,
@@ -36,13 +36,13 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('agent_availability');

@@ -13,8 +13,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   accessLevel: {
     type: Sequelize.STRING,
@@ -23,7 +23,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
 });
 

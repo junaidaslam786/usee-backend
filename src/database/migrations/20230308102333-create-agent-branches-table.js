@@ -4,7 +4,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
     field: 'id',
     primaryKey: true,
     unique: true,
-    defaultValue: Sequelize.UUIDV4
+    defaultValue: Sequelize.UUIDV4,
   },
   userId: {
     field: 'user_id',
@@ -12,24 +12,24 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('age
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   name: {
     type: Sequelize.STRING,
     field: 'name',
-    allowNull: false
+    allowNull: false,
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('agent_branches');

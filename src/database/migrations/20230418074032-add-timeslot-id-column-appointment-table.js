@@ -4,7 +4,7 @@ module.exports = {
     await queryInterface.removeColumn('appointments', 'appointment_date');
 
     await queryInterface.addColumn('appointments', 'appointment_date', {
-      type: Sequelize.DATEONLY
+      type: Sequelize.DATEONLY,
     });
 
     await queryInterface.addColumn('appointments', 'time_slot_id', {
@@ -12,9 +12,9 @@ module.exports = {
       onDelete: 'CASCADE',
       references: {
         model: 'agent_time_slots',
-        key: 'id'
-      }
-  });
+        key: 'id',
+      },
+    });
   },
 
   down: async (queryInterface, Sequelize) => {
@@ -27,5 +27,5 @@ module.exports = {
       allowNull: false,
     });
     await queryInterface.removeColumn('appointments', 'time_slot_id');
-  }
+  },
 };

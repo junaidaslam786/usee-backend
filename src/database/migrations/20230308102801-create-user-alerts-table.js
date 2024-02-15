@@ -13,8 +13,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   productId: {
     field: 'product_id',
@@ -22,8 +22,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     onDelete: 'CASCADE',
     references: {
       model: 'products',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   alertMode: {
     field: 'alert_mode',
@@ -35,26 +35,26 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
   },
   removed: {
     type: Sequelize.BOOLEAN,
-    field: 'removed'
+    field: 'removed',
   },
   viewed: {
     type: Sequelize.BOOLEAN,
-    field: 'viewed'
+    field: 'viewed',
   },
   emailed: {
     type: Sequelize.BOOLEAN,
-    field: 'emailed'
+    field: 'emailed',
   },
   createdBy: {
     allowNull: true,
-    type:Sequelize.UUID,
-    field: 'created_by'
+    type: Sequelize.UUID,
+    field: 'created_by',
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('user_alerts');

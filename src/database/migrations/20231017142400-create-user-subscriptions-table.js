@@ -1,5 +1,3 @@
-'use strict';
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -13,7 +11,7 @@ module.exports = {
           model: 'users',
           key: 'id',
         },
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
       },
       subscriptionId: {
         primaryKey: true,
@@ -24,7 +22,7 @@ module.exports = {
           model: 'subscriptions',
           key: 'id',
         },
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
       },
       featureId: {
         primaryKey: true,
@@ -35,7 +33,7 @@ module.exports = {
           model: 'features',
           key: 'id',
         },
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
       },
       freeRemainingUnits: {
         field: 'free_remaining_units',
@@ -74,19 +72,19 @@ module.exports = {
         field: 'created_at',
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         field: 'updated_at',
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('user_subscriptions');
-  }
+  },
 };
-

@@ -17,19 +17,19 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cit
     onDelete: 'CASCADE',
     references: {
       model: 'states',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('cities');

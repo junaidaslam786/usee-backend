@@ -1,5 +1,3 @@
-'use strict';
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -9,7 +7,7 @@ module.exports = {
         primaryKey: true,
         unique: true,
         defaultValue: Sequelize.UUIDV4,
-        allowNull: false
+        allowNull: false,
       },
       userId: {
         field: 'user_id',
@@ -17,8 +15,8 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'users',
-          key: 'id'
-        }
+          key: 'id',
+        },
       },
       featureId: {
         field: 'feature_id',
@@ -26,50 +24,51 @@ module.exports = {
         // allowNull: false,
         references: {
           model: 'features',
-          key: 'id'
-        }
+          key: 'id',
+        },
       },
       quantity: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
       },
       amount: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
       },
       description: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       createdBy: {
         allowNull: true,
-        type:Sequelize.UUID,
-        field: 'created_by'
+        type: Sequelize.UUID,
+        field: 'created_by',
       },
       updatedBy: {
         allowNull: true,
-        type:Sequelize.UUID,
-        field: 'updated_by'
+        type: Sequelize.UUID,
+        field: 'updated_by',
       },
       createdAt: {
         type: Sequelize.DATE,
         field: 'created_at',
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         type: Sequelize.DATE,
         field: 'updated_at',
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       deletedAt: {
         allowNull: true,
         type: Sequelize.DATE,
         field: 'deleted_at',
-        defaultValue: null
+        defaultValue: null,
       },
     });
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('token_transactions');
-  }
+  },
 };

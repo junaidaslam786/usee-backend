@@ -4,7 +4,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     field: 'id',
     primaryKey: true,
     unique: true,
-    defaultValue: Sequelize.UUIDV4
+    defaultValue: Sequelize.UUIDV4,
   },
   productId: {
     field: 'product_id',
@@ -12,8 +12,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'products',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   customerId: {
     field: 'customer_id',
@@ -21,32 +21,28 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   amount: {
     type: Sequelize.STRING,
     field: 'amount',
-    allowNull: false
+    allowNull: false,
   },
   notes: {
     type: Sequelize.STRING,
     field: 'notes',
   },
   status: {
-    type: Sequelize.INTEGER,
-    field: 'status',
-  },
-  status: {
     field: 'status',
     type: Sequelize.ENUM,
-    defaultValue: "pending",
-    values: ["pending", "accepted", "rejected"]
+    defaultValue: 'pending',
+    values: ['pending', 'accepted', 'rejected'],
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
 });
 

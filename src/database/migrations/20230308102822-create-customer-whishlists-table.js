@@ -13,8 +13,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cus
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   productId: {
     field: 'product_id',
@@ -22,14 +22,14 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cus
     onDelete: 'CASCADE',
     references: {
       model: 'products',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('customer_wishlists');

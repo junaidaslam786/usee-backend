@@ -13,8 +13,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   productId: {
     field: 'product_id',
@@ -22,8 +22,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'products',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   removeReasonId: {
     field: 'remove_reason_id',
@@ -31,22 +31,22 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'product_remove_reasons',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   reason: {
     type: Sequelize.TEXT,
-    field: 'reason'
+    field: 'reason',
   },
   status: {
     type: Sequelize.BOOLEAN,
-    field: 'status'
+    field: 'status',
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('product_remove_request');

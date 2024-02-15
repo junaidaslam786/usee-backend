@@ -13,23 +13,23 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cat
     onDelete: 'CASCADE',
     references: {
       model: 'categories',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   label: {
     type: Sequelize.STRING,
     field: 'label',
-    allowNull: false
+    allowNull: false,
   },
   type: {
     field: 'type',
     type: Sequelize.ENUM,
-    defaultValue: "text",
-    values: ["text", "textarea", "select", "checkbox", "radio", "file"]
+    defaultValue: 'text',
+    values: ['text', 'textarea', 'select', 'checkbox', 'radio', 'file'],
   },
-  options:{
+  options: {
     type: Sequelize.TEXT,
-    field: 'options'
+    field: 'options',
   },
   required: {
     type: Sequelize.BOOLEAN,
@@ -42,12 +42,12 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cat
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
 });
 

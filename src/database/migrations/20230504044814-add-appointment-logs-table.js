@@ -13,8 +13,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('app
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   appointmentId: {
     field: 'appointment_id',
@@ -22,8 +22,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('app
     onDelete: 'CASCADE',
     references: {
       model: 'appointments',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   userType: {
     type: Sequelize.STRING,
@@ -43,8 +43,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('app
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('appointment_logs');

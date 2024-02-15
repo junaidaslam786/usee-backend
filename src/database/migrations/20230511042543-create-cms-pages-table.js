@@ -12,8 +12,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cms
     onDelete: 'CASCADE',
     references: {
       model: 'categories',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   title: {
     type: Sequelize.STRING,

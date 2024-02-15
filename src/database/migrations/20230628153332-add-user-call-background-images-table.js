@@ -13,12 +13,12 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
     onDelete: 'CASCADE',
     references: {
       model: 'users',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   name: {
     type: Sequelize.TEXT,
-    field: 'name'
+    field: 'name',
   },
   url: {
     type: Sequelize.STRING,
@@ -27,7 +27,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('use
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
 });
 

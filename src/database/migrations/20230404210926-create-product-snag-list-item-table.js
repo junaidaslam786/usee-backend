@@ -13,8 +13,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'product_snag_list',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   snagKey: {
     type: Sequelize.STRING,
@@ -35,8 +35,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('product_snag_list_items');

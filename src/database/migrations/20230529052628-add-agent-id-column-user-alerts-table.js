@@ -5,12 +5,13 @@ module.exports = {
       onDelete: 'CASCADE',
       references: {
         model: 'users',
-        key: 'id'
-      }
-    },);
+        key: 'id',
+      },
+    });
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.removeColumn('user_alerts', 'agent_id');
-  }
+  },
 };

@@ -4,7 +4,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     field: 'id',
     primaryKey: true,
     unique: true,
-    defaultValue: Sequelize.UUIDV4
+    defaultValue: Sequelize.UUIDV4,
   },
   productId: {
     field: 'product_id',
@@ -12,8 +12,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
     onDelete: 'CASCADE',
     references: {
       model: 'products',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   image: {
     type: Sequelize.STRING,
@@ -25,14 +25,14 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('pro
   },
   createdBy: {
     allowNull: true,
-    type:Sequelize.UUID,
-    field: 'created_by'
+    type: Sequelize.UUID,
+    field: 'created_by',
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  }
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('product_images');

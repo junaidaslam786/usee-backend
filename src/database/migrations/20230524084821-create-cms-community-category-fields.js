@@ -4,7 +4,7 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cms
     field: 'id',
     primaryKey: true,
     unique: true,
-    defaultValue: Sequelize.UUIDV4
+    defaultValue: Sequelize.UUIDV4,
   },
   communityId: {
     field: 'community_id',
@@ -12,8 +12,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cms
     onDelete: 'CASCADE',
     references: {
       model: 'cms_community',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   key: {
     field: 'key',
@@ -21,8 +21,8 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cms
     onDelete: 'CASCADE',
     references: {
       model: 'category_fields',
-      key: 'id'
-    }
+      key: 'id',
+    },
   },
   value: {
     type: Sequelize.STRING,
@@ -31,19 +31,19 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cms
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   deletedAt: {
     allowNull: true,
     type: Sequelize.DATE,
     field: 'deleted_at',
-    defaultValue: null
-  }
+    defaultValue: null,
+  },
 });
 
 export const down = (queryInterface) => queryInterface.dropTable('cms_community_category_fields');

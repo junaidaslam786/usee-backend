@@ -10,21 +10,21 @@ export const up = (queryInterface, Sequelize) => queryInterface.createTable('cat
   name: {
     type: Sequelize.STRING,
     field: 'name',
-    allowNull: false
+    allowNull: false,
   },
-  description:{
+  description: {
     type: Sequelize.TEXT,
-    field: 'description'
+    field: 'description',
   },
   createdAt: {
     type: Sequelize.DATE,
     field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
   updatedAt: {
     type: Sequelize.DATE,
     field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
   },
 });
 
