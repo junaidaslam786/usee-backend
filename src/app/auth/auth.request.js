@@ -58,28 +58,6 @@ export const userOnboardingRules = [
     .withMessage('Please provide valid email address')
     .notEmpty()
     .withMessage('Please provide valid email address'),
-  body('password')
-    .exists().withMessage('Please provide valid password')
-    .notEmpty()
-    .withMessage('Please provide valid password')
-    .isLength({ min: 8 })
-    .withMessage('Password must contain at least 8 characters')
-    .matches(/[A-Z]/)
-    .withMessage('Password must contain at least one uppercase letter')
-    .matches(/[a-z]/)
-    .withMessage('Password must contain at least one lowercase letter')
-    .matches(/[0-9]/)
-    .withMessage('Password must contain at least one number')
-    .matches(/[!@#$%^&*(),.?":{}|<>]/)
-    .withMessage('Password must contain at least one special character'),
-  body('confirmPassword').custom((value, { req }) => {
-    if (value !== req.body.password) {
-      throw new Error('Password and Confirm password should match');
-    }
-
-    // Indicates the success of this synchronous custom validator
-    return true;
-  }),
 ];
 
 export const registerAgentRules = [

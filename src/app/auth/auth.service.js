@@ -151,6 +151,7 @@ export const agentOnboarding = async (req, reqBody, dbInstance) => {
         user.cityName = cityName;
         user.countryName = countryName;
         user.status = true;
+        user.otpVerified = true;
         user.active = false;
         await user.save({ transaction });
       } else {
