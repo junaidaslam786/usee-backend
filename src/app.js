@@ -255,6 +255,14 @@ app.get('/auth/facebook/callback', async (req, res) => {
               facebookId: id,
             });
           }
+          
+          if(user && state === 'agent') {
+            const agent = await db.models.agent.create({
+              userId: user.id,
+              createdBy: user.id,
+              updatedBy: user.id,
+            });
+          }
 
           const token = await user.generateToken();
           const refreshToken = await user.generateToken('4h');
