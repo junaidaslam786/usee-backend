@@ -250,7 +250,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
               email: email,
               userType: state,
               signupStep: -1,
-              status: false,
+              status: true,
               active: false,
               facebookId: id,
             });
@@ -268,7 +268,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
           const refreshToken = await user.generateToken('4h');
 
           // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
-          res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
+          res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}`);
         }).catch((error) => {
           // eslint-disable-next-line no-console
           console.error(error);
