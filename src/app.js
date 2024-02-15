@@ -255,20 +255,16 @@ app.get('/auth/facebook/callback', async (req, res) => {
               facebookId: id,
             });
           }
-          
-          if(user && state === 'agent') {
-            const agent = await db.models.agent.create({
-              userId: user.id,
-              createdBy: user.id,
-              updatedBy: user.id,
-            });
-          }
 
           const token = await user.generateToken();
           const refreshToken = await user.generateToken('4h');
 
           // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
-          res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}`);
+          if( state === 'agent' ) {
+            res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}`);
+          } else {
+            res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
+          }
         }).catch((error) => {
           // eslint-disable-next-line no-console
           console.error(error);

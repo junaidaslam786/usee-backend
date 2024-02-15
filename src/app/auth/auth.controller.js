@@ -20,6 +20,24 @@ export const login = async (req, res, next) => {
 };
 
 /**
+ * POST /auth/agent-onboarding
+ * Agent onboarding request
+ */
+export const agentOnboarding = async (req, res, next) => {
+  try {
+    const result = await authService.agentOnboarding(req, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('userOnboardingError', err);
+    return next(err);
+  }
+};
+
+/**
  * POST /auth/register-agent
  * Register agent request
  */

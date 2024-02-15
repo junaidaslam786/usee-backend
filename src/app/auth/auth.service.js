@@ -107,6 +107,154 @@ export const login = async (reqBody, dbInstance) => {
   }
 }
 
+export const agentOnboarding = async (req, reqBody, dbInstance) => {
+  try {
+    const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      companyName,
+      companyPosition,
+      phoneNumber,
+      jobTitle,
+      ornNumber,
+      cityName,
+      countryName,
+      timezone
+    } = reqBody;
+
+    let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
+    const result = await db.transaction(async (transaction) => {
+      if (timezone) {
+        const findTimezone = timezoneJson.find((tz) => tz.value === timezone);
+        if (findTimezone) {
+          selectedTimezone = findTimezone.value;
+        }
+      }
+
+      // Fetch user from the database
+      const user = await userService.getUserByEmail(email.toLowerCase());
+
+      // if user is found, update user fields from the reqBody
+      if (user) {
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.phoneNumber = phoneNumber;
+        user.password = password;
+        user.userType = USER_TYPE.AGENT;
+        user.signupStep = reqBody?.signupStep ? reqBody.signupStep : 0;
+        user.otpCode = reqBody?.otpCode ? reqBody.otpCode : null;
+        user.otpExpiry = reqBody?.otpExpiry ? reqBody.otpExpiry : null;
+        user.timezone = selectedTimezone;
+        user.cityName = cityName;
+        user.countryName = countryName;
+        user.status = true;
+        user.active = false;
+        await user.save({ transaction });
+      } else {
+        return { error: true, message: 'User not found!' }
+      }
+
+      let agentPayload = {
+        userId: user.id,
+        companyName,
+        companyPosition,
+        jobTitle,
+        licenseNo: reqBody?.licenseNo ? reqBody.licenseNo : "",
+        agentType: AGENT_TYPE.AGENT,
+        apiCode: utilsHelper.generateRandomString(10, true),
+        ornNumber: ornNumber,
+      }
+
+      if (req.files && req.files.document) {
+        const documentFile = req.files.document;
+        const newFileName = `${Date.now()}_${documentFile.name.replace(/ +/g, "")}`;
+        const result = await utilsHelper.fileUpload(documentFile, PROPERTY_ROOT_PATHS.PROFILE_DOCUMENT, newFileName);
+        if (result?.error) {
+          return { error: true, message: result?.error }
+        }
+        agentPayload.documentUrl = result;
+      }
+
+      // create agent profile
+      const agent = await agentTable.create(agentPayload, { transaction });
+
+      // create one default branch for agent
+      const agentBranch = await dbInstance.agentBranch.create({
+        userId: user.id,
+        name: companyName,
+      }, { transaction });
+
+      agent.branchId = agentBranch.id;
+      await agent.save({ transaction });
+
+      // Create a Customer in Stripe
+      const stripeCustomer = await stripe.customers.create({
+        email: user.email,
+        name: user.fullName,
+      });
+
+      // get user by id
+      if (stripeCustomer?.id) {
+        user.stripeCustomerId = stripeCustomer.id;
+        await user.save({ transaction });
+      }
+
+      const timeslots = await agentTimeSlot.findAll();
+      for (let day = 1; day <= 7; day++) {
+        let agentAvailabilities = [];
+        for (const slot of timeslots) {
+          agentAvailabilities.push({
+            userId: user.id,
+            dayId: day,
+            timeSlotId: slot.id,
+            status: true,
+          });
+        }
+        await agentAvailability.bulkCreate(agentAvailabilities, { transaction });
+      }
+
+      // Generate and return tokens
+      const token = user.generateToken('4h', agent);
+      // const refreshToken = user.generateToken('4h');
+
+      const returnedUserData = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        companyName: agent.companyName,
+        companyPosition: agent.companyPosition,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        type: user.userTypeDisplay,
+        userType: user.userType,
+        stripeCustomerId: user.stripeCustomerId,
+        agentBranch: agentBranch,
+      };
+
+      const emailData = [];
+      emailData.name = user.fullName;
+      emailData.login = utilsHelper.generateUrl('agent-login', user.userType);
+      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_AGENT), emailData);
+      const payload = {
+        to: user.email,
+        subject: EMAIL_SUBJECT.REGISTER_AGENT,
+        html: htmlData,
+      }
+      mailHelper.sendMail(payload);
+
+      return { user: returnedUserData, token };
+    });
+
+    return result;
+  } catch (err) {
+    console.log('registerAsAgentError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
 export const registerAsAgent = async (req, reqBody, dbInstance) => {
   try {
     const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
