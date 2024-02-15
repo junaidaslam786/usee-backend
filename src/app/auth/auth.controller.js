@@ -25,7 +25,7 @@ export const login = async (req, res, next) => {
  */
 export const agentOnboarding = async (req, res, next) => {
   try {
-    const result = await authService.agentOnboarding(req, req.dbInstance);
+    const result = await authService.agentOnboarding(req, req.body, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }

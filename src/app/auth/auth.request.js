@@ -13,9 +13,6 @@ export const userOnboardingRules = [
     .withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty()
     .withMessage('Please provide last name'),
-  body('role').exists().withMessage('Please provide role').notEmpty()
-    .isIn(['user', 'admin'])
-    .withMessage('Invalid role provided'),
   body('companyName').exists().withMessage('Please provide company name').notEmpty()
     .withMessage('Please provide company name'),
   body('companyPosition').exists().withMessage('Please provide company position').notEmpty()
@@ -60,17 +57,7 @@ export const userOnboardingRules = [
     .exists()
     .withMessage('Please provide valid email address')
     .notEmpty()
-    .withMessage('Please provide valid email address')
-    // eslint-disable-next-line arrow-body-style
-    .custom(async (value) => {
-      // eslint-disable-next-line consistent-return
-      return await db.models.user.findOne({ where: { email: value.toLowerCase() } }).then((userData) => {
-        if (userData) {
-          // eslint-disable-next-line prefer-promise-reject-errors
-          return Promise.reject('Email address already exist.');
-        }
-      });
-    }),
+    .withMessage('Please provide valid email address'),
   body('password')
     .exists().withMessage('Please provide valid password')
     .notEmpty()
