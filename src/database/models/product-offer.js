@@ -41,7 +41,8 @@ export default function (sequelize) {
     },
     status: {
       type: DataTypes.ENUM,
-      enum: ['pending', 'accepted', 'rejected'],
+      defaultValue: 'pending',
+      values: ['pending', 'accepted', 'rejected'],
     },
     rejectReason: {
       type: DataTypes.STRING,
