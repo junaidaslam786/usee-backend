@@ -261,12 +261,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
 
           // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
           if( state === 'agent' ) {
-            // if user is staus and active boolean fields set, redirect to dashboard
-            if(user.status && user.active){
-              res.redirect(`${process.env.HOME_PANEL_URL}/agent/dashboard?token=${token}&onboarded=true`);
-            }
-
-            res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=false`);
+            res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
           } else {
             res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
           }

@@ -32,8 +32,8 @@ export default async function (req, res, next) {
       {
         attributes: ["id", "name"],
         model: req.dbInstance.role, as: 'role',
-        include: [{ 
-          model: req.dbInstance.permission, 
+        include: [{
+          model: req.dbInstance.permission,
           attributes: ["id", "name", "key"],
           through: { attributes: [] }
         }]
@@ -59,7 +59,7 @@ export default async function (req, res, next) {
   if (user.deletedAt) {
     return next(createError(401, 'Account is deleted, please contact admin!'));
   }
-    
+
   req.permissions = [];
   if (user?.role?.permissions) {
     user.role.permissions.map((perm) => {
