@@ -269,6 +269,9 @@ app.get('/auth/facebook/callback', async (req, res) => {
           const token = await user.generateToken();
           const refreshToken = await user.generateToken('4h');
 
+          // send a social_user_details cookie to the frontend
+          res.cookie('social_user_details', JSON.stringify({ user: user, token: token, refreshToken: refreshToken }), { maxAge: 120000, httpOnly: true });
+
           // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
           if (state === 'agent') {
             res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
