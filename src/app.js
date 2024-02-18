@@ -254,13 +254,23 @@ app.get('/auth/facebook/callback', async (req, res) => {
               active: false,
               facebookId: id,
             });
+
+            // create agent using above user
+            if (state === 'agent') {
+              const agent = await db.models.agent.create({
+                userId: user.id,
+                agentType: AGENT_TYPE.AGENT,
+                createdBy: user.id,
+                updatedBy: user.id,
+              });
+            }
           }
 
           const token = await user.generateToken();
           const refreshToken = await user.generateToken('4h');
 
           // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
-          if( state === 'agent' ) {
+          if (state === 'agent') {
             res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
           } else {
             res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
