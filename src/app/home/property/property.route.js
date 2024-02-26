@@ -1,5 +1,3 @@
-
-
 import { Router } from 'express';
 
 import * as propertyController from './property.controller';

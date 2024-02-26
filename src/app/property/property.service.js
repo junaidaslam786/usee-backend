@@ -1030,6 +1030,18 @@ export const listHomePageProperties = async (reqBody, req) => {
           return
         }
       }
+      if (reqBody.area) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 4)
+        if (index === -1 || el.productMetaTags[index]?.value >= reqBody.area) {
+          return
+        }
+      }
+      if (reqBody.unit) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 3)
+        if (index === -1 || el.productMetaTags[index]?.value !== reqBody.unit) {
+          return
+        }
+      }
       arr.push(el)
     });
 
