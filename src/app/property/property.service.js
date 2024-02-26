@@ -1032,7 +1032,7 @@ export const listHomePageProperties = async (reqBody, req) => {
       }
       if (reqBody.area) {
         const index = el.productMetaTags.findIndex(category => category.categoryField.id === 4)
-        if (index === -1 || el.productMetaTags[index]?.value >= reqBody.area) {
+        if (index === -1 || parseInt(el.productMetaTags[index]?.value) < parseInt(reqBody.area)) {
           return
         }
       }
