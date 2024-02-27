@@ -936,7 +936,12 @@ export const searchCircle = async (req) => {
   try {
     const { center, radius } = req.body;
     const records = await req.dbInstance.product.findAll({
-      attributes: ["id", "longitude", "latitude"]
+      where: {
+        [OP.and]: [
+          whereClause,
+          { status: PRODUCT_STATUS.ACTIVE }
+        ]
+      }
     });
 
     const nearbyRecords = records.filter(record => {
