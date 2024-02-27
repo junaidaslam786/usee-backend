@@ -20,15 +20,15 @@ export default function (sequelize) {
       references: {
         model: 'categories',
         key: 'id',
-      }
+      },
     },
     label: {
       type: DataTypes.STRING,
     },
     type: {
       type: DataTypes.STRING,
-      field: "type",
-      enum: ["text", "textarea", "select", "checkbox", "radio", "file"]
+      field: 'type',
+      enum: ['text', 'textarea', 'select', 'checkbox', 'radio', 'file'],
     },
     options: {
       type: DataTypes.TEXT,
@@ -45,14 +45,17 @@ export default function (sequelize) {
     sequelize,
   });
 
+  // eslint-disable-next-line no-unused-vars
   CategoryField.addHook('beforeSave', async (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   CategoryField.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   CategoryField.addHook('afterDestroy', (instance) => {
     //
   });

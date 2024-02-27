@@ -50,6 +50,8 @@ const TWITTER_CONSUMER_KEY = process.env.TWITTER_API_KEY;
 const TWITTER_CONSUMER_SECRET = process.env.TWITTER_API_SECRET;
 const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const LINKEDIN_PRIMARY_CLIENT_SECRET = process.env.LINKEDIN_PRIMARY_CLIENT_SECRET;
+const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
+const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_ENDPOINT_SECRET;
@@ -292,70 +294,6 @@ app.get('/auth/facebook/callback', async (req, res) => {
   }
 });
 
-// Twitter authentication route
-app.post('/auth/twitter', async (req, res) => {
-  const { userType } = req.body;
-
-  if (!userType) {
-    return res.status(400).json({ error: 'User type is required' });
-  }
-
-  const callbackUrl = `${process.env.APP_URL}/auth/twitter/callback`;
-  const scope = 'email';
-  const state = 'twitter';
-  // const url = `https://api.twitter.com/oauth/authenticate?client_id=${TWITTER_CONSUMER_KEY}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
-
-  const oauth = new OAuth({
-    consumer: {
-      key: TWITTER_CONSUMER_KEY,
-      secret: TWITTER_CONSUMER_SECRET,
-    },
-    signature_method: 'HMAC-SHA1',
-    hash_function: (baseString, key) => crypto.createHmac('sha1', key).update(baseString).digest('base64'),
-  });
-
-  console.log("oauth: ", oauth);
-
-  const requestData = {
-    url: 'https://api.twitter.com/oauth/request_token',
-    method: 'POST',
-    data: {
-      oauth_callback: callbackUrl,
-    },
-  };
-
-  console.log("requestData: ", requestData);
-
-  const authHeader = oauth.toHeader(oauth.authorize(requestData));
-
-  console.log("authHeader: ", authHeader);
-
-  // Note: Use the "Authorization" key instead of "headers.Authorization" for axios POST requests
-  const axiosOptions = {
-    url: requestData.url,
-    method: requestData.method,
-    data: requestData.data,
-    headers: { "Authorization": authHeader },
-  };
-
-  console.log("axiosOptions: ", axiosOptions);
-  await axios(axiosOptions)
-    .then((response) => {
-      // Handle successful response and extract the request token
-      console.log(response.data);
-      res.json(response.data);
-    })
-    .catch((error) => {
-      console.error(error.response.data);
-      res.json(error.response.data);
-    });
-
-  // const url = `https://api.twitter.com/oauth/request_token`;
-
-  // console.log("URL: ", url);
-  // res.json(response.data);
-});
-
 // Twitter authentication callback route
 app.get('/auth/twitter/callback', async (req, res) => {
   console.log("TWITTER CALLBACK");
@@ -389,6 +327,75 @@ app.get('/auth/twitter/callback', async (req, res) => {
     const token = await user.generateToken();
 
     res.json({ success: true, user: user, token: token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to authenticate user' });
+  }
+});
+
+// Twitter authentication route
+app.post('/auth/twitter', async (req, res) => {
+  const { userType } = req.body;
+
+  if (!userType) {
+    return res.status(400).json({ error: 'User type is required' });
+  }
+
+  try {
+    const callbackUrl = `${process.env.APP_URL}/auth/twitter/callback`;
+    const scope = 'email';
+    const state = 'twitter';
+    // const url = `https://api.twitter.com/oauth/authenticate?client_id=${TWITTER_CONSUMER_KEY}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
+
+    const oauth = new OAuth({
+      consumer: {
+        key: TWITTER_CONSUMER_KEY,
+        secret: TWITTER_CONSUMER_SECRET,
+      },
+      signature_method: 'HMAC-SHA1',
+      hash_function: (baseString, key) => crypto.createHmac('sha1', key).update(baseString).digest('base64'),
+    });
+
+    console.log("oauth: ", oauth);
+
+    const requestData = {
+      url: 'https://api.twitter.com/oauth/request_token',
+      method: 'POST',
+      data: {
+        oauth_callback: callbackUrl,
+      },
+    };
+
+    console.log("requestData: ", requestData);
+
+    const authHeader = oauth.toHeader(oauth.authorize(requestData));
+
+    console.log("authHeader: ", authHeader);
+
+    // Note: Use the "Authorization" key instead of "headers.Authorization" for axios POST requests
+    const axiosOptions = {
+      url: requestData.url,
+      method: requestData.method,
+      data: requestData.data,
+      headers: { "Authorization": authHeader },
+    };
+
+    console.log("axiosOptions: ", axiosOptions);
+    await axios(axiosOptions)
+      .then((response) => {
+        // Handle successful response and extract the request token
+        console.log(response.data);
+        res.json(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.json(error);
+      });
+
+    // const url = `https://api.twitter.com/oauth/request_token`;
+
+    // console.log("URL: ", url);
+    // res.json(response.data);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
@@ -565,12 +572,108 @@ app.post('/auth/google', (req, res) => {
     const redirectUrl = `${process.env.APP_URL}/auth/google/callback`;
     const scope = 'email';
     const state = userType;
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}&response_type=code`;
+    const url = encodeURI(`https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}&response_type=code`);
 
     res.json({ url });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Google authentication failure' });
+  }
+});
+
+// Microsoft authentication callback route
+app.post('/auth/microsoft/callback', async (req, res) => {
+  // const { code, state } = req.query;
+  const { access_token, code, id_token, state } = req.body;
+
+  switch (state) {
+    case '11111':
+    case '00000':
+      break;
+    default:
+      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
+  }
+
+  try {
+    const userResponse = await axios.get('https://graph.microsoft.com/v1.0/me', {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    });
+    const userData = userResponse.data;
+
+    const { id, displayName, mail } = userData;
+
+    let user = await db.models.user.findOne({
+      where: { email: mail },
+    });
+
+    if (!user) {
+      const nameArray = displayName.split(" ");
+      const firstName = nameArray[0];
+      const lastName = nameArray[1];
+
+      user = await db.models.user.create({
+        firstName: firstName,
+        lastName: lastName,
+        email: mail,
+        userType: state,
+        signupStep: -1,
+        status: false,
+        active: false,
+        microsoftId: id,
+      });
+
+      // create agent using above user
+      if (state === '1') {
+        const agent = await db.models.agent.create({
+          userId: user.id,
+          agentType: AGENT_TYPE.AGENT,
+          createdBy: user.id,
+          updatedBy: user.id,
+        });
+      }
+    }
+
+    const token = await user.generateToken('1h');
+    const refreshToken = await user.generateToken('4h');
+
+    // send a social_user_details cookie to the frontend
+    res.cookie('social_user_details', JSON.stringify({ user: user, token: token, refreshToken: refreshToken }), { maxAge: 120000, httpOnly: true });
+
+    // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+    if (state === '11111') {
+      res.redirect(`${process.env.HOME_PANEL_URL}/agent/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    } else {
+      res.redirect(`${process.env.HOME_PANEL_URL}/customer/dashboard?token=${token}`);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: true, message: 'Microsoft authentication failure' });
+  }
+});
+
+// Microsoft authentication route
+app.post('/auth/microsoft', async (req, res) => {
+  const { userType } = req.body;
+
+  if (!userType) {
+    return res.status(400).json({ error: true, message: 'User type is required' });
+  }
+
+  try {
+    const redirectUrl = `${process.env.APP_URL}/auth/microsoft/callback`;
+    const scope = 'openid profile email offline_access User.Read';
+    const state = userType == '00000' ? '00000' : '11111';
+    const response_type = 'id_token token';
+    const response_mode = 'form_post';
+    const nonce = Math.floor(100000 + Math.random() * 900000);
+    const url = encodeURI(`https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${MICROSOFT_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}&response_type=${response_type}&response_mode=${response_mode}&nonce=${nonce}`);
+
+    res.json({ url });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: true, message: 'Microsoft authentication failure' });
   }
 });
 

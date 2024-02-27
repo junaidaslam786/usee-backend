@@ -144,6 +144,10 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       unique: true,
     },
+    microsoftId: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
     timezone: {
       type: DataTypes.STRING,
     },
