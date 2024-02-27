@@ -26,6 +26,9 @@ const { NODE_ENV } = process.env;
 
 const app = express();
 
+const cache = require('express-cache-headers');
+app.use(cache({ maxAge: 86400 }));
+
 // Initialize stripe
 const stripe = Stripe(configs.stripeConfig.stripe.apiKey, {
   apiVersion: configs.stripeConfig.stripe.apiVersion
@@ -48,6 +51,8 @@ const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 const TWITTER_CONSUMER_KEY = process.env.TWITTER_API_KEY;
 const TWITTER_CONSUMER_SECRET = process.env.TWITTER_API_SECRET;
+const TWITTER_OAUTH_CLIENT_ID = process.env.TWITTER_OAUTH_CLIENT_ID;
+const TWITTER_OAUTH_CLIENT_SECRET = process.env.TWITTER_OAUTH_CLIENT_SECRET;
 const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const LINKEDIN_PRIMARY_CLIENT_SECRET = process.env.LINKEDIN_PRIMARY_CLIENT_SECRET;
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
@@ -345,7 +350,6 @@ app.post('/auth/twitter', async (req, res) => {
     const callbackUrl = `${process.env.APP_URL}/auth/twitter/callback`;
     const scope = 'email';
     const state = 'twitter';
-    // const url = `https://api.twitter.com/oauth/authenticate?client_id=${TWITTER_CONSUMER_KEY}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}`;
 
     const oauth = new OAuth({
       consumer: {
@@ -356,8 +360,6 @@ app.post('/auth/twitter', async (req, res) => {
       hash_function: (baseString, key) => crypto.createHmac('sha1', key).update(baseString).digest('base64'),
     });
 
-    console.log("oauth: ", oauth);
-
     const requestData = {
       url: 'https://api.twitter.com/oauth/request_token',
       method: 'POST',
@@ -365,8 +367,6 @@ app.post('/auth/twitter', async (req, res) => {
         oauth_callback: callbackUrl,
       },
     };
-
-    console.log("requestData: ", requestData);
 
     const authHeader = oauth.toHeader(oauth.authorize(requestData));
 
@@ -377,7 +377,7 @@ app.post('/auth/twitter', async (req, res) => {
       url: requestData.url,
       method: requestData.method,
       data: requestData.data,
-      headers: { "Authorization": authHeader },
+      headers: { "Authorization": authHeader.Authorization },
     };
 
     console.log("axiosOptions: ", axiosOptions);
@@ -385,17 +385,14 @@ app.post('/auth/twitter', async (req, res) => {
       .then((response) => {
         // Handle successful response and extract the request token
         console.log(response.data);
-        res.json(response.data);
+
+        const url = `https://api.twitter.com/oauth/authenticate?oauth_token=${response.data.oauth_token}`;
+        res.json({ url });
       })
       .catch((error) => {
         console.error(error);
         res.json(error);
       });
-
-    // const url = `https://api.twitter.com/oauth/request_token`;
-
-    // console.log("URL: ", url);
-    // res.json(response.data);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
