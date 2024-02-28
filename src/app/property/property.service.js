@@ -937,10 +937,7 @@ export const searchCircle = async (req) => {
     const { center, radius } = req.body;
     const records = await req.dbInstance.product.findAll({
       where: {
-        [OP.and]: [
-          whereClause,
-          { status: PRODUCT_STATUS.ACTIVE }
-        ]
+        status: PRODUCT_STATUS.ACTIVE
       }
     });
 
