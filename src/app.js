@@ -245,12 +245,12 @@ app.get('/auth/facebook/callback', async (req, res) => {
           let user = await db.models.user.findOne({
             where: { email: email },
           });
+          let agent = null;
 
           if (!user) {
             const nameArray = name.split(" ");
             const firstName = nameArray[0];
             const lastName = nameArray[1];
-            let agent = null;
 
             user = await db.models.user.create({
               firstName: firstName,
