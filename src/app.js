@@ -272,17 +272,23 @@ app.get('/auth/facebook/callback', async (req, res) => {
                 updatedBy: user.id,
               });
             }
+          } else {
+            if (state === 'agent') {
+              agent = await db.models.agent.findOne({
+                where: { userId: user.id },
+              });
+            }
           }
 
           const token = await user.generateToken('4h', agent);
           const refreshToken = await user.generateToken('4h');
 
-          // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
-          if (state === 'agent') {
-            res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
-          } else {
-            res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
-          }
+          // if (state === 'agent') {
+          //   res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+          // } else {
+          //   res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
+          // }
+          res.redirect(`${process.env.HOME_PANEL_URL}/facebook/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
         }).catch((error) => {
           // eslint-disable-next-line no-console
           console.error(error);
