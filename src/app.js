@@ -275,6 +275,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
           }
 
           const token = await user.generateToken('', agent);
+          token.user = user;
           const refreshToken = await user.generateToken('4h');
 
           // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
