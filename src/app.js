@@ -250,6 +250,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
             const nameArray = name.split(" ");
             const firstName = nameArray[0];
             const lastName = nameArray[1];
+            let agent = null;
 
             user = await db.models.user.create({
               firstName: firstName,
@@ -264,7 +265,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
 
             // create agent using above user
             if (state === 'agent') {
-              const agent = await db.models.agent.create({
+              agent = await db.models.agent.create({
                 userId: user.id,
                 agentType: AGENT_TYPE.AGENT,
                 createdBy: user.id,
@@ -273,11 +274,8 @@ app.get('/auth/facebook/callback', async (req, res) => {
             }
           }
 
-          const token = await user.generateToken();
+          const token = await user.generateToken('', agent);
           const refreshToken = await user.generateToken('4h');
-
-          // send a social_user_details cookie to the frontend
-          res.cookie('social_user_details', JSON.stringify({ user: user, token: token, refreshToken: refreshToken }), { maxAge: 120000, httpOnly: true });
 
           // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
           if (state === 'agent') {
@@ -301,23 +299,31 @@ app.get('/auth/facebook/callback', async (req, res) => {
 
 // Twitter authentication callback route
 app.get('/auth/twitter/callback', async (req, res) => {
-  console.log("TWITTER CALLBACK");
-  console.log("REQ: ", req);
-  console.log("RES: ", res);
-  const { code, state } = req.query;
+  const { code, state, oauth_token, oauth_verifier } = req.query;
 
-  if (state !== 'twitter') {
-    return res.status(400).json({ error: 'Invalid state parameter' });
-  }
+  // if (state !== 'twitter') {
+  //   return res.status(400).json({ error: 'Invalid state parameter' });
+  // }
 
-  try {
-    const response = await fetch(`https://api.twitter.com/oauth/access_token?client_id=${TWITTER_CONSUMER_KEY}&redirect_uri=${process.env.HOME_PANEL_URL}/auth/twitter/callback&client_secret=${TWITTER_CONSUMER_SECRET}&code=${code}`);
-    const data = await response.json();
+  // try {
+    const response = await axios.post(`https://api.twitter.com/oauth/access_token?oauth_verifier=${oauth_verifier}&oauth_token=${oauth_token}`);
+    const data = response.data;
+    const queryString = response.data;
+    const params = new URLSearchParams(queryString);
 
-    const { access_token } = data;
+    const oauth_token2 = params.get('oauth_token');
+    console.log("OAUTH TOKEN: ", oauth_token);
+    console.log("OAUTH TOKEN2: ", oauth_token2);
 
-    const userResponse = await fetch(`https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true&oauth_token=${access_token}`);
-    const userData = await userResponse.json();
+    // get user details from twitter api
+    const userResponse = await axios.get(`https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true`, {
+      headers: {
+        Authorization: `Bearer ${oauth_token}`
+      }
+    });
+
+    const userData = userResponse.data;
+    console.log("USER DATA: ", userData);
 
     const { id, name, email } = userData;
 
@@ -326,16 +332,48 @@ app.get('/auth/twitter/callback', async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      const nameArray = name.split(" ");
+      const firstName = nameArray[0];
+      const lastName = nameArray[1];
+
+      user = await db.models.user.create({
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        userType: state,
+        signupStep: -1,
+        status: true,
+        active: false,
+        facebookId: id,
+      });
+
+      // create agent using above user
+      if (state === 'agent') {
+        const agent = await db.models.agent.create({
+          userId: user.id,
+          agentType: AGENT_TYPE.AGENT,
+          createdBy: user.id,
+          updatedBy: user.id,
+        });
+      }
     }
 
     const token = await user.generateToken();
+    const refreshToken = await user.generateToken('4h');
 
-    res.json({ success: true, user: user, token: token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to authenticate user' });
-  }
+    // send a social_user_details cookie to the frontend
+    res.cookie('social_user_details', JSON.stringify({ user: user, token: token, refreshToken: refreshToken }), { maxAge: 120000, httpOnly: true });
+
+    // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+    if (state === 'agent') {
+      res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    } else {
+      res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
+    }
+  // } catch (error) {
+  //   console.error(error);
+  //   res.status(500).json({ error: 'Failed to authenticate user' });
+  // }
 });
 
 // Twitter authentication route
@@ -370,8 +408,6 @@ app.post('/auth/twitter', async (req, res) => {
 
     const authHeader = oauth.toHeader(oauth.authorize(requestData));
 
-    console.log("authHeader: ", authHeader);
-
     // Note: Use the "Authorization" key instead of "headers.Authorization" for axios POST requests
     const axiosOptions = {
       url: requestData.url,
@@ -380,13 +416,15 @@ app.post('/auth/twitter', async (req, res) => {
       headers: { "Authorization": authHeader.Authorization },
     };
 
-    console.log("axiosOptions: ", axiosOptions);
     await axios(axiosOptions)
       .then((response) => {
         // Handle successful response and extract the request token
-        console.log(response.data);
+        const queryString = response.data;
+        const params = new URLSearchParams(queryString);
 
-        const url = `https://api.twitter.com/oauth/authenticate?oauth_token=${response.data.oauth_token}`;
+        const oauth_token = params.get('oauth_token');
+
+        const url = `https://api.twitter.com/oauth/authenticate?oauth_token=${oauth_token}`;
         res.json({ url });
       })
       .catch((error) => {
