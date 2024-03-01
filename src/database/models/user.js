@@ -136,6 +136,10 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       unique: true,
     },
+    twitterId: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
     linkedinId: {
       type: DataTypes.STRING,
       unique: true,
