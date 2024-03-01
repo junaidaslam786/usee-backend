@@ -1,4 +1,4 @@
-import { AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE } from "@/config/constants";
+import { AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE, PROPERTY_ROOT_PATHS } from "@/config/constants";
 import { utilsHelper, mailHelper } from "@/helpers";
 import db from "@/database";
 import * as userService from "../../user/user.service";
@@ -384,7 +384,7 @@ const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
 
 export const updateAgentUser = async (reqBody, req) => {
   try {
-    const { userId, role } = reqBody;
+    const { userId, companyName, role, firstName, lastName, countryName, cityName, companyPosition, jobTitle, licenseNo, otpVerified, ornNumber, phoneNumber, status, userType, signupStep, timezone } = reqBody;
     const { user: agentInfo, dbInstance } = req;
 
     if (agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
@@ -394,7 +394,46 @@ export const updateAgentUser = async (reqBody, req) => {
     await db.transaction(async (transaction) => {
       const agentUser = await getAgentUserByUserId(userId, dbInstance);
 
+      let sortWhere = { agentId: agentInfo.id };
+      if (agentInfo.agent.agentType == AGENT_TYPE.MANAGER) {
+        sortWhere = { managerId: agentInfo.id };
+      }
+      const latestSortOrderData = await dbInstance.agent.findOne({
+        attributes: ["sortOrder"],
+        where: sortWhere,
+        order: [["createdAt", "desc"]],
+        limit: 1,
+      });
+      const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
+
+      let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
+      if (timezone) {
+        const findTimezone = timezoneJson.find((tz) => tz.value === timezone);
+        if (findTimezone) {
+          selectedTimezone = findTimezone.value;
+        }
+      }
+
       agentUser.agentType = role;
+      agentUser.companyName = companyName;
+      agentUser.companyPosition = companyPosition;
+      agentUser.jobTitle = jobTitle;
+      agentUser.licenseNo = licenseNo;
+      agentUser.sortOrder = sortOrder;
+      agentUser.ornNumber = ornNumber;
+      agentUser.createdBy = agentInfo.id;
+      agentUser.updatedBy = agentInfo.id;
+      
+      if (req.files && req.files.document) {
+        const documentFile = req.files.document;
+        const newFileName = `${Date.now()}_${documentFile.name.replace(/ +/g, "")}`;
+        const result = await utilsHelper.fileUpload(documentFile, PROPERTY_ROOT_PATHS.PROFILE_DOCUMENT, newFileName);
+        if (result?.error) {
+          return { error: true, message: result?.error }
+        }
+        agentUser.documentUrl = result;
+      }
+
       await agentUser.save({ transaction });
 
       if (agentInfo.agentType !== AGENT_TYPE.STAFF) {
@@ -420,6 +459,22 @@ export const updateAgentUser = async (reqBody, req) => {
           await dbInstance.agentAccessLevel.bulkCreate(agentAccessLevels, { transaction });
         }
       }
+
+      const user = await dbInstance.user.findOne({ where: { id: userId } });
+
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.phoneNumber = phoneNumber;
+      user.cityName = cityName;
+      user.countryName = countryName;
+      user.status = status;
+      user.userType = userType;
+      user.signupStep = signupStep;
+      user.otpVerified = otpVerified;
+      user.timezone = selectedTimezone;
+      user.createdBy = agentInfo.id;
+      user.updatedBy = agentInfo.id;
+      await user.save({ transaction });
 
       return agentUser;
     });

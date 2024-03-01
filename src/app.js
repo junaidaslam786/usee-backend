@@ -231,8 +231,6 @@ app.get('/auth/facebook/callback', async (req, res) => {
     await axios.get(access_token_response)
       .then(async (response) => {
         const { data } = response;
-        // eslint-disable-next-line no-console
-        // console.log('DATA', data);
 
         const { access_token } = data;
 
@@ -240,7 +238,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
         await axios.get(detailsResponse).then(async (response) => {
           const { id, name, email } = response.data;
 
-          console.log("RESPONSE: ", response.data);
+          console.log("RESPONSE DATA: ", response.data);
 
           let user = await db.models.user.findOne({
             where: { email: email },
@@ -257,9 +255,11 @@ app.get('/auth/facebook/callback', async (req, res) => {
               lastName: lastName,
               email: email,
               userType: state,
+              timezone: process.env.APP_DEFAULT_TIMEZONE,
               signupStep: -1,
               status: true,
               active: false,
+              otpVerified: true,
               facebookId: id,
             });
 
@@ -268,9 +268,25 @@ app.get('/auth/facebook/callback', async (req, res) => {
               agent = await db.models.agent.create({
                 userId: user.id,
                 agentType: AGENT_TYPE.AGENT,
+                apiCode: utilsHelper.generateRandomString(10, true),
                 createdBy: user.id,
                 updatedBy: user.id,
               });
+
+              console.log("AGENT: ", agent);
+
+              let sortWhere = { agentId: user.id };
+              if (user.agent.agentType == AGENT_TYPE.MANAGER) {
+                sortWhere = { managerId: user.id };
+              }
+              const latestSortOrderData = await dbInstance.agent.findOne({
+                attributes: ["sortOrder"],
+                where: sortWhere,
+                order: [["createdAt", "desc"]],
+                limit: 1,
+              });
+              const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
+              const res = await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
             }
           } else {
             if (state === 'agent') {
@@ -312,70 +328,70 @@ app.get('/auth/twitter/callback', async (req, res) => {
   // }
 
   // try {
-    const response = await axios.post(`https://api.twitter.com/oauth/access_token?oauth_verifier=${oauth_verifier}&oauth_token=${oauth_token}`);
-    const data = response.data;
-    const queryString = response.data;
-    const params = new URLSearchParams(queryString);
+  const response = await axios.post(`https://api.twitter.com/oauth/access_token?oauth_verifier=${oauth_verifier}&oauth_token=${oauth_token}`);
+  const data = response.data;
+  const queryString = response.data;
+  const params = new URLSearchParams(queryString);
 
-    const oauth_token2 = params.get('oauth_token');
-    console.log("OAUTH TOKEN: ", oauth_token);
-    console.log("OAUTH TOKEN2: ", oauth_token2);
+  const oauth_token2 = params.get('oauth_token');
+  console.log("OAUTH TOKEN: ", oauth_token);
+  console.log("OAUTH TOKEN2: ", oauth_token2);
 
-    // get user details from twitter api
-    const userResponse = await axios.get(`https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true`, {
-      headers: {
-        Authorization: `Bearer ${oauth_token}`
-      }
-    });
-
-    const userData = userResponse.data;
-    console.log("USER DATA: ", userData);
-
-    const { id, name, email } = userData;
-
-    const user = await db.models.user.findOne({
-      where: { email: email },
-    });
-
-    if (!user) {
-      const nameArray = name.split(" ");
-      const firstName = nameArray[0];
-      const lastName = nameArray[1];
-
-      user = await db.models.user.create({
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        userType: state,
-        signupStep: -1,
-        status: true,
-        active: false,
-        facebookId: id,
-      });
-
-      // create agent using above user
-      if (state === 'agent') {
-        const agent = await db.models.agent.create({
-          userId: user.id,
-          agentType: AGENT_TYPE.AGENT,
-          createdBy: user.id,
-          updatedBy: user.id,
-        });
-      }
+  // get user details from twitter api
+  const userResponse = await axios.get(`https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true`, {
+    headers: {
+      Authorization: `Bearer ${oauth_token}`
     }
+  });
 
-    const token = await user.generateToken();
-    const refreshToken = await user.generateToken('4h');
+  const userData = userResponse.data;
+  console.log("USER DATA: ", userData);
 
-    // send a social_user_details cookie to the frontend
-    res.cookie('social_user_details', JSON.stringify({ user: user, token: token, refreshToken: refreshToken }), { maxAge: 120000, httpOnly: true });
+  const { id, name, email } = userData;
 
-    // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+  const user = await db.models.user.findOne({
+    where: { email: email },
+  });
+
+  if (!user) {
+    const nameArray = name.split(" ");
+    const firstName = nameArray[0];
+    const lastName = nameArray[1];
+
+    user = await db.models.user.create({
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      userType: state,
+      signupStep: -1,
+      status: true,
+      active: false,
+      facebookId: id,
+    });
+
+    // create agent using above user
     if (state === 'agent') {
-      res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
-    } else {
-      res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
+      const agent = await db.models.agent.create({
+        userId: user.id,
+        agentType: AGENT_TYPE.AGENT,
+        createdBy: user.id,
+        updatedBy: user.id,
+      });
     }
+  }
+
+  const token = await user.generateToken();
+  const refreshToken = await user.generateToken('4h');
+
+  // send a social_user_details cookie to the frontend
+  res.cookie('social_user_details', JSON.stringify({ user: user, token: token, refreshToken: refreshToken }), { maxAge: 120000, httpOnly: true });
+
+  // res.json({ success: true, user: user, token: token, refreshToken: refreshToken });
+  if (state === 'agent') {
+    res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+  } else {
+    res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
+  }
   // } catch (error) {
   //   console.error(error);
   //   res.status(500).json({ error: 'Failed to authenticate user' });
