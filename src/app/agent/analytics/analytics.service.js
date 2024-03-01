@@ -2,7 +2,7 @@ import { AGENT_TYPE, SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } 
 // import { utilsHelper } from '@/helpers';
 import db from '@/database';
 import { Sequelize } from 'sequelize';
-import { calculateDistance, calculateTime } from '@/helpers/googleMapHelper';
+import { calculateDistanceMatrix } from '@/helpers/googleMapHelper';
 const { Op } = Sequelize;
 const {
   categoryField,
@@ -75,46 +75,46 @@ export async function getUsersAnalytics(req, res, userInstance) {
   }
 
   try {
-  const { rows, count } = await agent.findAndCountAll({
-    where: where,
-    include: [
-      {
-        model: user,
-        include: [
-          {
-            model: productAllocation,
-          },
-          {
-            model: agentAccessLevel,
-          },
-        ],
-      },
-    ],
-    distinct: true,
-    order: [['id', 'DESC']],
-    // offset: limit * (page - 1),
-    // limit: limit,
-  });
+    const { rows, count } = await agent.findAndCountAll({
+      where: where,
+      include: [
+        {
+          model: user,
+          include: [
+            {
+              model: productAllocation,
+            },
+            {
+              model: agentAccessLevel,
+            },
+          ],
+        },
+      ],
+      distinct: true,
+      order: [['id', 'DESC']],
+      // offset: limit * (page - 1),
+      // limit: limit,
+    });
 
-  let activeUsers = 0,
-    nonActiveUsers = 0,
-    managerUsers = 0,
-    staffUsers = 0;
-  for (const agent of rows) {
-    agent.user.active ? activeUsers++ : nonActiveUsers++;
-    if (agent.agentType === USER_TYPE.AGENT) agentUsers++;
-    if (agent.agentType === AGENT_TYPE.MANAGER) managerUsers++;
-    if (agent.agentType === AGENT_TYPE.STAFF) staffUsers++;
-  }
+    let activeUsers = 0,
+      nonActiveUsers = 0,
+      managerUsers = 0,
+      staffUsers = 0;
+    for (const agent of rows) {
+      agent.user.active ? activeUsers++ : nonActiveUsers++;
+      if (agent.agentType === USER_TYPE.AGENT) agentUsers++;
+      if (agent.agentType === AGENT_TYPE.MANAGER) managerUsers++;
+      if (agent.agentType === AGENT_TYPE.STAFF) staffUsers++;
+    }
 
-  return {
-    rows,
-    totalUsers: count,
-    activeUsers,
-    nonActiveUsers,
-    managerUsers,
-    staffUsers,
-  };
+    return {
+      rows,
+      totalUsers: count,
+      activeUsers,
+      nonActiveUsers,
+      managerUsers,
+      staffUsers,
+    };
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: 'Server error', error });
@@ -1138,13 +1138,14 @@ export async function getPropertyOffers(req, res, userInstance) {
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    let acceptedOffers = 0,
-      rejectedOffers = 0,
-      pendingOffers = 0;
+    let acceptedOffers = 0;
+    let rejectedOffers = 0;
+    let pendingOffers = 0;
+    // eslint-disable-next-line no-restricted-syntax
     for (const offer of rows) {
-      if (offer.status === 'accepted') acceptedOffers++;
-      if (offer.status === 'rejected') rejectedOffers++;
-      if (offer.status === 'pending') pendingOffers++;
+      if (offer.status === 'accepted') acceptedOffers += 1;
+      if (offer.status === 'rejected') rejectedOffers += 1;
+      if (offer.status === 'pending') pendingOffers += 1;
     }
 
     return {
@@ -1163,15 +1164,24 @@ export async function getPropertyOffers(req, res, userInstance) {
 export async function getCarbonFootprint(req, res) {
   const { agentLocation, propertyLocation } = req.body;
 
-  const distance = await calculateDistance(agentLocation, propertyLocation);
-  const time = await calculateTime(agentLocation, propertyLocation);
+  try {
+    const distanceMatrix = await calculateDistanceMatrix(agentLocation, propertyLocation);
+    // console.log("distance", distance);
 
-  // Assuming average CO2 emissions per mile
-  const co2EmissionsPerMile = 0.404; // in kilograms
-
-  const co2Saved = distance * co2EmissionsPerMile;
-
-  res.json({ co2Saved, time });
+    if (distanceMatrix && distanceMatrix.length > 0 && distanceMatrix[0].status === 'OK') {
+      const distanceMatrixValue = distanceMatrix[0].distance.value;
+      // Assuming average CO2 emissions per mile
+      const co2EmissionsPerMile = 0.404; // in kilograms
+      const co2SavedValue = distanceMatrixValue * co2EmissionsPerMile;
+      const co2SavedText = `${co2SavedValue} metric tons CO₂E`;
+      res.json({ distance: distanceMatrix[0].distance.text, time: distanceMatrix[0].duration.text, co2SavedText });
+    } else {
+      res.status(400).json({ message: 'Invalid distance matrix response' });
+    }
+  } catch (err) {
+    console.error('Error calculating carbon footprint:', err);
+    res.status(500).json({ message: 'Server error', err });
+  }
 }
 
 export async function getPropertiesSoldRented(req, res, userInstance) {
@@ -1186,7 +1196,7 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
     },
   };
   where.userId = {
-      [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
+    [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
   };
 
   if (startDate && endDate) {
