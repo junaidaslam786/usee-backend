@@ -274,9 +274,6 @@ app.get('/auth/facebook/callback', async (req, res) => {
               console.log("AGENT: ", agent);
 
               let sortWhere = { agentId: user.id };
-              if (user.agent.agentType == AGENT_TYPE.MANAGER) {
-                sortWhere = { managerId: user.id };
-              }
               const latestSortOrderData = await dbInstance.agent.findOne({
                 attributes: ["sortOrder"],
                 where: sortWhere,
@@ -284,7 +281,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
                 limit: 1,
               });
               const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
-              const res = await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
+              await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
             }
           } else {
             if (state === 'agent') {
@@ -297,12 +294,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
           const token = await user.generateToken('4h', agent);
           const refreshToken = await user.generateToken('4h');
 
-          // if (state === 'agent') {
-          //   res.redirect(`${process.env.HOME_PANEL_URL}/${state}/register-social?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
-          // } else {
-          //   res.redirect(`${process.env.HOME_PANEL_URL}/${state}/dashboard?token=${token}`);
-          // }
-          res.redirect(`${process.env.HOME_PANEL_URL}/facebook/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+          res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
         }).catch((error) => {
           // eslint-disable-next-line no-console
           console.error(error);
@@ -387,9 +379,6 @@ app.get('/auth/twitter/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        if (user.agent.agentType == AGENT_TYPE.MANAGER) {
-          sortWhere = { managerId: user.id };
-        }
         const latestSortOrderData = await dbInstance.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -410,7 +399,7 @@ app.get('/auth/twitter/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/twitter/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
@@ -537,7 +526,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         status: true,
         active: false,
         otpVerified: true,
-        linkedinId: id,
+        linkedinId: sub,
       });
 
       // create agent using above user
@@ -553,9 +542,6 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        if (user.agent.agentType == AGENT_TYPE.MANAGER) {
-          sortWhere = { managerId: user.id };
-        }
         const latestSortOrderData = await dbInstance.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -576,7 +562,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/linkedin/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Failed to authenticate user' });
@@ -674,9 +660,6 @@ app.get('/auth/google/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        if (user.agent.agentType == AGENT_TYPE.MANAGER) {
-          sortWhere = { managerId: user.id };
-        }
         const latestSortOrderData = await dbInstance.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -697,7 +680,7 @@ app.get('/auth/google/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/google/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
@@ -784,9 +767,6 @@ app.post('/auth/microsoft/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        if (user.agent.agentType == AGENT_TYPE.MANAGER) {
-          sortWhere = { managerId: user.id };
-        }
         const latestSortOrderData = await dbInstance.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -807,7 +787,7 @@ app.post('/auth/microsoft/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/microsoft/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Microsoft authentication failure' });
