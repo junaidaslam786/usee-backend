@@ -274,7 +274,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
               console.log("AGENT: ", agent);
 
               let sortWhere = { agentId: user.id };
-              const latestSortOrderData = await dbInstance.agent.findOne({
+              const latestSortOrderData = await db.models.agent.findOne({
                 attributes: ["sortOrder"],
                 where: sortWhere,
                 order: [["createdAt", "desc"]],
@@ -379,7 +379,7 @@ app.get('/auth/twitter/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        const latestSortOrderData = await dbInstance.agent.findOne({
+        const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
           order: [["createdAt", "desc"]],
@@ -542,7 +542,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        const latestSortOrderData = await dbInstance.agent.findOne({
+        const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
           order: [["createdAt", "desc"]],
@@ -660,7 +660,7 @@ app.get('/auth/google/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        const latestSortOrderData = await dbInstance.agent.findOne({
+        const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
           order: [["createdAt", "desc"]],
@@ -767,7 +767,7 @@ app.post('/auth/microsoft/callback', async (req, res) => {
         console.log("AGENT: ", agent);
 
         let sortWhere = { agentId: user.id };
-        const latestSortOrderData = await dbInstance.agent.findOne({
+        const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
           order: [["createdAt", "desc"]],
