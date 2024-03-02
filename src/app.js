@@ -697,7 +697,7 @@ app.post('/auth/google', (req, res) => {
 
   try {
     const redirectUrl = `${process.env.APP_URL}/auth/google/callback`;
-    const scope = 'email';
+    const scope = 'email profile openid';
     const state = userType;
     const url = encodeURI(`https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}&response_type=code`);
 
@@ -728,6 +728,7 @@ app.post('/auth/microsoft/callback', async (req, res) => {
       }
     });
     const userData = userResponse.data;
+    console.log("USER DATA: ", userData);
 
     const { id, displayName, mail } = userData;
 
@@ -737,15 +738,15 @@ app.post('/auth/microsoft/callback', async (req, res) => {
     let agent = null;
 
     if (!user) {
-      const nameArray = name.split(" ");
+      const nameArray = displayName.split(" ");
       const firstName = nameArray[0];
       const lastName = nameArray[1];
 
       user = await db.models.user.create({
         firstName: firstName,
         lastName: lastName,
-        email: email,
-        userType: state,
+        email: mail,
+        userType: state === '11111' ? 'agent' : 'customer',
         timezone: process.env.APP_DEFAULT_TIMEZONE,
         signupStep: -1,
         status: true,
