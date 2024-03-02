@@ -57,7 +57,7 @@ export const updateCurrentUser = async (reqBody, req) => {
       user.profileImage = result;
     }
 
-    if (reqBody?.companyPosition || reqBody?.mobileNumber || reqBody?.companyName || reqBody?.companyAddress || reqBody?.zipCode || reqBody?.mortgageAdvisorEmail || req?.files?.companyLogo) {
+    if (reqBody?.companyPosition || reqBody?.mobileNumber || reqBody?.companyName || reqBody?.companyAddress || reqBody?.zipCode || reqBody?.mortgageAdvisorEmail || reqBody?.ornNumber || req?.files?.companyLogo) {
       let agent = user.agent;
       if (reqBody?.companyPosition) {
         agent.companyPosition = reqBody.companyPosition;
@@ -81,6 +81,10 @@ export const updateCurrentUser = async (reqBody, req) => {
 
       if (reqBody?.mortgageAdvisorEmail) {
         agent.mortgageAdvisorEmail = reqBody.mortgageAdvisorEmail;
+      }
+
+      if (reqBody?.ornNumber) {
+        agent.ornNumber = reqBody.ornNumber;
       }
 
       // company logo upload
