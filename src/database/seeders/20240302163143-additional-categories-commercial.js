@@ -23,6 +23,7 @@ module.exports = {
         required: false,
         order: 11,
       });
+      // if Conference Room yes
       categoryFields.push({
         id: 12,
         category_id: 1,
@@ -57,14 +58,15 @@ module.exports = {
         category_id: 1,
         label: 'Display Window Type',
         type: 'select',
-        options: 'Full Height,Storefront,Corner',
+        options: 'Full Height,Storefront,Corner,Other',
         required: false,
         order: 15,
       });
+      // if Display Window Type = Other
       categoryFields.push({
         id: 16,
         category_id: 1,
-        label: 'Display Window Type (Other)',
+        label: 'Display Window Type Value(Other)',
         type: 'text',
         options: '',
         required: false,
@@ -195,10 +197,11 @@ module.exports = {
         required: false,
         order: 29,
       });
+      // if Outdoor Seating yes
       categoryFields.push({
         id: 30,
         category_id: 1,
-        label: 'Area of Outdoor Seating',
+        label: 'Area of Outdoor Seating(m²)',
         type: 'text',
         options: '',
         required: false,
@@ -271,6 +274,7 @@ module.exports = {
         required: false,
         order: 37,
       });
+      // if Security Features yes
       categoryFields.push({
         id: 38,
         category_id: 1,
@@ -298,6 +302,7 @@ module.exports = {
         required: false,
         order: 40,
       });
+      // if Parking Facility yes
       categoryFields.push({
         id: 41,
         category_id: 1,
@@ -356,7 +361,7 @@ module.exports = {
         id: 47,
         category_id: 1,
         label: 'Additional Features',
-        type: 'text',
+        type: 'textarea',
         options: '',
         required: false,
         order: 47,
