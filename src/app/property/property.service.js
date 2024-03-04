@@ -7,6 +7,7 @@ import * as userService from '../user/user.service';
 const path = require("path");
 const ejs = require("ejs");
 const OP = Sequelize.Op;
+// const literal = Sequelize.literal;
 
 export const createProperty = async (reqBody, req) => {
   try {
@@ -1003,8 +1004,8 @@ export const searchCircle = async (req) => {
     const records = await req.dbInstance.product.findAll({
       where: {
         status: PRODUCT_STATUS.ACTIVE
-      }
-      ,    include: [
+      },
+      include: [
         {
           model: req.dbInstance.user,
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
@@ -1127,31 +1128,6 @@ export const listHomePageProperties = async (reqBody, req) => {
           return
         }
       }
-      if (reqBody.propertyCategory) {
-        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 2)
-        if (index === -1 || el.productMetaTags[index].value !== reqBody.propertyCategory) {
-          return
-        }
-      }
-      if (reqBody.propertyCategoryType) {
-        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 1)
-        if (index === -1 || el.productMetaTags[index].value !== reqBody.propertyCategoryType) {
-          return
-        }
-      }
-      if (reqBody.propertyType) {
-        const id = (reqBody.propertyCategoryType === "commercial") ? 7 : 6
-        const index = el.productMetaTags.findIndex(category => category.categoryField.id === id)
-        if (index === -1 || el.productMetaTags[index].value !== reqBody.propertyType) {
-          return
-        }
-      }
-      if (reqBody.rooms) {
-        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 5)
-        if (index === -1 || el.productMetaTags[index].value !== reqBody.rooms) {
-          return
-        }
-      }
       if (reqBody.minPrice) {
         if (el.price < reqBody.minPrice) {
           return
@@ -1162,9 +1138,17 @@ export const listHomePageProperties = async (reqBody, req) => {
           return
         }
       }
-      if (reqBody.area) {
-        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 4)
-        if (index === -1 || parseInt(el.productMetaTags[index]?.value) < parseInt(reqBody.area)) {
+      // commercial/residential
+      if (reqBody.propertyCategoryType) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 1)
+        if (index === -1 || el.productMetaTags[index].value !== reqBody.propertyCategoryType) {
+          return
+        }
+      }
+      // rent/sale
+      if (reqBody.propertyCategory) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 2)
+        if (index === -1 || el.productMetaTags[index].value !== reqBody.propertyCategory) {
           return
         }
       }
@@ -1174,6 +1158,407 @@ export const listHomePageProperties = async (reqBody, req) => {
           return
         }
       }
+      if (reqBody.area) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 4)
+        if (index === -1 || parseInt(el.productMetaTags[index]?.value) < parseInt(reqBody.area)) {
+          return
+        }
+      }
+      if (reqBody.rooms) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 5)
+        if (index === -1 || el.productMetaTags[index].value !== reqBody.rooms) {
+          return
+        }
+      }
+      if (reqBody.propertyType) {
+        const id = (reqBody.propertyCategoryType === "commercial") ? 7 : 6
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === id)
+        if (index === -1 || el.productMetaTags[index].value !== reqBody.propertyType) {
+          return
+        }
+      }
+      if (reqBody.priceType) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 8)
+        if (index === -1 || el.productMetaTags[index].value !== reqBody.priceType) {
+          return
+        }
+      }
+      if (reqBody.deedTitle) {
+        const index = el.productMetaTags.findIndex(category => category.categoryField.id === 9)
+        if (index === -1 || el.productMetaTags[index].value !== reqBody.deedTitle) {
+          return
+        }
+      }
+      // Office
+      // Layout
+      if (reqBody.layout) {
+        const layoutIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 10);
+        if (layoutIndex === -1 || el.productMetaTags[layoutIndex].value !== reqBody.layout) {
+          return;
+        }
+      }
+      // Conference Room
+      if (reqBody.conferenceRoom) {
+        const conferenceRoomIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 11);
+        if (conferenceRoomIndex === -1 || el.productMetaTags[conferenceRoomIndex].value !== reqBody.conferenceRoom) {
+          return;
+        }
+      }
+      // Conference Room Capacity
+      if (reqBody.conferenceRoomCapacity) {
+        const conferenceRoomCapacityIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 12);
+        if (conferenceRoomCapacityIndex === -1 || el.productMetaTags[conferenceRoomCapacityIndex].value !== reqBody.conferenceRoomCapacity) {
+          return;
+        }
+      }
+      // Kitchen
+      if (reqBody.kitchen) {
+        const kitchenIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 13);
+        if (kitchenIndex === -1 || el.productMetaTags[kitchenIndex].value !== reqBody.kitchen) {
+          return;
+        }
+      }
+
+      // Retail
+      // Area of Display Window
+      if (reqBody.displayWindowArea) {
+        const displayWindowAreaIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 14);
+        if (displayWindowAreaIndex === -1 || el.productMetaTags[displayWindowAreaIndex].value !== reqBody.displayWindowArea) {
+          return;
+        }
+      }
+      // Display Window Type
+      if (reqBody.displayWindowType) {
+        const displayWindowTypeIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 15);
+        if (displayWindowTypeIndex === -1 || el.productMetaTags[displayWindowTypeIndex].value !== reqBody.displayWindowType) {
+          return;
+        }
+      }
+      // if Display Window Type = Other
+      // Display Window Type Value (Other)
+      if (reqBody.displayWindowTypeOther) {
+        const displayWindowTypeOtherIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 16);
+        if (displayWindowTypeOtherIndex === -1 || el.productMetaTags[displayWindowTypeOtherIndex].value !== reqBody.displayWindowTypeOther) {
+          return;
+        }
+      }
+
+      // Shopping Center
+      // Number of Stores
+      if (reqBody.numberOfStores) {
+        const numberOfStoresIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 17);
+        if (numberOfStoresIndex === -1 || el.productMetaTags[numberOfStoresIndex].value !== reqBody.numberOfStores) {
+          return;
+        }
+      }
+      // Food Court
+      if (reqBody.foodCourt) {
+        const foodCourtIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 18);
+        if (foodCourtIndex === -1 || el.productMetaTags[foodCourtIndex].value !== reqBody.foodCourt) {
+          return;
+        }
+      }
+      // Rest Rooms
+      if (reqBody.restRooms) {
+        const restRoomsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 19);
+        if (restRoomsIndex === -1 || el.productMetaTags[restRoomsIndex].value !== reqBody.restRooms) {
+          return;
+        }
+      }
+
+      // Hotel
+      // Number Of Pools
+      if (reqBody.numberOfPools) {
+        const numberOfPoolsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 20);
+        if (numberOfPoolsIndex === -1 || el.productMetaTags[numberOfPoolsIndex].value !== reqBody.numberOfPools) {
+          return;
+        }
+      }
+      // Pool Types
+      if (reqBody.poolTypes) {
+        const poolTypesIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 21);
+        if (poolTypesIndex === -1 || el.productMetaTags[poolTypesIndex].value !== reqBody.poolTypes) {
+          return;
+        }
+      }
+      // Number of Rooms
+      if (reqBody.numberOfRooms) {
+        const numberOfRoomsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 22);
+        if (numberOfRoomsIndex === -1 || el.productMetaTags[numberOfRoomsIndex].value !== reqBody.numberOfRooms) {
+          return;
+        }
+      }
+
+      // Club
+      // Area of Bar (m²)
+      if (reqBody.areaOfBar) {
+        const areaOfBarIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 23);
+        if (areaOfBarIndex === -1 || el.productMetaTags[areaOfBarIndex].value !== reqBody.areaOfBar) {
+          return;
+        }
+      }
+      // Area of Lounge (m²)
+      if (reqBody.areaOfLounge) {
+        const areaOfLoungeIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 24);
+        if (areaOfLoungeIndex === -1 || el.productMetaTags[areaOfLoungeIndex].value !== reqBody.areaOfLounge) {
+          return;
+        }
+      }
+      // Capacity of VIP Section
+      if (reqBody.vipSectionCapacity) {
+        const vipSectionCapacityIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 25);
+        if (vipSectionCapacityIndex === -1 || el.productMetaTags[vipSectionCapacityIndex].value !== reqBody.vipSectionCapacity) {
+          return;
+        }
+      }
+      // Number of Dance Floors
+      if (reqBody.numberOfDanceFloors) {
+        const numberOfDanceFloorsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 26);
+        if (numberOfDanceFloorsIndex === -1 || el.productMetaTags[numberOfDanceFloorsIndex].value !== reqBody.numberOfDanceFloors) {
+          return;
+        }
+      }
+      // Number of Private Rooms
+      if (reqBody.numberOfPrivateRooms) {
+        const numberOfPrivateRoomsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 27);
+        if (numberOfPrivateRoomsIndex === -1 || el.productMetaTags[numberOfPrivateRoomsIndex].value !== reqBody.numberOfPrivateRooms) {
+          return;
+        }
+      }
+
+      // Restaurant
+      // Area of Kitchen
+      if (reqBody.areaOfKitchen) {
+        const areaOfKitchenIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 28);
+        if (areaOfKitchenIndex === -1 || el.productMetaTags[areaOfKitchenIndex].value !== reqBody.areaOfKitchen) {
+          return;
+        }
+      }
+      // Outdoor Seating
+      if (reqBody.outdoorSeating) {
+        const outdoorSeatingIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 29);
+        if (outdoorSeatingIndex === -1 || el.productMetaTags[outdoorSeatingIndex].value !== reqBody.outdoorSeating) {
+          return;
+        }
+      }
+      // if Outdoor Seating = Yes
+      // Area of Outdoor Seating (m²)
+      if (reqBody.areaOfOutdoorSeating) {
+        const areaOfOutdoorSeatingIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 30);
+        if (areaOfOutdoorSeatingIndex === -1 || el.productMetaTags[areaOfOutdoorSeatingIndex].value !== reqBody.areaOfOutdoorSeating) {
+          return;
+        }
+      }
+
+      // Hotel Room
+      // Room Size (m²)
+      if (reqBody.roomSize) {
+        const roomSizeIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 31);
+        if (roomSizeIndex === -1 || el.productMetaTags[roomSizeIndex].value !== reqBody.roomSize) {
+          return;
+        }
+      }
+      // Number of Beds
+      if (reqBody.numberOfBeds) {
+        const numberOfBedsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 32);
+        if (numberOfBedsIndex === -1 || el.productMetaTags[numberOfBedsIndex].value !== reqBody.numberOfBeds) {
+          return;
+        }
+      }
+      // Room Type
+      if (reqBody.roomType) {
+        const roomTypeIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 33);
+        if (roomTypeIndex === -1 || el.productMetaTags[roomTypeIndex].value !== reqBody.roomType) {
+          return;
+        }
+      }
+      // Floor Level
+      if (reqBody.floorLevel) {
+        const floorLevelIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 34);
+        if (floorLevelIndex === -1 || el.productMetaTags[floorLevelIndex].value !== reqBody.floorLevel) {
+          return;
+        }
+      }
+      // View
+      if (reqBody.view) {
+        const viewIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 35);
+        if (viewIndex === -1 || el.productMetaTags[viewIndex].value !== reqBody.view) {
+          return;
+        }
+      }
+      // Balcony/Terrace
+      if (reqBody.balconyTerrace) {
+        const balconyTerraceIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 36);
+        if (balconyTerraceIndex === -1 || el.productMetaTags[balconyTerraceIndex].value !== reqBody.balconyTerrace) {
+          return;
+        }
+      }
+
+      // Commercial Property Common Features
+      // Security Features
+      if (reqBody.securityFeatures) {
+        const securityFeaturesIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 37);
+        if (securityFeaturesIndex === -1 || el.productMetaTags[securityFeaturesIndex].value !== reqBody.securityFeatures) {
+          return;
+        }
+      }
+      // if Security Features = Yes
+      if (reqBody.securityFeaturesValue) {
+        const securityFeaturesValueIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 38);
+        if (securityFeaturesValueIndex === -1 || el.productMetaTags[securityFeaturesValueIndex].value !== reqBody.securityFeaturesValue) {
+          return;
+        }
+      }
+      // Disability Access
+      if (reqBody.disabilityAccess) {
+        const disabilityAccessIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 39);
+        if (disabilityAccessIndex === -1 || el.productMetaTags[disabilityAccessIndex].value !== reqBody.disabilityAccess) {
+          return;
+        }
+      }
+      // Parking Facility
+      if (reqBody.parkingFacility) {
+        const parkingFacilityIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 40);
+        if (parkingFacilityIndex === -1 || el.productMetaTags[parkingFacilityIndex].value !== reqBody.parkingFacility) {
+          return;
+        }
+      }
+      // if Parking Facility = Yes
+      if (reqBody.parkingFacilityValue) {
+        const parkingFacilityValueIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 41);
+        if (parkingFacilityValueIndex === -1 || el.productMetaTags[parkingFacilityValueIndex].value !== reqBody.parkingFacilityValue) {
+          return;
+        }
+      }
+      // Public Transport Access
+      if (reqBody.publicTransportAccess) {
+        const publicTransportAccessIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 42);
+        if (publicTransportAccessIndex === -1 || el.productMetaTags[publicTransportAccessIndex].value !== reqBody.publicTransportAccess) {
+          return;
+        }
+      }
+      // Year Built
+      if (reqBody.yearBuilt) {
+        const yearBuiltIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 43);
+        if (yearBuiltIndex === -1 || el.productMetaTags[yearBuiltIndex].value !== reqBody.yearBuilt) {
+          return;
+        }
+      }
+      // Condition
+      if (reqBody.condition) {
+        const conditionIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 44);
+        if (conditionIndex === -1 || el.productMetaTags[conditionIndex].value !== reqBody.condition) {
+          return;
+        }
+      }
+      // Availability Date
+      if (reqBody.availabilityDate) {
+        const availabilityDateIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 45);
+        if (availabilityDateIndex === -1 || el.productMetaTags[availabilityDateIndex].value !== reqBody.availabilityDate) {
+          return;
+        }
+      }
+      // Pet Friendliness
+      if (reqBody.petFriendliness) {
+        const petFriendlinessIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 46);
+        if (petFriendlinessIndex === -1 || el.productMetaTags[petFriendlinessIndex].value !== reqBody.petFriendliness) {
+          return;
+        }
+      }
+      // Additional Features
+      if (reqBody.additionalFeatures) {
+        const additionalFeaturesIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 47);
+        if (additionalFeaturesIndex === -1 || el.productMetaTags[additionalFeaturesIndex].value !== reqBody.additionalFeatures) {
+          return;
+        }
+      }
+
+      // Residential Property Specific Features
+      // Apartments
+      // Building Amenities
+      if (reqBody.buildingAmenities) {
+        const buildingAmenitiesIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 48);
+        if (buildingAmenitiesIndex === -1 || el.productMetaTags[buildingAmenitiesIndex].value !== reqBody.buildingAmenities) {
+          return;
+        }
+      }
+      // House
+      // Fireplace
+      if (reqBody.fireplace) {
+        const fireplaceIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 49);
+        if (!el.productMetaTags[fireplaceIndex] || el.productMetaTags[fireplaceIndex].value !== reqBody.fireplace) {
+          return;
+        }
+      }
+      // if Fireplace = yes
+      // Fireplace Value
+      if (reqBody.fireplaceValue) {
+        const fireplaceValueIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 50);
+        if (fireplaceValueIndex === -1 || el.productMetaTags[fireplaceValueIndex].value !== reqBody.fireplaceValue) {
+          return;
+        }
+      }
+      // Number of Floors
+      if (reqBody.numberOfFloors) {
+        const numberOfFloorsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 51);
+        if (numberOfFloorsIndex === -1 || el.productMetaTags[numberOfFloorsIndex].value !== reqBody.numberOfFloors) {
+          return;
+        }
+      }
+      // Basement
+      if (reqBody.basement) {
+        const basementIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 52);
+        if (basementIndex === -1 || el.productMetaTags[basementIndex].value !== reqBody.basement) {
+          return;
+        }
+      }
+
+      // Residential Properties Common Features
+      // Parking
+      if (reqBody.parking) {
+        const parkingIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 53);
+        if (parkingIndex === -1 || el.productMetaTags[parkingIndex].value !== reqBody.parking) {
+          return;
+        }
+      }
+      // if Parking = yes
+      // Parking Option
+      if (reqBody.parkingOption) {
+        const parkingOptionIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 54);
+        if (parkingOptionIndex === -1 || el.productMetaTags[parkingOptionIndex].value !== reqBody.parkingOption) {
+          return;
+        }
+      }
+      // if Parking Option = Garage/Carport
+      // Garage/Carport(No. of Spaces)
+      if (reqBody.garageCarport) {
+        const garageCarportIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 55);
+        if (garageCarportIndex === -1 || el.productMetaTags[garageCarportIndex].value !== reqBody.garageCarport) {
+          return;
+        }
+      }
+      // Outdoor Spaces
+      if (reqBody.outdoorSpaces) {
+        const outdoorSpacesIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 56);
+        if (outdoorSpacesIndex === -1 || el.productMetaTags[outdoorSpacesIndex].value !== reqBody.outdoorSpaces) {
+          return;
+        }
+      }
+      // Number of Bathrooms
+      if (reqBody.numberOfBathrooms) {
+        const numberOfBathroomsIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 57);
+        if (numberOfBathroomsIndex === -1 || el.productMetaTags[numberOfBathroomsIndex].value !== reqBody.numberOfBathrooms) {
+          return;
+        }
+      }
+      // Furnished
+      if (reqBody.furnished) {
+        const furnishedIndex = el.productMetaTags.findIndex(category => category.categoryField.id === 58);
+        if (furnishedIndex === -1 || el.productMetaTags[furnishedIndex].value !== reqBody.furnished) {
+          return;
+        }
+      }
+
       arr.push(el)
     });
 
@@ -1204,6 +1589,72 @@ export const listHomePageProperties = async (reqBody, req) => {
     return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
+
+// export const listHomePageProperties2 = async (reqBody, req) => {
+//   try {
+//     const whereClause = req?.query?.agentId ? {
+//       status: PRODUCT_STATUS.ACTIVE,
+//       categoryId: PRODUCT_CATEGORIES.PROPERTY,
+//       [OP.or]: [
+//         { userId: req.query.agentId },
+//         { id: { [OP.in]: literal(`(select product_id from product_allocations where user_id = '${req.query.agentId}')`) } }
+//       ]
+//     } : {
+//       status: PRODUCT_STATUS.ACTIVE,
+//       categoryId: PRODUCT_CATEGORIES.PROPERTY,
+//     };
+
+//     // Construct SQL query to filter products based on category fields
+//     const sqlQuery = `
+//       SELECT p.*, 
+//              pm.value AS fieldValue,
+//              cf.label AS fieldLabel
+//       FROM products p
+//       LEFT JOIN product_meta_tags pm ON p.id = pm.productId
+//       LEFT JOIN category_fields cf ON pm.key = cf.id
+//       WHERE ${literal(whereClause)}
+//       ORDER BY p.id DESC
+//     `;
+
+//     // Execute the SQL query
+//     const filteredProducts = await req.dbInstance.query(sqlQuery, { type: req.dbInstance.Sequelize.QueryTypes.SELECT });
+
+//     // Filter products based on category fields and other criteria
+//     const paginatedArr = filteredProducts.filter(product => {
+//       // Add if checks based on category fields
+//       switch (product.fieldLabel) {
+//         case 'Layout':
+//           if (reqBody.layout && reqBody.layout !== product.fieldValue) {
+//             return false;
+//           }
+//           break;
+//         case 'Conference Room':
+//           if (reqBody.conferenceRoom && reqBody.conferenceRoom !== product.fieldValue) {
+//             return false;
+//           }
+//           break;
+//         // Add more cases for other category fields as needed
+//       }
+
+//       // Add other filters here as before
+
+//       return true; // Include product in result if it passes all checks
+//     });
+
+//     // Apply sorting and pagination logic
+
+//     return {
+//       data: paginatedArr,
+//       page: page,
+//       size: perPage,
+//       totalPage: totalPages,
+//       totalItems: paginatedArr.length,
+//     };
+//   } catch (err) {
+//     console.log('listActivePropertiesServiceError', err);
+//     return { error: true, message: 'Server not responding, please try again later.' };
+//   }
+// };
 
 export const deleteCustomerOffer = async (offerId, req) => {
   try {
