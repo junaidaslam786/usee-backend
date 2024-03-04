@@ -923,7 +923,72 @@ export const searchPolygon = async (req) => {
           whereClause,
           { status: PRODUCT_STATUS.ACTIVE }
         ]
-      }
+      },
+      include: [
+        {
+          model: req.dbInstance.user,
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          include: [
+            {
+              model: req.dbInstance.agent,
+              attributes: ["id", "ornNumber"],
+            },
+          ],
+        },
+        {
+          model: req.dbInstance.productDocument,
+          attributes: ["id", "title", "file"],
+        },
+        {
+          model: req.dbInstance.productImage,
+          attributes: ["id", "image", "sort_order"],
+        },
+        {
+          model: req.dbInstance.productMetaTag,
+          attributes: ["value"],
+          include: [
+            {
+              model: req.dbInstance.categoryField,
+              attributes: ["id", "label", "type", "options", "required"],
+            },
+          ]
+        },
+        {
+          model: req.dbInstance.productOffer,
+          attributes: ["id", "amount", "notes", "status", "rejectReason"],
+          include: [
+            {
+              model: req.dbInstance.user,
+              attributes: ["id", "firstName", "lastName", "email"],
+            },
+            {
+              model: req.dbInstance.productSnagList,
+              attributes: ["id", "agentApproved", "customerApproved"],
+              include: [
+                {
+                  model: req.dbInstance.productSnagListItem,
+                  attributes: ["snagKey", "snagValue", ['customer_comment', 'cc'], ['agent_comment', 'ac']],
+                },
+              ]
+            },
+          ],
+        },
+        {
+          model: req.dbInstance.productAllocation,
+          attributes: ['id'],
+          include: [{
+            model: req.dbInstance.user,
+            attributes: ['id', 'firstName', 'lastName']
+          }]
+        },
+        {
+          model: req.dbInstance.productLog,
+          as: "productViews",
+          // where: {
+          //   log_type: "viewed",
+          // },
+        },
+      ],
     });
     return results;
   } catch (err) {
@@ -939,6 +1004,71 @@ export const searchCircle = async (req) => {
       where: {
         status: PRODUCT_STATUS.ACTIVE
       }
+      ,    include: [
+        {
+          model: req.dbInstance.user,
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage"],
+          include: [
+            {
+              model: req.dbInstance.agent,
+              attributes: ["id", "ornNumber"],
+            },
+          ],
+        },
+        {
+          model: req.dbInstance.productDocument,
+          attributes: ["id", "title", "file"],
+        },
+        {
+          model: req.dbInstance.productImage,
+          attributes: ["id", "image", "sort_order"],
+        },
+        {
+          model: req.dbInstance.productMetaTag,
+          attributes: ["value"],
+          include: [
+            {
+              model: req.dbInstance.categoryField,
+              attributes: ["id", "label", "type", "options", "required"],
+            },
+          ]
+        },
+        {
+          model: req.dbInstance.productOffer,
+          attributes: ["id", "amount", "notes", "status", "rejectReason"],
+          include: [
+            {
+              model: req.dbInstance.user,
+              attributes: ["id", "firstName", "lastName", "email"],
+            },
+            {
+              model: req.dbInstance.productSnagList,
+              attributes: ["id", "agentApproved", "customerApproved"],
+              include: [
+                {
+                  model: req.dbInstance.productSnagListItem,
+                  attributes: ["snagKey", "snagValue", ['customer_comment', 'cc'], ['agent_comment', 'ac']],
+                },
+              ]
+            },
+          ],
+        },
+        {
+          model: req.dbInstance.productAllocation,
+          attributes: ['id'],
+          include: [{
+            model: req.dbInstance.user,
+            attributes: ['id', 'firstName', 'lastName']
+          }]
+        },
+        {
+          model: req.dbInstance.productLog,
+          as: "productViews",
+          // where: {
+          //   log_type: "viewed",
+          // },
+        },
+      ],
     });
 
     const nearbyRecords = records.filter(record => {
