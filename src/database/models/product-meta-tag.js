@@ -3,35 +3,35 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class ProductMetaTag extends Model {
     static associate(models) {
-      ProductMetaTag.belongsTo(models.product, { foreignKey: 'productId' })
-      ProductMetaTag.belongsTo(models.categoryField, { foreignKey: 'key' })
+      ProductMetaTag.belongsTo(models.product, { foreignKey: 'productId' });
+      ProductMetaTag.belongsTo(models.categoryField, { foreignKey: 'key' });
     }
   }
 
   ProductMetaTag.init({
     id: {
       type: DataTypes.UUID,
-      field: "id",
+      field: 'id',
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     productId: {
       type: DataTypes.UUID,
       references: {
         model: 'products',
         key: 'id',
-      }
+      },
     },
     key: {
       allowNull: true,
       type: DataTypes.UUID,
-      field: "key",
+      field: 'key',
       references: {
-        model: "category_fields",
-        key: "id"
+        model: 'category_fields',
+        key: 'id',
       },
-      onUpdate: "CASCADE",
+      onUpdate: 'CASCADE',
     },
     value: {
       type: DataTypes.STRING,
@@ -41,17 +41,20 @@ export default function (sequelize) {
     modelName: 'productMetaTag',
     tableName: 'product_meta_tags',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
+  // eslint-disable-next-line no-unused-vars
   ProductMetaTag.addHook('beforeSave', async (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   ProductMetaTag.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   ProductMetaTag.addHook('afterDestroy', (instance) => {
     //
   });

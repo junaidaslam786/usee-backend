@@ -3,8 +3,8 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class ProductSnagList extends Model {
     static associate(models) {
-      ProductSnagList.belongsTo(models.productOffer, { foreignKey: 'offerId' })
-      ProductSnagList.hasMany(models.productSnagListItem, { foreignKey: 'snagListId' })
+      ProductSnagList.belongsTo(models.productOffer, { foreignKey: 'offerId' });
+      ProductSnagList.hasMany(models.productSnagListItem, { foreignKey: 'snagListId' });
     }
   }
 
@@ -21,7 +21,7 @@ export default function (sequelize) {
       references: {
         model: 'product_offers',
         key: 'id',
-      }
+      },
     },
     agentApproved: {
       type: DataTypes.BOOLEAN,
@@ -33,17 +33,20 @@ export default function (sequelize) {
     modelName: 'productSnagList',
     tableName: 'product_snag_list',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
+  // eslint-disable-next-line no-unused-vars
   ProductSnagList.addHook('beforeSave', async (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   ProductSnagList.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   ProductSnagList.addHook('afterDestroy', (instance) => {
     //
   });

@@ -306,7 +306,7 @@ module.exports = {
       categoryFields.push({
         id: 41,
         category_id: 1,
-        label: 'Parking Facility(Number of Spaces)',
+        label: 'Parking Facility (Number of Spaces)',
         type: 'text',
         options: '',
         required: false,
