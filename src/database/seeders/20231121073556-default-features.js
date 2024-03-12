@@ -1,10 +1,9 @@
-import { v4 } from 'uuid';
-
 'use strict';
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  // eslint-disable-next-line no-unused-vars
+  async up(queryInterface, Sequelize) {
     return queryInterface.bulkInsert('features', [{
       id: '159c869a-1b24-4cd3-ac61-425645b730c7',
       name: 'Video Call',
@@ -62,7 +61,8 @@ module.exports = {
     }], {});
   },
 
-  async down (queryInterface, Sequelize) {
+  // eslint-disable-next-line no-unused-vars
+  async down(queryInterface, Sequelize) {
     return queryInterface.bulkDelete('features', null, {});
-  }
+  },
 };
