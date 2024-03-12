@@ -12,7 +12,7 @@ module.exports = {
       total_units: 0.0,
       free_units: 0.0,
       unit_name: 'call_recording',
-      unit_type: 'file',
+      unit_type: 'number',
       feature_type: 'addon',
     },
     {

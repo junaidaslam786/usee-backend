@@ -5,7 +5,7 @@ export default function (sequelize) {
     static associate(models) {
       Feature.belongsToMany(models.subscription, {
         through: 'SubscriptionFeatures',
-        foreignKey: 'featureId'
+        foreignKey: 'featureId',
       });
       Feature.hasMany(models.userSubscription, { foreignKey: 'featureId' });
     }
@@ -16,7 +16,7 @@ export default function (sequelize) {
       type: DataTypes.UUID,
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     name: {
       type: DataTypes.STRING,
@@ -27,7 +27,7 @@ export default function (sequelize) {
     },
     tokensPerUnit: {
       type: DataTypes.FLOAT,
-      allowNull: false
+      allowNull: false,
     },
     totalUnits: {
       type: DataTypes.FLOAT,
@@ -43,11 +43,11 @@ export default function (sequelize) {
     },
     unitType: {
       type: DataTypes.STRING,
-      enum: ["number", "minute", "hour", "day", "week", "month"]
+      enum: ['number', 'minute', 'hour', 'day', 'week', 'month'],
     },
     featureType: {
       type: DataTypes.STRING,
-      enum: ["feature", "addon"]
+      enum: ['feature', 'addon'],
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -60,13 +60,13 @@ export default function (sequelize) {
     deletedAt: {
       type: DataTypes.DATE,
       field: 'deleted_at',
-      allowNull: true
-    }
+      allowNull: true,
+    },
   }, {
     modelName: 'feature',
     tableName: 'features',
     sequelize,
-    paranoid: true
+    paranoid: true,
   });
 
   return Feature;
