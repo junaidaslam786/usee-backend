@@ -2,7 +2,6 @@ import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
   class AppointmentNote extends Model {
-    
     static associate(models) {
       AppointmentNote.belongsTo(models.user, { foreignKey: 'appointmentId' });
     }
@@ -22,8 +21,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'users',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     agentId: {
       field: 'agent_id',
@@ -31,8 +30,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'users',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     appointmentId: {
       field: 'appointment_id',
@@ -40,8 +39,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'appointments',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     notes: {
       type: DataTypes.TEXT,
@@ -49,7 +48,7 @@ export default function (sequelize) {
     createdAt: {
       allowNull: false,
       field: 'created_at',
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
     },
   }, {
     modelName: 'appointmentNote',

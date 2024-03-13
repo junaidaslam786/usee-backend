@@ -3,8 +3,8 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class AgentAvailability extends Model {
     static associate(models) {
-        AgentAvailability.belongsTo(models.user, { foreignKey: 'userId' })
-        AgentAvailability.belongsTo(models.agentTimeSlot, { foreignKey: 'timeSlotId' })
+      AgentAvailability.belongsTo(models.user, { foreignKey: 'userId' });
+      AgentAvailability.belongsTo(models.agentTimeSlot, { foreignKey: 'timeSlotId' });
     }
   }
 
@@ -21,20 +21,20 @@ export default function (sequelize) {
       references: {
         model: 'users',
         key: 'id',
-      }
+      },
     },
     timeSlotId: {
       type: DataTypes.INTEGER,
       references: {
         model: 'agent_time_slots',
         key: 'id',
-      }
+      },
     },
     dayId: {
-        type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER,
     },
     status: {
-        type: DataTypes.BOOLEAN,
+      type: DataTypes.BOOLEAN,
     },
   }, {
     modelName: 'agentAvailability',

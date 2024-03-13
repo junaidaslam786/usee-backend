@@ -3,9 +3,9 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class ProductRemoveRequest extends Model {
     static associate(models) {
-        ProductRemoveRequest.belongsTo(models.user, { foreignKey: 'userId' })
-        ProductRemoveRequest.belongsTo(models.product, { foreignKey: 'productId' })
-        ProductRemoveRequest.belongsTo(models.productRemoveReason, { foreignKey: 'removeReasonId' })
+      ProductRemoveRequest.belongsTo(models.user, { foreignKey: 'userId' });
+      ProductRemoveRequest.belongsTo(models.product, { foreignKey: 'productId' });
+      ProductRemoveRequest.belongsTo(models.productRemoveReason, { foreignKey: 'removeReasonId' });
     }
   }
 
@@ -22,33 +22,33 @@ export default function (sequelize) {
       references: {
         model: 'users',
         key: 'id',
-      }
+      },
     },
     productId: {
       type: DataTypes.UUID,
       references: {
         model: 'products',
         key: 'id',
-      }
+      },
     },
     removeReasonId: {
       type: DataTypes.INTEGER,
       references: {
         model: 'product_remove_reasons',
         key: 'id',
-      }
+      },
     },
     reason: {
-        type: DataTypes.TEXT,
+      type: DataTypes.TEXT,
     },
     status: {
-        type: DataTypes.BOOLEAN, // 0. pending, 1. approved 2. rejected
+      type: DataTypes.BOOLEAN, // 0. pending, 1. approved 2. rejected
     },
   }, {
     modelName: 'productRemoveRequest',
     tableName: 'product_remove_request',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
   ProductRemoveRequest.addHook('beforeSave', async (instance) => {

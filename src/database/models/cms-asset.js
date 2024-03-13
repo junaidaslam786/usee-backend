@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class CmsAssets extends Model {
     static associate(models) {
-      CmsAssets.belongsTo(models.cmsPage, { foreignKey: 'pageId' })
+      CmsAssets.belongsTo(models.cmsPage, { foreignKey: 'pageId' });
     }
   }
 
@@ -21,11 +21,11 @@ export default function (sequelize) {
       references: {
         model: 'cms_pages',
         key: 'id',
-      }
+      },
     },
     url: {
       type: DataTypes.STRING,
-      field: 'url'
+      field: 'url',
     },
   }, {
     modelName: 'cmsAsset',

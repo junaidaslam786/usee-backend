@@ -3,8 +3,8 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class CustomerWishlist extends Model {
     static associate(models) {
-        CustomerWishlist.belongsTo(models.user, { foreignKey: 'customerId' })
-        CustomerWishlist.belongsTo(models.product, { foreignKey: 'productId' })
+      CustomerWishlist.belongsTo(models.user, { foreignKey: 'customerId' });
+      CustomerWishlist.belongsTo(models.product, { foreignKey: 'productId' });
     }
   }
 
@@ -21,20 +21,20 @@ export default function (sequelize) {
       references: {
         model: 'users',
         key: 'id',
-      }
+      },
     },
     productId: {
       type: DataTypes.UUID,
       references: {
         model: 'products',
         key: 'id',
-      }
+      },
     },
   }, {
     modelName: 'customerWishlist',
     tableName: 'customer_wishlists',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
   CustomerWishlist.addHook('beforeSave', async (instance) => {

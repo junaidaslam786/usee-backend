@@ -19,8 +19,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'users',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     appointmentId: {
       field: 'appointment_id',
@@ -28,8 +28,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'appointments',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     userType: {
       field: 'user_type',
@@ -49,7 +49,7 @@ export default function (sequelize) {
     createdAt: {
       allowNull: false,
       field: 'created_at',
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
     },
   }, {
     modelName: 'appointmentLog',

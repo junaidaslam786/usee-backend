@@ -3,8 +3,8 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class CmsPageCategoryField extends Model {
     static associate(models) {
-      CmsPageCategoryField.belongsTo(models.cmsPage, { foreignKey: 'pageId' })
-      CmsPageCategoryField.belongsTo(models.categoryField, { foreignKey: 'key' })
+      CmsPageCategoryField.belongsTo(models.cmsPage, { foreignKey: 'pageId' });
+      CmsPageCategoryField.belongsTo(models.categoryField, { foreignKey: 'key' });
     }
   }
 
@@ -14,33 +14,33 @@ export default function (sequelize) {
       field: 'id',
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     pageId: {
       type: DataTypes.UUID,
       field: 'page_id',
       references: {
         model: 'cms_pages',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     key: {
       type: DataTypes.INTEGER,
       field: 'key',
       references: {
         model: 'category_fields',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     value: {
       type: DataTypes.STRING,
-      field: 'value'
+      field: 'value',
     },
   }, {
     modelName: 'cmsPageCategoryField',
     tableName: 'cms_page_category_fields',
     sequelize,
-    paranoid: true
+    paranoid: true,
   });
 
   CmsPageCategoryField.addHook('beforeSave', async (instance) => {

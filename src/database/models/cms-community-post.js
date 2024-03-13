@@ -3,8 +3,8 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class CmsCommunityPost extends Model {
     static associate(models) {
-      CmsCommunityPost.belongsTo(models.cmsCommunity, { foreignKey: 'communityId' })
-      CmsCommunityPost.hasMany(models.cmsCommunityPostComment, { foreignKey: 'communityPostId'})
+      CmsCommunityPost.belongsTo(models.cmsCommunity, { foreignKey: 'communityId' });
+      CmsCommunityPost.hasMany(models.cmsCommunityPostComment, { foreignKey: 'communityPostId' });
     }
   }
 
@@ -14,7 +14,7 @@ export default function (sequelize) {
       field: 'id',
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     communityId: {
       type: DataTypes.UUID,
@@ -22,33 +22,33 @@ export default function (sequelize) {
       references: {
         model: 'cms_community',
         key: 'id',
-      }
+      },
     },
     title: {
       type: DataTypes.TEXT,
       field: 'title',
-      allowNull: false
+      allowNull: false,
     },
     name: {
       type: DataTypes.STRING,
       field: 'name',
-      allowNull: false
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
       field: 'email',
-      allowNull: false
+      allowNull: false,
     },
     status: {
       type: DataTypes.STRING,
       field: 'status',
-      defaultValue: true
+      defaultValue: true,
     },
   }, {
     modelName: 'cmsCommunityPost',
     tableName: 'cms_community_posts',
     sequelize,
-    paranoid: true
+    paranoid: true,
   });
 
   CmsCommunityPost.addHook('beforeSave', async (instance) => {

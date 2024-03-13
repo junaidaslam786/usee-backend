@@ -29,8 +29,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'users',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     productId: {
       field: 'product_id',
@@ -38,8 +38,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'products',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     userType: {
       field: 'user_type',
@@ -55,13 +55,13 @@ export default function (sequelize) {
     createdAt: {
       allowNull: false,
       field: 'created_at',
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
     },
   }, {
     modelName: 'productLog',
     tableName: 'product_logs',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
   ProductLog.addHook('beforeSave', async (instance) => {

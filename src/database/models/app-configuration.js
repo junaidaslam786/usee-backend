@@ -2,8 +2,8 @@ import { DataTypes, Model } from 'sequelize';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16'
-})
+  apiVersion: '2023-10-16',
+});
 
 export default function (sequelize) {
   class AppConfiguration extends Model { }
@@ -12,42 +12,42 @@ export default function (sequelize) {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     configKey: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      field: "config_key",
+      field: 'config_key',
     },
     configValue: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: "config_value",
+      field: 'config_value',
     },
     description: {
-      type: DataTypes.TEXT
+      type: DataTypes.TEXT,
     },
     stripeProductId: {
       type: DataTypes.STRING,
-      field: "stripe_product_id",
+      field: 'stripe_product_id',
     },
     stripePriceId: {
       type: DataTypes.STRING,
-      field: "stripe_price_id",
+      field: 'stripe_price_id',
     },
   }, {
     modelName: 'appConfiguration',
     tableName: 'app_configurations',
     sequelize,
-    paranoid: true
+    paranoid: true,
   });
 
   AppConfiguration.addHook('beforeBulkUpdate', async (appConfiguration, options) => {
     if (appConfiguration.attributes.configKey === 'tokenPrice') {
-      console.log("Updating token price on stripe");
+      console.log('Updating token price on stripe');
       // Retrieve Token product from stripe
-      const product = await stripe.products.retrieve("prod_P4W0XpwFd7MXLR");
+      const product = await stripe.products.retrieve('prod_P4W0XpwFd7MXLR');
 
       // create a new price for the product
       const price = await stripe.prices.create({
@@ -63,7 +63,7 @@ export default function (sequelize) {
         product.id,
         {
           default_price: price.id,
-        }
+        },
       );
 
       if (productUpdate) {

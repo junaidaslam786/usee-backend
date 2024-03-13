@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class CustomerLog extends Model {
     static associate(models) {
-        CustomerLog.belongsTo(models.user, { foreignKey: 'userId' });
+      CustomerLog.belongsTo(models.user, { foreignKey: 'userId' });
     }
   }
 
@@ -20,7 +20,7 @@ export default function (sequelize) {
       references: {
         model: 'users',
         key: 'id',
-      }
+      },
     },
     type: {
       type: DataTypes.STRING,

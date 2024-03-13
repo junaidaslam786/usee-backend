@@ -11,7 +11,7 @@ export default function (sequelize) {
       field: 'id',
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     appointmentId: {
       field: 'appointment_id',
@@ -19,8 +19,8 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'appointments',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     productId: {
       field: 'product_id',
@@ -28,23 +28,23 @@ export default function (sequelize) {
       onDelete: 'CASCADE',
       references: {
         model: 'products',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     interest: {
       field: 'interest',
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: false,
     },
     createdAt: {
       allowNull: false,
       field: 'created_at',
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
     },
     updatedAt: {
       allowNull: false,
       field: 'updated_at',
-      type: DataTypes.DATE
+      type: DataTypes.DATE,
     },
   }, {
     modelName: 'appointmentProduct',

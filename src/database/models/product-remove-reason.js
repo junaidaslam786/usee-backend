@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
-  class ProductRemoveReason extends Model {}
+  class ProductRemoveReason extends Model { }
 
   ProductRemoveReason.init({
     id: {
@@ -12,8 +12,8 @@ export default function (sequelize) {
       autoIncrement: true,
     },
     reason: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
   }, {
     modelName: 'productRemoveReason',
