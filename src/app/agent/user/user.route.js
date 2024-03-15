@@ -17,6 +17,7 @@ router.put('/update-sorting', isAuthenticated, validate(userValidations.updateAg
 router.get('/:id', isAuthenticated, userController.getAgentUser);
 router.delete('/:id', isAuthenticated, userController.deleteAgentUser);
 router.get('/:userId/subscriptions', isAuthenticated, userController.getUserSubscriptionDetails);
+router.put('/:userId/subscription', isAuthenticated, userController.updateUserSubscription);
 router.post('/:userId/subscribe', userController.associateUserToSubscriptionFeatures);
 router.get('/:userId/tokens', isAuthenticated, userController.getUserTokens);
 router.get('/:userId/token-transactions', isAuthenticated, userController.getUserTokenTransactions);

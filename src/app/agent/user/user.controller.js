@@ -164,6 +164,23 @@ export const getUserSubscriptionDetails = async (req, res, next) => {
   }
 };
 
+/**
+ * PUT /agent/user/:userId/subscription
+ * Update user subscription by user id
+ */
+export const updateUserSubscription = async (req, res, next) => {
+  try {
+    const result = await userService.updateUserSubscription(req.params?.userId, req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("updateUserSubscriptionError", err);
+    next(err);
+  }
+}
+
 export const associateUserToSubscriptionFeatures = async (req, res, next) => {
   try {
     const result = await userService.associateUserToSubscriptionFeatures(req.params?.userId, req.body, req);
@@ -171,7 +188,7 @@ export const associateUserToSubscriptionFeatures = async (req, res, next) => {
       return next(createError(400, result.message));
     }
 
-    return res.json({ success: true, message: "User subscribed successfully" });
+    return res.status(200).json(result);
   } catch (err) {
     console.log("associateUserToSubscriptionFeatures", err);
     next(err);

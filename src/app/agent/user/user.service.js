@@ -500,7 +500,7 @@ export const getUserSubscriptionDetails = async (userId, dbInstance) => {
         subscription_id: "35e0b998-53bc-4777-a207-261fff3489aa",
         status: "active",
       },
-      attributes: ["freeRemainingUnits", "paidRemainingUnits", "startDate", "endDate", "status"],
+      attributes: ["freeRemainingUnits", "paidRemainingUnits", "autoRenew", "autoRenewUnits", "startDate", "endDate", "status"],
       include: [
         {
           model: dbInstance.feature,
@@ -539,6 +539,37 @@ export const getUserSubscriptionDetails = async (userId, dbInstance) => {
   }
 };
 
+export const updateUserSubscription = async (userId, reqBody, req) => {
+  try {
+    const { user, dbInstance } = req;
+    const { subscriptionId, featureId, autoRenew, autoRenewUnits } = reqBody;
+
+    if (user.agent.agentType === AGENT_TYPE.STAFF) {
+      return { error: true, message: "You do not have permission to update subscription." };
+    } else if (!user || !dbInstance.user) {
+      throw new Error("Invalid User.");
+    }
+
+    // update user subscription fields based on subscriptionId and featureId
+    const userSubscription = await dbInstance.userSubscription.findOne({
+      where: { userId: user.id, subscriptionId, featureId },
+    });
+
+    if (!userSubscription) {
+      throw new Error(`No user subscription found for user ${user.id} and subscription ${subscriptionId}`);
+    } else {
+      userSubscription.autoRenew = autoRenew;
+      userSubscription.autoRenewUnits = autoRenewUnits;      
+      await userSubscription.save();
+    }
+
+    return { success: true, message: "Subscription updated successfully." };
+  } catch (e) {
+    console.log("updateUserSubscription", e);
+    return { error: true, generalError: "Server not responding, please try again later." };
+  }
+};
+
 export const associateUserToSubscriptionFeatures = async (userId, reqBody, req) => {
   try {
     const { user, dbInstance } = req;
@@ -561,47 +592,6 @@ export const associateUserToSubscriptionFeatures = async (userId, reqBody, req) 
   }
 };
 
-// export const addUserToSubscription = async (userId, subscriptionId, featureIds, dbInstance, transaction) => {
-//   try {
-//     const user = await dbInstance.user.findOne({ where: { id: userId } });
-//     if (!user) {
-//       return { error: true, message: "Invalid user id or user does not exist." };
-//     }
-
-//     const subscription = await dbInstance.subscription.findOne({ where: { id: subscriptionId } });
-//     if (!subscription) {
-//       return { error: true, message: "Invalid subscription id or subscription does not exist." };
-//     }
-
-//     const userSubscriptions = [];
-//     let results;
-//     for (const featureId of featureIds) {
-//       const feature = await dbInstance.feature.findOne({ where: { id: featureId } });
-//       if (!feature) {
-//         return { error: true, message: "Invalid feature id or feature do not exist." };
-//       }
-
-//       userSubscriptions.push({
-//         userId: user.id,
-//         subscriptionId: subscription.id,
-//         featureId: feature.id,
-//         freeRemainingUnits: feature.freeUnits,
-//         paidRemainingUnits: 0,
-//         status: "active",
-//         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-//       });
-//     }
-
-//     if (userSubscriptions?.length > 0) {
-//       results = await dbInstance.userSubscription.bulkCreate(userSubscriptions, { transaction });
-//     }
-
-//     return subscription;
-//   } catch (err) {
-//     console.log("addUserToSubscription", err);
-//     return { error: true, message: "Server not responding, please try again later." };
-//   }
-// };
 export const addUserToSubscription = async (userId, subscriptionId, featureIds, dbInstance, transaction) => {
   try {
     const user = await dbInstance.user.findOne({ where: { id: userId } });
@@ -638,6 +628,7 @@ export const addUserToSubscription = async (userId, subscriptionId, featureIds, 
           freeRemainingUnits: feature.freeUnits,
           paidRemainingUnits: 0,
           status: "active",
+          startDate: new Date(),
           endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
       }
