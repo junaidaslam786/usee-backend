@@ -54,8 +54,8 @@ export const createPropertyRules = [
       }
       return true;
     }),
-  body('postalCode').exists().withMessage('Please provide property postal code').notEmpty()
-    .withMessage('Please provide property postal code'),
+  // body('postalCode').exists().withMessage('Please provide property postal code').notEmpty()
+  //   .withMessage('Please provide property postal code'),
   body('region').exists().withMessage('Please provide property region').notEmpty()
     .withMessage('Please provide property region'),
   body('latitude').exists().withMessage('Please provide property latitude').notEmpty()
