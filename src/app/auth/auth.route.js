@@ -7,7 +7,9 @@ import * as authValidations from './auth.request';
 const router = Router();
 
 router.post('/login', validate(authValidations.loginRules), authController.login);
-router.post('/agent-onboarding', validate(authValidations.userOnboardingRules), authController.agentOnboarding);
+router.post('/agent-onboarding', validate(authValidations.agentOnboardingRules), authController.agentOnboarding);
+router.post('/customer-onboarding',
+  validate(authValidations.customerOnboardingRules), authController.customerOnboarding);
 router.post('/register-agent', validate(authValidations.registerAgentRules), authController.registerAgent);
 router.post('/register-customer', validate(authValidations.registerCustomerRules), authController.registerCustomer);
 router.get('/forgot-password', validate(authValidations.forgotPasswordRules), authController.forgotPassword);
