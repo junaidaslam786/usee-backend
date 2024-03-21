@@ -256,6 +256,85 @@ export const agentOnboarding = async (req, reqBody, dbInstance) => {
   }
 }
 
+export const customerOnboarding = async (req, reqBody, dbInstance) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      timezone
+    } = reqBody;
+
+    let selectedTimezone = process.env.APP_DEFAULT_TIMEZONE;
+    const result = await db.transaction(async (transaction) => {
+      if (timezone) {
+        const findTimezone = timezoneJson.find((tz) => tz.value === timezone);
+        if (findTimezone) {
+          selectedTimezone = findTimezone.value;
+        }
+      }
+
+      // Fetch user from the database
+      const user = await userService.getUserByEmail(email.toLowerCase());
+
+      // if user is found, update user fields from the reqBody
+      if (user) {
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.phoneNumber = phoneNumber;
+        user.password = password;
+        user.userType = USER_TYPE.CUSTOMER;
+        user.signupStep = reqBody?.signupStep ? reqBody.signupStep : 0;
+        user.otpCode = reqBody?.otpCode ? reqBody.otpCode : null;
+        user.otpExpiry = reqBody?.otpExpiry ? reqBody.otpExpiry : null;
+        user.timezone = selectedTimezone;
+        // user.cityName = cityName;
+        // user.countryName = countryName;
+        user.status = true;
+        user.otpVerified = true;
+        user.active = false;
+        await user.save({ transaction });
+      } else {
+        return { error: true, message: 'User not found!' }
+      }
+
+      // Generate and return tokens
+      const token = user.generateToken('4h');
+      // const refreshToken = user.generateToken('4h');
+
+      const returnedUserData = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        type: user.userTypeDisplay,
+        userType: user.userType,
+      };
+
+      const emailData = [];
+      emailData.name = user.fullName;
+      emailData.login = utilsHelper.generateUrl('customer-login', user.userType);
+      const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.REGISTER_CUSTOMER), emailData);
+      const payload = {
+        to: user.email,
+        subject: EMAIL_SUBJECT.REGISTER_CUSTOMER,
+        html: htmlData,
+      }
+      mailHelper.sendMail(payload);
+
+      return { user: returnedUserData, token };
+    });
+
+    return result;
+  } catch (err) {
+    console.log('registerAsCustomerError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
 export const registerAsAgent = async (req, reqBody, dbInstance) => {
   try {
     const { agent: agentTable, agentTimeSlot, agentAvailability } = dbInstance;
