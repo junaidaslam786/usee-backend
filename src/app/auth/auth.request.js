@@ -124,6 +124,10 @@ export const customerOnboardingRules = [
     if (value !== req.body.password) {
       throw new Error('Password and Confirm password should match');
     }
+
+    // Indicates the success of this synchronous custom validator
+    return true;
+  }),
 ];
 
 export const registerAgentRules = [
