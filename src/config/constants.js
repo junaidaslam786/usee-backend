@@ -7,6 +7,7 @@ export const PRODUCT_STATUS = {
   INACTIVE: 'inactive',
   UNDER_OFFER: 'under_offer',
   SOLD: 'sold',
+  RENTED: 'rented',
   REMOVED: 'removed',
 };
 

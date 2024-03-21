@@ -768,7 +768,8 @@ export const processUpdateOffer = async (offer, dbInstance, status, reason) => {
       await offer.save({ transaction });
 
       if (product && status === OFFER_STATUS.ACCEPTED) {
-        product.status = PRODUCT_STATUS.UNDER_OFFER;
+        const index = product.productMetaTags.findIndex(category => category.categoryField.id === 2)
+        product.status = product.productMetaTags[index].value === 'rent' ? PRODUCT_STATUS.RENTED : PRODUCT_STATUS.SOLD;
         await product.save();
       }
 
@@ -1589,72 +1590,6 @@ export const listHomePageProperties = async (reqBody, req) => {
     return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
-
-// export const listHomePageProperties2 = async (reqBody, req) => {
-//   try {
-//     const whereClause = req?.query?.agentId ? {
-//       status: PRODUCT_STATUS.ACTIVE,
-//       categoryId: PRODUCT_CATEGORIES.PROPERTY,
-//       [OP.or]: [
-//         { userId: req.query.agentId },
-//         { id: { [OP.in]: literal(`(select product_id from product_allocations where user_id = '${req.query.agentId}')`) } }
-//       ]
-//     } : {
-//       status: PRODUCT_STATUS.ACTIVE,
-//       categoryId: PRODUCT_CATEGORIES.PROPERTY,
-//     };
-
-//     // Construct SQL query to filter products based on category fields
-//     const sqlQuery = `
-//       SELECT p.*, 
-//              pm.value AS fieldValue,
-//              cf.label AS fieldLabel
-//       FROM products p
-//       LEFT JOIN product_meta_tags pm ON p.id = pm.productId
-//       LEFT JOIN category_fields cf ON pm.key = cf.id
-//       WHERE ${literal(whereClause)}
-//       ORDER BY p.id DESC
-//     `;
-
-//     // Execute the SQL query
-//     const filteredProducts = await req.dbInstance.query(sqlQuery, { type: req.dbInstance.Sequelize.QueryTypes.SELECT });
-
-//     // Filter products based on category fields and other criteria
-//     const paginatedArr = filteredProducts.filter(product => {
-//       // Add if checks based on category fields
-//       switch (product.fieldLabel) {
-//         case 'Layout':
-//           if (reqBody.layout && reqBody.layout !== product.fieldValue) {
-//             return false;
-//           }
-//           break;
-//         case 'Conference Room':
-//           if (reqBody.conferenceRoom && reqBody.conferenceRoom !== product.fieldValue) {
-//             return false;
-//           }
-//           break;
-//         // Add more cases for other category fields as needed
-//       }
-
-//       // Add other filters here as before
-
-//       return true; // Include product in result if it passes all checks
-//     });
-
-//     // Apply sorting and pagination logic
-
-//     return {
-//       data: paginatedArr,
-//       page: page,
-//       size: perPage,
-//       totalPage: totalPages,
-//       totalItems: paginatedArr.length,
-//     };
-//   } catch (err) {
-//     console.log('listActivePropertiesServiceError', err);
-//     return { error: true, message: 'Server not responding, please try again later.' };
-//   }
-// };
 
 export const deleteCustomerOffer = async (offerId, req) => {
   try {
