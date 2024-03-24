@@ -294,7 +294,7 @@ app.get('/auth/facebook/callback', async (req, res) => {
           const token = await user.generateToken('4h', agent);
           const refreshToken = await user.generateToken('4h');
 
-          res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+          res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=${state}`);
         }).catch((error) => {
           // eslint-disable-next-line no-console
           console.error(error);
@@ -399,7 +399,7 @@ app.get('/auth/twitter/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=${state}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
@@ -562,7 +562,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=${state}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Failed to authenticate user' });
@@ -680,7 +680,7 @@ app.get('/auth/google/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=${state}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to authenticate user' });
@@ -788,7 +788,7 @@ app.post('/auth/microsoft/callback', async (req, res) => {
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
-    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=agent`);
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=${state}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Microsoft authentication failure' });
