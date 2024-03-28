@@ -1,10 +1,10 @@
 import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
-  class BookDemo extends Model {
+  class ContactUs extends Model {
   }
 
-  BookDemo.init({
+  ContactUs.init({
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -16,6 +16,9 @@ export default function (sequelize) {
       type: DataTypes.STRING,
     },
     email: {
+      type: DataTypes.STRING,
+    },
+    subject: {
       type: DataTypes.STRING,
     },
     jobTitle: {
@@ -30,26 +33,26 @@ export default function (sequelize) {
       type: DataTypes.TEXT,
     },
   }, {
-    modelName: 'bookDemo',
-    tableName: 'book_demo',
+    modelName: 'contactUs',
+    tableName: 'contact_us',
     sequelize,
     updatedAt: false,
   });
 
   // eslint-disable-next-line no-unused-vars
-  BookDemo.addHook('beforeSave', async (instance) => {
+  ContactUs.addHook('beforeSave', async (instance) => {
     //
   });
 
   // eslint-disable-next-line no-unused-vars
-  BookDemo.addHook('afterCreate', (instance) => {
+  ContactUs.addHook('afterCreate', (instance) => {
     //
   });
 
   // eslint-disable-next-line no-unused-vars
-  BookDemo.addHook('afterDestroy', (instance) => {
+  ContactUs.addHook('afterDestroy', (instance) => {
     //
   });
 
-  return BookDemo;
+  return ContactUs;
 }

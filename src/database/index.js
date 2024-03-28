@@ -11,6 +11,7 @@ import cmsCommunity from './models/cms-community';
 import cmsCommunityPost from './models/cms-community-post';
 import cmsCommunityPostComment from './models/cms-community-post-comment';
 import cmsCommunityCategoryField from './models/cms-community-category-field';
+import contactUs from './models/contact-us';
 import agentAvailabilityModel from './models/agent-availability';
 import agentBranchModel from './models/agent-branch';
 import agentTimeSlotModel from './models/agent-time-slot';
@@ -69,6 +70,7 @@ const modelDefiners = [
   cmsCommunityPost,
   cmsCommunityPostComment,
   cmsCommunityCategoryField,
+  contactUs,
   agentAvailabilityModel,
   agentBranchModel,
   agentTimeSlotModel,

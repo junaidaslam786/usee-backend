@@ -1,46 +1,92 @@
 import { mailHelper } from '@/helpers';
 import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT } from '@/config/constants';
-const path = require("path")
-const ejs = require("ejs");
+
+const path = require('path');
+const ejs = require('ejs');
 
 export const bookDemo = async (reqBody, req) => {
-    try {
-        const { 
-            name,
-            email,
-            jobTitle,
-            phoneNumber,
-            message
-        } = reqBody;
+  try {
+    const {
+      name,
+      email,
+      jobTitle,
+      phoneNumber,
+      message,
+    } = reqBody;
 
-        const { dbInstance } = req;
-      
-        await dbInstance.bookDemo.create({
-            name,
-            email,
-            jobTitle,
-            phoneNumber,
-            message
-        });
+    const { dbInstance } = req;
 
-        const emailData = [];
-        emailData.name = name;
-        emailData.email = email;
-        emailData.jobTitle = jobTitle;
-        emailData.phoneNumber = phoneNumber;
-        emailData.message = message;
-        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.BOOK_DEMO), emailData);
+    await dbInstance.bookDemo.create({
+      name,
+      email,
+      jobTitle,
+      phoneNumber,
+      message,
+    });
 
-        const payload = {
-            to: process.env.DEFAULT_REPLY_SENDER,
-            subject: EMAIL_SUBJECT.BOOK_DEMO,
-            html: htmlData,
-        }
-        mailHelper.sendMail(payload);
+    const emailData = [];
+    emailData.name = name;
+    emailData.email = email;
+    emailData.jobTitle = jobTitle;
+    emailData.phoneNumber = phoneNumber;
+    emailData.message = message;
+    const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.BOOK_DEMO), emailData);
 
-        return true;
-    } catch(err) {
-        console.log('bookDemoServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
-    }
-}
+    const payload = {
+      to: process.env.DEFAULT_REPLY_SENDER,
+      subject: EMAIL_SUBJECT.BOOK_DEMO,
+      html: htmlData,
+    };
+    mailHelper.sendMail(payload);
+
+    return true;
+  } catch (err) {
+    console.log('bookDemoServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};
+
+export const contactUs = async (reqBody, req) => {
+  try {
+    const {
+      name,
+      email,
+      subject,
+      jobTitle,
+      phoneNumber,
+      message,
+    } = reqBody;
+
+    const { dbInstance } = req;
+
+    await dbInstance.contactUs.create({
+      name,
+      email,
+      subject,
+      jobTitle,
+      phoneNumber,
+      message,
+    });
+
+    // const emailData = [];
+    // emailData.name = name;
+    // emailData.email = email;
+    // emailData.subject = subject;
+    // emailData.jobTitle = jobTitle;
+    // emailData.phoneNumber = phoneNumber;
+    // emailData.message = message;
+    // const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CONTACT_US), emailData);
+
+    // const payload = {
+    //   to: process.env.DEFAULT_REPLY_SENDER,
+    //   subject: EMAIL_SUBJECT.CONTACT_US,
+    //   html: htmlData,
+    // };
+    // mailHelper.sendMail(payload);
+
+    return true;
+  } catch (err) {
+    console.log('saveContactUsInfoServiceError', err);
+    return { error: true, message: 'Server not responding, please try again later.' };
+  }
+};

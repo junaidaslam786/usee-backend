@@ -30,3 +30,21 @@ export const bookDemo = async (req, res, next) => {
       return next(err);
     }
 };
+
+/**
+ *  POST /home/contact-us
+ *  Save contact us information of the user
+ */
+ export const contactUs = async (req, res, next) => {
+    try {
+      const result = await homeService.contactUs(req.body, req);
+      if (result?.error && result?.message) {
+        return next(createError(400, result.message));
+      }
+  
+      return res.json({ success: true, message: "Contact us information saved successfully" });
+    } catch (err) {
+      console.log('saveContactUsInfoError', err);
+      return next(err);
+    }
+};
