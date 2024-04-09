@@ -30,7 +30,7 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
     };
 
     whereClause.status = {
-      [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.PENDING]
+      [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.PENDING, APPOINTMENT_STATUS.EXPIRED]
     };
 
     if (appointmentType === APPOINTMENT_TYPES.COMPLETED) {
@@ -39,6 +39,10 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
 
     if (appointmentType === APPOINTMENT_TYPES.CANCELLED) {
       whereClause.status = APPOINTMENT_STATUS.CANCELLED;
+    }
+
+    if (appointmentType === APPOINTMENT_TYPES.EXPIRED) {
+      whereClause.status = APPOINTMENT_STATUS.EXPIRED;
     }
 
     if (reqBody?.filter) {

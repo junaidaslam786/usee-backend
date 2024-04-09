@@ -120,6 +120,7 @@ export const EMAIL_SUBJECT = {
   OFFER: 'Customer has made an offer to the property',
   OFFER_UPDATE: 'Trader has made an update on your offer',
   JOIN_APPOINTMENT: 'Usee-360 Appointment',
+  UPCOMING_APPOINTMENT: 'Usee-360 Appointment Reminder',
   BOOK_DEMO: 'Usee-360 Demo',
   SNAGLIST_UPDATE: 'Trader has made an update in the snaglist',
   SNAGLIST_APPROVE: 'Trader has approved the snaglist',
@@ -142,6 +143,8 @@ export const EMAIL_TEMPLATE_PATH = {
   WISHLIST_REMOVE: 'email-template/wishlist-remove.ejs',
   OFFER: 'email-template/property-offer.ejs',
   OFFER_UPDATE: 'email-template/property-offer-update.ejs',
+  CUSTOMER_UPCOMING_APPOINTMENT: 'email-template/customer-upcoming-appointment.ejs',
+  AGENT_UPCOMING_APPOINTMENT: 'email-template/agent-upcoming-appointment.ejs',
   CUSTOMER_JOIN_AGENT_APPOINTMENT: 'email-template/customer-join-agent-appointment.ejs',
   AGENT_JOIN_AGENT_APPOINTMENT: 'email-template/agent-join-agent-appointment.ejs',
   ALLOTED_AGENT_JOIN_AGENT_APPOINTMENT: 'email-template/alloted-agent-join-agent-appointment.ejs',
@@ -169,6 +172,7 @@ export const APPOINTMENT_STATUS = {
   INPROGRESS: 'inprogress',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  EXPIRED: 'expired',
 };
 
 export const APPOINTMENT_LOG_TYPE = {

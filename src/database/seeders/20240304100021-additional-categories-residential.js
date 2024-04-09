@@ -69,7 +69,7 @@ module.exports = {
         category_id: 1,
         label: 'Parking Option',
         type: 'select',
-        options: 'Garage/Carport,Street Parking',
+        options: 'Garage,Carport,Street Parking',
         required: false,
         order: 54,
       });
