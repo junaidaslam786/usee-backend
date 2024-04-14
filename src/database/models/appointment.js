@@ -193,13 +193,13 @@ export default function (sequelize) {
     const { appointmentDate } = instance;
     const startTime = utilsHelper.convertGmtToTime(instance.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
     const startTimeMoment = moment(startTime, 'HH:mm').tz('UTC'); // Parse in UTC
-    const fifteenMinutesBeforeStartTime = startTimeMoment.subtract(15, 'minutes');
+    const thirtyMinutesBeforeStartTime = startTimeMoment.subtract(30, 'minutes');
     console.log('appointmentDate: ', appointmentDate);
     console.log('startTime: ', startTime);
     console.log('startTimeMoment: ', startTimeMoment);
-    console.log('fifteenMinutesBeforeStartTime: ', fifteenMinutesBeforeStartTime);
+    console.log('thirtyMinutesBeforeStartTime: ', thirtyMinutesBeforeStartTime);
 
-    const cronExpression = calculateCronExpression(appointmentDate, fifteenMinutesBeforeStartTime);
+    const cronExpression = calculateCronExpression(appointmentDate, thirtyMinutesBeforeStartTime);
     console.log('CE: ', cronExpression);
 
     if (instance.isNewRecord) {
