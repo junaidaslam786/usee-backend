@@ -5,7 +5,7 @@ import OpenTok from 'opentok';
 export const getSessionId = async (userId) => {
   try {
     return new Promise(resolve => {
-      const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
+      const opentok = new OpenTok(process.env.OPENTOK_API_KEY, process.env.OPENTOK_API_SECRET);
       opentok.createSession({ mediaMode: 'routed', archiveMode: "always", archiveName: "usee360_call"+userId.substr(userId.length - 6) }, (error, session) => {
         if (error) {
           resolve(false);
@@ -21,7 +21,7 @@ export const getSessionId = async (userId) => {
 
 export const getSessionEntryToken = async (user, role, sessionId) => {
   try {
-    const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
+    const opentok = new OpenTok(process.env.OPENTOK_API_KEY, process.env.OPENTOK_API_SECRET);
     const timestamp = Math.floor(new Date().getTime() / 1000);
     const tokenOptions = {
       role: role || 'publisher',
@@ -41,19 +41,19 @@ export const generateJwt = () => {
   const exp = now + (60 * 60); // Token valid for 1 hour
 
   const payload = {
-    iss: process.env.OPENTOK_APIKEY,
+    iss: process.env.OPENTOK_API_KEY,
     ist: 'project',
     iat: now,
     exp: exp
   };
 
-  return jwt.sign(payload, process.env.OPENTOK_APISECRET);
+  return jwt.sign(payload, process.env.OPENTOK_API_SECRET);
 };
 
 export const getSessionDetails = async (sessionId) => {
   try {
     return new Promise(resolve => {
-      const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
+      const opentok = new OpenTok(process.env.OPENTOK_API_KEY, process.env.OPENTOK_API_SECRET);
       opentok.listArchives({ offset: 0, count: 5 }, function(err, archives, count) {
         if (err) return res.send(500, 'Could not list archives. error=' + err.message);
         resolve({ archives: archives, count: count });
@@ -87,7 +87,7 @@ export const getSessionDetails = async (sessionId) => {
 export const downloadArchive = async (archiveId) => {
   try {
     return new Promise(resolve => {
-      const opentok = new OpenTok(process.env.OPENTOK_APIKEY, process.env.OPENTOK_APISECRET);
+      const opentok = new OpenTok(process.env.OPENTOK_API_KEY, process.env.OPENTOK_API_SECRET);
       opentok.getArchive(archiveId, (error, archive) => {
         if (error) {
           console.log(error);

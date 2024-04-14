@@ -41,7 +41,7 @@ import superAdminReportsRouter from '../app/superAdmin/reports/reports.route';
 import superAdminSearchRouter from '../app/superAdmin/search/search.route';
 import superAdminSubscriptionRouter from '../app/superAdmin/subscription/subscription.route';
 import superAdminTokenRouter from '../app/superAdmin/token/token.route';
-import superAdminUserRouter from '../app/superAdmin/user/user.route'
+import superAdminUserRouter from '../app/superAdmin/user/user.route';
 
 // Admin Routes
 import adminAgentRouter from '../app/admin/agent/user/user.route';

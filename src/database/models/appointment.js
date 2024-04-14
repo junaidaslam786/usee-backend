@@ -14,6 +14,21 @@ const cron = require('node-cron');
 const moment = require('moment-timezone');
 const path = require("path")
 const ejs = require("ejs");
+const { Auth } = require('@vonage/auth');
+const { Vonage } = require('@vonage/server-sdk');
+
+const credentials = new Auth({
+  apiKey: process.env.VONAGE_API_KEY,
+  apiSecret: process.env.VONAGE_API_SECRET,
+});
+const options = {};
+const vonage = new Vonage(credentials, options);
+
+async function sendSMS(to, from, text) {
+  await vonage.sms.send({to, from, text})
+      .then(resp => { console.log('Message sent successfully'); console.log(resp); })
+      .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
+}
 
 export default function (sequelize) {
   class Appointment extends Model {
@@ -184,13 +199,17 @@ export default function (sequelize) {
     console.log('startTimeMoment: ', startTimeMoment);
     console.log('fifteenMinutesBeforeStartTime: ', fifteenMinutesBeforeStartTime);
 
-    const cronExpression = calculateCronExpression(appointmentDate, thirtyMinutesBeforeStartTime);
+    const cronExpression = calculateCronExpression(appointmentDate, fifteenMinutesBeforeStartTime);
     console.log('CE: ', cronExpression);
 
     if (instance.isNewRecord) {
       console.log('New record');
     } else {
       console.log('Old record');
+
+      // ** SEND CUSTOMER SMS ** //
+      const smsText = `Your appointment is scheduled on ${appointmentDate} at ${startTime} ${customerDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/customer`;
+      await sendSMS(customerDetails.phoneNumber, 'USEE360', smsText);
 
       // ** SEND CUSTOMER EMAIL ** //
       const scheduledJob = cron.schedule(cronExpression, async () => {
@@ -230,6 +249,15 @@ export default function (sequelize) {
       });
       console.log('Scheduled job(Customer): ', scheduledJob);
       console.log('  =>', scheduledJob.options.name);
+
+      // ** SEND AGENT SMS ** //
+      if (allotedAgentUser) {
+        const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${allotedAgentUser.user.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/agent`;
+        await sendSMS(allotedAgentUser.user.phoneNumber, 'USEE360', agentSmsText);
+      } else {
+        const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${agentDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/agent`;
+        await sendSMS(agentDetails.phoneNumber, 'USEE360', agentSmsText);
+      }
 
       // ** SEND AGENT EMAIL ** //
       const scheduledJob2 = cron.schedule(cronExpression, async () => {
@@ -281,7 +309,6 @@ export default function (sequelize) {
   // eslint-disable-next-line no-unused-vars
   Appointment.addHook('afterCreate', (instance) => {
     //
-    console.log('Appointment created: ', instance);
   });
 
   Appointment.addHook('beforeDestroy', async (instance) => {

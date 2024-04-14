@@ -14,6 +14,21 @@ import {
 } from '@/config/constants';
 const path = require("path")
 const ejs = require("ejs");
+const { Auth } = require('@vonage/auth');
+const { Vonage } = require('@vonage/server-sdk');
+
+const credentials = new Auth({
+  apiKey: process.env.VONAGE_API_KEY,
+  apiSecret: process.env.VONAGE_API_SECRET,
+});
+const options = {};
+const vonage = new Vonage(credentials, options);
+
+async function sendSMS(to, from, text) {
+  await vonage.sms.send({to, from, text})
+      .then(resp => { console.log('Message sent successfully'); console.log(resp); })
+      .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
+}
 
 export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
   try {
@@ -254,6 +269,12 @@ export const createAppointment = async (req, dbInstance) => {
         }
       }
 
+      // send customer SMS
+      const from = 'USEE360';
+      const customerPhoneNumber = customerDetails.phoneNumber.replace(/^\+/, '');
+      const customerText = 'Hello, your appointment has been scheduled.';
+      await sendSMS(customerPhoneNumber, from, customerText);
+
       // send customer email
       const emailData = [];
       emailData.date = appointmentDate;
@@ -273,6 +294,11 @@ export const createAppointment = async (req, dbInstance) => {
         html: htmlData,
       }
       mailHelper.sendMail(payload);
+
+      // send agent sms
+      const agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber.replace(/^\+/, '') : req.user.phoneNumber.replace(/^\+/, '');
+      const agentText = `Hello , your appointment has been scheduled.`;
+      await sendSMS(agentPhoneNumber, from, agentText);
 
       // send agent email
       const agentEmailData = [];
