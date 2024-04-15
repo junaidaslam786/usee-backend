@@ -48,6 +48,10 @@ export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
       [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.PENDING, APPOINTMENT_STATUS.EXPIRED]
     };
 
+    if (appointmentType === APPOINTMENT_TYPES.UPCOMING) {
+      whereClause.status = APPOINTMENT_STATUS.PENDING;
+    }
+
     if (appointmentType === APPOINTMENT_TYPES.COMPLETED) {
       whereClause.status = APPOINTMENT_STATUS.COMPLETED;
     }
