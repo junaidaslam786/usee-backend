@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import path from 'path'
+import path from 'path';
 
 const {
   DB_HOST, DB_PORT = 5432, DB_NAME, DB_USER, DB_PASSWORD,
@@ -15,7 +15,7 @@ const defaultConfig = {
   port: Number(DB_PORT),
   define: {
     underscored: true,
-    raw: true
+    raw: true,
   },
   seederStorage: 'sequelize',
   migrationStorage: 'sequelize',

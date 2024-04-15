@@ -12,6 +12,9 @@ import {
   APPOINTMENT_TYPES,
   DASHBOARD_FILTER
 } from '@/config/constants';
+
+const cron = require('node-cron');
+const moment = require('moment-timezone');
 const path = require("path")
 const ejs = require("ejs");
 const { Auth } = require('@vonage/auth');
@@ -25,9 +28,20 @@ const options = {};
 const vonage = new Vonage(credentials, options);
 
 async function sendSMS(to, from, text) {
-  await vonage.sms.send({to, from, text})
-      .then(resp => { console.log('Message sent successfully'); console.log(resp); })
-      .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
+  await vonage.sms.send({ to, from, text })
+    .then(resp => { console.log('Message sent successfully'); console.log(resp); })
+    .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
+}
+
+function calculateCronExpression(date, startTime) {
+  const targetMinute = moment(startTime, 'HH:mm').format('mm'); // Extract minute from start time
+  const targetHour = moment(startTime, 'HH:mm').format('HH'); // Extract hour from start time
+  const targetDay = moment(date).format('D'); // Day of the month
+  const targetDayOfWeek = moment(date).format('d'); // Day of the week (0-indexed)
+  const targetMonth = moment(date).format('M'); // Month (1-indexed)
+
+  // Runs once at the specified time on the appointment date
+  return `${targetMinute} ${targetHour} ${targetDay} ${targetMonth} ${targetDayOfWeek}`;
 }
 
 export const listAppointments = async (agentInfo, reqBody, dbInstance) => {
@@ -299,7 +313,7 @@ export const createAppointment = async (req, dbInstance) => {
       }
       mailHelper.sendMail(payload);
 
-      // send agent sms
+      // send agent SMS
       const agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber.replace(/^\+/, '') : req.user.phoneNumber.replace(/^\+/, '');
       const agentText = `Hello , your appointment has been scheduled.`;
       await sendSMS(agentPhoneNumber, from, agentText);
@@ -324,6 +338,153 @@ export const createAppointment = async (req, dbInstance) => {
         html: agentEmailHtmlData,
       }
       mailHelper.sendMail(agentEmailPayload);
+
+      // Schedule cron job to send reminder SMS and email 30 minutes before the call
+      const startTime = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
+      const startTimeMoment = moment(startTime, 'HH:mm').tz('UTC'); // Parse in UTC
+      const thirtyMinutesBeforeStartTime = startTimeMoment.subtract(30, 'minutes');
+      console.log('appointmentDate: ', appointmentDate);
+      console.log('startTime: ', startTime);
+      console.log('startTimeMoment: ', startTimeMoment);
+      console.log('thirtyMinutesBeforeStartTime: ', thirtyMinutesBeforeStartTime);
+
+      const cronExpression = calculateCronExpression(appointmentDate, thirtyMinutesBeforeStartTime);
+      console.log('CE: ', cronExpression);
+
+      const scheduledJob = cron.schedule(cronExpression, async () => {
+        // ** SEND CUSTOMER SMS ** //
+        const smsText = `Your appointment is scheduled on ${appointmentDate} at ${startTime} ${customerDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
+        console.log(smsText);
+        await sendSMS(customerDetails.phoneNumber, 'USEE360', smsText);
+
+        // ** SEND CUSTOMER EMAIL ** //
+        const emailData = [];
+        emailData.date = appointmentDate;
+        emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
+        emailData.timezone = customerDetails.timezone;
+        emailData.products = [];
+        emailData.allotedAgent = allotedAgentUser?.user?.firstName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : `${req.user.firstName} ${req.user.lastName}`;
+        emailData.companyName = req.user.companyName ? req.user.companyName : "";
+        emailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
+        emailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;
+        emailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
+        emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
+        emailData.contactEmail = process.env.CONTACT_EMAIL;
+        emailData.appUrl = process.env.APP_URL;
+        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CUSTOMER_UPCOMING_APPOINTMENT), emailData);
+        const payload = {
+          to: customerDetails.email,
+          subject: EMAIL_SUBJECT.UPCOMING_APPOINTMENT,
+          html: htmlData,
+        }
+        mailHelper.sendMail(payload);
+      }, {
+        scheduled: true, // Set the scheduled option for one-time execution
+        timezone: customerDetails.timezone,
+      });
+      console.log('Scheduled job(Customer): ', scheduledJob);
+
+      if (scheduledJob) {
+        appointment.scheduledJobCustomer = scheduledJob.options.name;
+        await appointment.save();
+      }
+
+      const startTime2 = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
+      const startTimeMoment2 = moment(startTime2, 'HH:mm').tz('UTC'); // Parse in UTC
+      const thirtyMinutesBeforeStartTime2 = startTimeMoment2.subtract(30, 'minutes');
+      console.log('appointmentDate: ', appointmentDate);
+      console.log('startTime: ', startTime2);
+      console.log('startTimeMoment: ', startTimeMoment2);
+      console.log('thirtyMinutesBeforeStartTime: ', thirtyMinutesBeforeStartTime2);
+
+      const cronExpression2 = calculateCronExpression(appointmentDate, thirtyMinutesBeforeStartTime);
+      console.log('CE: ', cronExpression2);
+
+      const scheduledJob2 = cron.schedule(cronExpression2, async () => {
+        // ** SEND AGENT SMS ** //
+        if (allotedAgentUser) {
+          const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${allotedAgentUser.user.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+          console.log(agentSmsText);
+          await sendSMS(allotedAgentUser.user.phoneNumber, 'USEE360', agentSmsText);
+        } else {
+          const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${req.user.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+          console.log(agentSmsText);
+          await sendSMS(req.user.phoneNumber, 'USEE360', agentSmsText);
+        }
+
+        // ** SEND AGENT EMAIL ** //
+        const agentEmailData = [];
+        agentEmailData.date = appointmentDate;
+        agentEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
+        agentEmailData.timezone = allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone;
+        agentEmailData.products = [];
+        agentEmailData.allotedAgent = allotedAgentUser?.user?.firstName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : `${req.user.firstName} ${req.user.lastName}`;
+        agentEmailData.companyName = req.user.companyName ? req.user.companyName : "";
+        agentEmailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
+        agentEmailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;
+        agentEmailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
+        agentEmailData.customer = customerDetails.fullName;
+        agentEmailData.customerImage = customerDetails.profileImage;
+        agentEmailData.customerPhoneNumber = customerDetails.phoneNumber;
+        agentEmailData.customerEmail = customerDetails.email;
+        agentEmailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+        agentEmailData.contactEmail = process.env.CONTACT_EMAIL;
+        agentEmailData.appUrl = process.env.APP_URL;
+
+        const agentEmailHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, (allotedAgentUser ? EMAIL_TEMPLATE_PATH.AGENT_UPCOMING_APPOINTMENT : EMAIL_TEMPLATE_PATH.AGENT_UPCOMING_APPOINTMENT)), agentEmailData);
+        const agentEmailPayload = {
+          to: allotedAgentUser ? allotedAgentUser.user.email : req.user.email,
+          subject: EMAIL_SUBJECT.UPCOMING_APPOINTMENT,
+          html: agentEmailHtmlData,
+        }
+        mailHelper.sendMail(agentEmailPayload);
+      }, {
+        scheduled: true, // Set the scheduled option for one-time execution
+        timezone: allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone,
+      });
+      console.log('Scheduled job(Agent): ', scheduledJob2);
+
+      if (scheduledJob2) {
+        appointment.scheduledJobAgent = scheduledJob2.options.name;
+        await appointment.save();
+      }
+
+      // Schedule cron job to update appointment status to 'expired' after 30 minutes when no one joins
+      const startTime3 = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
+      const startTimeMoment3 = moment(startTime3, 'HH:mm').tz('UTC'); // Parse in UTC
+      const thirtyMinutesAfterStartTime = startTimeMoment3.subtract(30, 'minutes');
+      console.log('startTime: ', startTime3);
+      console.log('startTimeMoment: ', startTimeMoment3);
+      console.log('thirtyMinutesAfterStartTime: ', thirtyMinutesAfterStartTime);
+
+      const cronExpression3 = calculateCronExpression(appointmentDate, thirtyMinutesAfterStartTime);
+      console.log('CE: ', cronExpression3);
+
+      const scheduledJob3 = cron.schedule(cronExpression3, async () => {
+        const appoinmentLatest = await dbInstance.appointment.findOne({
+          where: {
+            id: appointment.id,
+            status: 'pending'
+          }
+        });
+        if (appoinmentLatest) {
+          await dbInstance.appointment.update({
+            status: 'expired'
+          }, {
+            where: {
+              id: appointment.id,
+              status: 'pending'
+            }
+          });
+          console.log('Appointment status updated to expired');
+        } else {
+          console.log('Appointment status was not updated');
+        }
+      }, {
+        scheduled: true, // Set the scheduled option for one-time execution
+        timezone: allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone,
+      });
+      console.log('Scheduled job(Expired): ', scheduledJob3);
 
       return appointment;
     });
