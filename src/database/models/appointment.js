@@ -25,9 +25,9 @@ const options = {};
 const vonage = new Vonage(credentials, options);
 
 async function sendSMS(to, from, text) {
-  await vonage.sms.send({to, from, text})
-      .then(resp => { console.log('Message sent successfully'); console.log(resp); })
-      .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
+  await vonage.sms.send({ to, from, text })
+    .then(resp => { console.log('Message sent successfully'); console.log(resp); })
+    .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
 }
 
 export default function (sequelize) {
@@ -204,15 +204,14 @@ export default function (sequelize) {
 
     if (instance.isNewRecord) {
       console.log('New record');
-    } else {
-      console.log('Old record');
 
-      // ** SEND CUSTOMER SMS ** //
-      const smsText = `Your appointment is scheduled on ${appointmentDate} at ${startTime} ${customerDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/customer`;
-      await sendSMS(customerDetails.phoneNumber, 'USEE360', smsText);
-
-      // ** SEND CUSTOMER EMAIL ** //
       const scheduledJob = cron.schedule(cronExpression, async () => {
+        // ** SEND CUSTOMER SMS ** //
+        const smsText = `Your appointment is scheduled on ${appointmentDate} at ${startTime} ${customerDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/customer`;
+        console.log(smsText);
+        await sendSMS(customerDetails.phoneNumber, 'USEE360', smsText);
+
+        // ** SEND CUSTOMER EMAIL ** //
         const emailData = [];
         emailData.date = appointmentDate;
         emailData.time = utilsHelper.convertGmtToTime(instance.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
@@ -233,34 +232,26 @@ export default function (sequelize) {
           html: htmlData,
         }
         mailHelper.sendMail(payload);
-        // Assuming instance.scheduledJob is an array
-        // if (!Array.isArray(instance.scheduledJobCustomer)) {
-        //   instance.scheduledJobCustomer = instance.scheduledJobCustomer ? [instance.scheduledJobCustomer] : [];
-        // }
-
-        // instance.scheduledJobCustomer.unshift(scheduledJob.options.name);
-        // instance.scheduledJobCustomer = instance.scheduledJobCustomer.join(',');
-        instance.scheduledJobCustomer = scheduledJob.options.name;
-        console.log('Scheduled job(Customer): ', instance.scheduledJobCustomer);
-
       }, {
         scheduled: true, // Set the scheduled option for one-time execution
         timezone: customerDetails.timezone,
       });
       console.log('Scheduled job(Customer): ', scheduledJob);
-      console.log('  =>', scheduledJob.options.name);
+      instance.scheduledJobCustomer = scheduledJob.options.name;
 
-      // ** SEND AGENT SMS ** //
-      if (allotedAgentUser) {
-        const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${allotedAgentUser.user.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/agent`;
-        await sendSMS(allotedAgentUser.user.phoneNumber, 'USEE360', agentSmsText);
-      } else {
-        const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${agentDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/agent`;
-        await sendSMS(agentDetails.phoneNumber, 'USEE360', agentSmsText);
-      }
-
-      // ** SEND AGENT EMAIL ** //
       const scheduledJob2 = cron.schedule(cronExpression, async () => {
+        // ** SEND AGENT SMS ** //
+        if (allotedAgentUser) {
+          const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${allotedAgentUser.user.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/agent`;
+          console.log(agentSmsText);
+          await sendSMS(allotedAgentUser.user.phoneNumber, 'USEE360', agentSmsText);
+        } else {
+          const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${agentDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${instance.id}/agent`;
+          console.log(agentSmsText);
+          await sendSMS(agentDetails.phoneNumber, 'USEE360', agentSmsText);
+        }
+
+        // ** SEND AGENT EMAIL ** //
         const agentEmailData = [];
         agentEmailData.date = appointmentDate;
         agentEmailData.time = utilsHelper.convertGmtToTime(instance.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : agentDetails.timezone), "HH:mm");
@@ -286,23 +277,15 @@ export default function (sequelize) {
           html: agentEmailHtmlData,
         }
         mailHelper.sendMail(agentEmailPayload);
-        // Optionally store the scheduled job reference for cancellation (see later)
-        // Assuming instance.scheduledJob is an array
-        // if (!Array.isArray(instance.scheduledJobAgent)) {
-        //   instance.scheduledJobAgent = instance.scheduledJobAgent ? [instance.scheduledJobAgent] : [];
-        // }
-
-        // instance.scheduledJobAgent.unshift(scheduledJob2.options.name);
-        // instance.scheduledJobAgent = instance.scheduledJobAgent.join(',');
-        instance.scheduledJobAgent = scheduledJob2.options.name;
-        console.log('Scheduled job(Agent): ', instance.scheduledJobAgent);
-
       }, {
         scheduled: true, // Set the scheduled option for one-time execution
         timezone: allotedAgentUser ? allotedAgentUser.user.timezone : agentDetails.timezone,
       });
+
       console.log('Scheduled job(Agent): ', scheduledJob2);
-      console.log('  =>', scheduledJob2.options.name);
+      instance.scheduledJobAgent = scheduledJob2.options.name;
+    } else {
+      console.log('Old record');
     }
   });
 

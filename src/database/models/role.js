@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class Role extends Model {
     static associate(models) {
-        Role.belongsToMany(models.permission, { through: 'role_permissions', updatedAt: false, unique: false });
+      Role.belongsToMany(models.permission, { through: 'role_permissions', updatedAt: false, unique: false });
     }
   }
 
@@ -16,11 +16,11 @@ export default function (sequelize) {
       autoIncrement: true,
     },
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     description: {
-        type: DataTypes.TEXT,
+      type: DataTypes.TEXT,
     },
   }, {
     modelName: 'role',

@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class City extends Model {
     static associate(models) {
-      City.belongsTo(models.state, { foreignKey: 'stateId' })
+      City.belongsTo(models.state, { foreignKey: 'stateId' });
     }
   }
 
@@ -20,11 +20,11 @@ export default function (sequelize) {
       references: {
         model: 'states',
         key: 'id',
-      }
+      },
     },
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
   }, {
     modelName: 'city',

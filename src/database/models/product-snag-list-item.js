@@ -3,14 +3,14 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class ProductSnagListItem extends Model {
     static associate(models) {
-      ProductSnagListItem.belongsTo(models.productSnagList, { foreignKey: 'snagListId' })
+      ProductSnagListItem.belongsTo(models.productSnagList, { foreignKey: 'snagListId' });
     }
   }
 
   ProductSnagListItem.init({
     id: {
       type: DataTypes.INTEGER,
-      field: "id",
+      field: 'id',
       primaryKey: true,
       unique: true,
       autoIncrement: true,
@@ -20,7 +20,7 @@ export default function (sequelize) {
       references: {
         model: 'product_snag_list',
         key: 'id',
-      }
+      },
     },
     snagKey: {
       type: DataTypes.STRING,
@@ -42,7 +42,7 @@ export default function (sequelize) {
     modelName: 'productSnagListItem',
     tableName: 'product_snag_list_items',
     sequelize,
-    updatedAt: false
+    updatedAt: false,
   });
 
   ProductSnagListItem.addHook('beforeSave', async (instance) => {

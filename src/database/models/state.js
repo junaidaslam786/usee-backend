@@ -3,8 +3,8 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class State extends Model {
     static associate(models) {
-        State.belongsTo(models.country, { foreignKey: 'countryId' })
-        State.hasMany(models.city, { foreignKey: 'stateId' });
+      State.belongsTo(models.country, { foreignKey: 'countryId' });
+      State.hasMany(models.city, { foreignKey: 'stateId' });
     }
   }
 
@@ -21,11 +21,11 @@ export default function (sequelize) {
       references: {
         model: 'countries',
         key: 'id',
-      }
+      },
     },
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
   }, {
     modelName: 'state',

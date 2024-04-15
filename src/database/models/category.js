@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 export default function (sequelize) {
   class Category extends Model {
     static associate(models) {
-      Category.hasMany(models.categoryField, { foreignKey: 'categoryId' })
+      Category.hasMany(models.categoryField, { foreignKey: 'categoryId' });
     }
   }
 
@@ -16,11 +16,11 @@ export default function (sequelize) {
       autoIncrement: true,
     },
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     description: {
-        type: DataTypes.TEXT,
+      type: DataTypes.TEXT,
     },
   }, {
     modelName: 'category',

@@ -13,23 +13,23 @@ export default function (sequelize) {
       type: DataTypes.UUID,
       primaryKey: true,
       unique: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
     },
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     featureId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'features',
-        key: 'id'
-      }
+        key: 'id',
+      },
     },
     quantity: {
       type: DataTypes.INTEGER, // can be negative if tokens are spent or positive if added
@@ -44,24 +44,24 @@ export default function (sequelize) {
     },
     createdBy: {
       type: DataTypes.UUID,
-      field: "created_by",
+      field: 'created_by',
     },
     updatedBy: {
       type: DataTypes.UUID,
-      field: "updated_by",
+      field: 'updated_by',
     },
     createdAt: {
       type: DataTypes.DATE,
-      field: "created_at",
+      field: 'created_at',
     },
     updatedAt: {
       type: DataTypes.DATE,
-      field: "updated_at",
+      field: 'updated_at',
     },
     deletedAt: {
       type: DataTypes.DATE,
-      field: "deleted_at",
-    }
+      field: 'deleted_at',
+    },
   }, {
     modelName: 'tokenTransaction',
     tableName: 'token_transactions',
