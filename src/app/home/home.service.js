@@ -30,7 +30,8 @@ export const bookDemo = async (reqBody, req) => {
     emailData.jobTitle = jobTitle;
     emailData.phoneNumber = phoneNumber;
     emailData.message = message;
-    const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.BOOK_DEMO), emailData);
+    const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH,
+      EMAIL_TEMPLATE_PATH.BOOK_DEMO), emailData);
 
     const payload = {
       to: process.env.DEFAULT_REPLY_SENDER,
@@ -68,21 +69,22 @@ export const contactUs = async (reqBody, req) => {
       message,
     });
 
-    // const emailData = [];
-    // emailData.name = name;
-    // emailData.email = email;
-    // emailData.subject = subject;
-    // emailData.jobTitle = jobTitle;
-    // emailData.phoneNumber = phoneNumber;
-    // emailData.message = message;
-    // const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CONTACT_US), emailData);
+    const emailData = [];
+    emailData.name = name;
+    emailData.email = email;
+    emailData.subject = subject;
+    emailData.jobTitle = jobTitle;
+    emailData.phoneNumber = phoneNumber;
+    emailData.message = message;
+    const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH,
+      EMAIL_TEMPLATE_PATH.CONTACT_US), emailData);
 
-    // const payload = {
-    //   to: process.env.DEFAULT_REPLY_SENDER,
-    //   subject: EMAIL_SUBJECT.CONTACT_US,
-    //   html: htmlData,
-    // };
-    // mailHelper.sendMail(payload);
+    const payload = {
+      to: process.env.DEFAULT_REPLY_SENDER,
+      subject: EMAIL_SUBJECT.CONTACT_US,
+      html: htmlData,
+    };
+    mailHelper.sendMail(payload);
 
     return true;
   } catch (err) {

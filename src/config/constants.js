@@ -101,6 +101,7 @@ export const APPOINTMENT_TYPES = {
   UPCOMING: 'upcoming',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  EXPIRED: 'expired',
 };
 
 export const EMAIL_SUBJECT = {
@@ -128,6 +129,7 @@ export const EMAIL_SUBJECT = {
   CANCELLED_APPOINTMENT: 'Usee-360 Appointment Cancelled',
   SEND_OTP: 'Usee-360 One Time Passcode (OTP)',
   AGENT_ACCOUNT_DELETION: 'Account Deletion Confirmation',
+  CONTACT_US: 'Usee-360 Query',
 };
 
 export const EMAIL_TEMPLATE_PATH = {
@@ -156,6 +158,7 @@ export const EMAIL_TEMPLATE_PATH = {
   CUSTOMER_STATUS_UPDATE_APPOINTMENT: 'email-template/customer-status-update-appointment.ejs',
   SEND_OTP: 'email-template/send-otp.ejs',
   AGENT_ACCOUNT_DELETION: 'email-template/agent-account-deletion.ejs',
+  CONTACT_US: 'email-template/contact-us.ejs',
 };
 
 export const DASHBOARD_FILTER = {
