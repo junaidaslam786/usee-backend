@@ -342,7 +342,7 @@ export const createAppointment = async (req, dbInstance) => {
       // Schedule cron job to send reminder SMS and email 30 minutes before the call
       const startTime = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
       const startTimeMoment = moment(startTime, 'HH:mm').tz('UTC'); // Parse in UTC
-      const thirtyMinutesBeforeStartTime = startTimeMoment.subtract(30, 'minutes');
+      const thirtyMinutesBeforeStartTime = startTimeMoment.clone().subtract(30, 'minutes');
       console.log('appointmentDate: ', appointmentDate);
       console.log('startTime: ', startTime);
       console.log('startTimeMoment: ', startTimeMoment);
@@ -391,7 +391,7 @@ export const createAppointment = async (req, dbInstance) => {
 
       const startTime2 = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
       const startTimeMoment2 = moment(startTime2, 'HH:mm').tz('UTC'); // Parse in UTC
-      const thirtyMinutesBeforeStartTime2 = startTimeMoment2.subtract(30, 'minutes');
+      const thirtyMinutesBeforeStartTime2 = startTimeMoment2.clone().subtract(30, 'minutes');
       console.log('appointmentDate: ', appointmentDate);
       console.log('startTime: ', startTime2);
       console.log('startTimeMoment: ', startTimeMoment2);
@@ -452,7 +452,7 @@ export const createAppointment = async (req, dbInstance) => {
       // Schedule cron job to update appointment status to 'expired' after 30 minutes when no one joins
       const startTime3 = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
       const startTimeMoment3 = moment(startTime3, 'HH:mm').tz('UTC'); // Parse in UTC
-      const thirtyMinutesAfterStartTime = startTimeMoment3.subtract(30, 'minutes');
+      const thirtyMinutesAfterStartTime = startTimeMoment3.clone().subtract(30, 'minutes');
       console.log('startTime: ', startTime3);
       console.log('startTimeMoment: ', startTimeMoment3);
       console.log('thirtyMinutesAfterStartTime: ', thirtyMinutesAfterStartTime);
