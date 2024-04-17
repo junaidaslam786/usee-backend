@@ -3,19 +3,48 @@ import { Sequelize } from 'sequelize';
 const OP = Sequelize.Op;
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
-import { 
+import {
   EMAIL_TEMPLATE_PATH,
-  EMAIL_SUBJECT, 
-  USER_TYPE, 
-  USER_ALERT_MODE, 
+  EMAIL_SUBJECT,
+  USER_TYPE,
+  USER_ALERT_MODE,
   USER_ALERT_TYPE,
   APPOINTMENT_TYPES,
   APPOINTMENT_STATUS,
   DASHBOARD_FILTER
 } from '@/config/constants';
+import timezoneJson from "../../../../timezones.json";
+
+const cron = require('node-cron');
+const moment = require('moment-timezone');
 const path = require("path")
 const ejs = require("ejs");
-import timezoneJson from "../../../../timezones.json";
+const { Auth } = require('@vonage/auth');
+const { Vonage } = require('@vonage/server-sdk');
+
+const credentials = new Auth({
+  apiKey: process.env.VONAGE_API_KEY,
+  apiSecret: process.env.VONAGE_API_SECRET,
+});
+const options = {};
+const vonage = new Vonage(credentials, options);
+
+async function sendSMS(to, from, text) {
+  await vonage.sms.send({ to, from, text })
+    .then(resp => { console.log('Message sent successfully'); console.log(resp); })
+    .catch(err => { console.log('There was an error sending the messages.'); console.error(err); });
+}
+
+function calculateCronExpression(date, startTime) {
+  const targetMinute = moment(startTime, 'HH:mm').format('mm'); // Extract minute from start time
+  const targetHour = moment(startTime, 'HH:mm').format('HH'); // Extract hour from start time
+  const targetDay = moment(date).format('D'); // Day of the month
+  const targetDayOfWeek = moment(date).format('d'); // Day of the week (0-indexed)
+  const targetMonth = moment(date).format('M'); // Month (1-indexed)
+
+  // Runs once at the specified time on the appointment date
+  return `${targetMinute} ${targetHour} ${targetDay} ${targetMonth} ${targetDayOfWeek}`;
+}
 
 export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
   try {
@@ -27,7 +56,11 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
     whereClause.status = {
       [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.PENDING]
     };
-    
+
+    if (appointmentType === APPOINTMENT_TYPES.UPCOMING) {
+      whereClause.status = APPOINTMENT_STATUS.PENDING;
+    }
+
     if (appointmentType === APPOINTMENT_TYPES.COMPLETED) {
       whereClause.status = APPOINTMENT_STATUS.COMPLETED;
     }
@@ -36,8 +69,12 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
       whereClause.status = APPOINTMENT_STATUS.CANCELLED;
     }
 
+    if (appointmentType === APPOINTMENT_TYPES.EXPIRED) {
+      whereClause.status = APPOINTMENT_STATUS.EXPIRED;
+    }
+
     if (reqBody?.filter) {
-      switch(reqBody?.filter) {
+      switch (reqBody?.filter) {
         case DASHBOARD_FILTER.CUSTOM:
           if (reqBody?.startDate && reqBody?.endDate) {
             whereClause.appointmentDate = {
@@ -74,13 +111,13 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
     const { count, rows } = await dbInstance.appointment.findAndCountAll({
       where: whereClause,
       include: [
-        { 
-          model: dbInstance.product, 
+        {
+          model: dbInstance.product,
           attributes: ["id"],
           through: { attributes: [] }
         },
-        { 
-          model: dbInstance.user, 
+        {
+          model: dbInstance.user,
           as: 'agentUser',
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
           include: [
@@ -90,20 +127,20 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
             },
           ]
         },
-        { 
-          model: dbInstance.user, 
+        {
+          model: dbInstance.user,
           as: 'allotedAgentUser',
           attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         },
-        { 
-          model: dbInstance.agentTimeSlot, 
+        {
+          model: dbInstance.agentTimeSlot,
         },
       ],
       order: [["appointmentDate", "DESC"]],
       offset: (itemPerPage * (page - 1)),
       limit: itemPerPage
     });
-    
+
     return {
       data: rows,
       page,
@@ -111,9 +148,9 @@ export const listAppointments = async (customerInfo, reqBody, dbInstance) => {
       totalPage: Math.ceil(count / itemPerPage),
       totalItems: count
     };
-  } catch(err) {
+  } catch (err) {
     console.log('listAppointmentsServiceError', err)
-    return { error: true, message: 'Server not responding, please try again later.'}
+    return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
 
@@ -122,21 +159,21 @@ export const getAppointment = async (appointmentId, req) => {
     const { user, dbInstance } = req;
     const appoinment = await getAppointmentDetailById(user, appointmentId, dbInstance);
     if (!appoinment) {
-        return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
+      return { error: true, message: 'Invalid appointment id or Appointment do not exist.' }
     }
 
     return appoinment;
-  } catch(err) {
+  } catch (err) {
     console.log('getAppointmentServiceError', err)
-    return { error: true, message: 'Server not responding, please try again later.'}
+    return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
 
 export const createAppointment = async (req, dbInstance) => {
   try {
-    const { 
-      property, 
-      appointmentDate, 
+    const {
+      property,
+      appointmentDate,
       timeSlotId,
       allotedAgent,
       timezone
@@ -144,14 +181,14 @@ export const createAppointment = async (req, dbInstance) => {
 
     const sessionId = await opentokHelper.getSessionId(req.user.id);
     if (!sessionId) {
-      return { error: true, message: 'Unable to make appointment due to voice call issue.'}
+      return { error: true, message: 'Unable to make appointment due to voice call issue.' }
     }
 
-    const propertyDetail = await dbInstance.product.findOne({ 
+    const propertyDetail = await dbInstance.product.findOne({
       where: { id: property },
       include: [
         {
-          model: dbInstance.user, 
+          model: dbInstance.user,
           attributes: ["id", "firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
           include: [
             {
@@ -177,7 +214,7 @@ export const createAppointment = async (req, dbInstance) => {
       allotedAgentUser = await dbInstance.agent.findOne({
         where: { userId: allotedAgent },
         include: [{
-          model: dbInstance.user, 
+          model: dbInstance.user,
           attributes: ["firstName", "lastName", "email", "profileImage", "phoneNumber", "timezone"]
         }],
       });
@@ -213,7 +250,7 @@ export const createAppointment = async (req, dbInstance) => {
     }
 
     if (!customerDetails) {
-      return { error: true, message: 'Session expired, please login to create appointment.'}
+      return { error: true, message: 'Session expired, please login to create appointment.' }
     }
 
     // check availability algorithm
@@ -297,6 +334,11 @@ export const createAppointment = async (req, dbInstance) => {
         mailHelper.sendMail(newPayload);
       }
 
+      // send agent SMS
+      // const agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber.replace(/^\+/, '') : req.user.phoneNumber.replace(/^\+/, '');
+      // const agentText = `Hello , your appointment has been scheduled.`;
+      // await sendSMS(agentPhoneNumber, from, agentText);
+
       // send agent email
       const emailData = [];
       emailData.date = appointmentDate;
@@ -315,6 +357,12 @@ export const createAppointment = async (req, dbInstance) => {
         html: htmlData,
       }
       mailHelper.sendMail(payload);
+
+      // send customer SMS
+      // const from = 'USEE360';
+      // const customerPhoneNumber = customerDetails.phoneNumber.replace(/^\+/, '');
+      // const customerText = 'Hello, your appointment has been scheduled.';
+      // await sendSMS(customerPhoneNumber, from, customerText);
 
       // send customer email
       const customerEmailData = [];
@@ -336,99 +384,242 @@ export const createAppointment = async (req, dbInstance) => {
       }
       mailHelper.sendMail(customerPayload);
 
+      // Schedule cron job to send reminder SMS and email 30 minutes before the call
+      const startTime = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
+      const startTimeMoment = moment(startTime, 'HH:mm').tz(customerDetails.timezone);
+      const thirtyMinutesBeforeStartTime = startTimeMoment.clone().subtract(30, 'minutes');
+      console.log('appointmentDate: ', appointmentDate);
+      console.log('startTime: ', startTime);
+      console.log('startTimeMoment: ', startTimeMoment);
+      console.log('thirtyMinutesBeforeStartTime: ', thirtyMinutesBeforeStartTime);
+
+      const cronExpression = calculateCronExpression(appointmentDate, thirtyMinutesBeforeStartTime);
+      console.log('CE: ', cronExpression);
+
+      const scheduledJob = cron.schedule(cronExpression, async () => {
+        // ** SEND CUSTOMER SMS ** //
+        // const smsText = `Your appointment is scheduled on ${appointmentDate} at ${startTime} ${customerDetails.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
+        // console.log(smsText);
+        // await sendSMS(customerDetails.phoneNumber, 'USEE360', smsText);
+
+        // ** SEND CUSTOMER EMAIL ** //
+        const emailData = [];
+        emailData.date = appointmentDate;
+        emailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, customerDetails.timezone, "HH:mm");
+        emailData.timezone = customerDetails.timezone;
+        emailData.products = [];
+        emailData.allotedAgent = allotedAgentUser?.user?.firstName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : `${req.user.firstName} ${req.user.lastName}`;
+        emailData.companyName = req.user.companyName ? req.user.companyName : "";
+        emailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
+        emailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;
+        emailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
+        emailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/customer`;
+        emailData.contactEmail = process.env.CONTACT_EMAIL;
+        emailData.appUrl = process.env.APP_URL;
+        const htmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.CUSTOMER_UPCOMING_APPOINTMENT), emailData);
+        const payload = {
+          to: customerDetails.email,
+          subject: EMAIL_SUBJECT.UPCOMING_APPOINTMENT,
+          html: htmlData,
+        }
+        mailHelper.sendMail(payload);
+      }, {
+        scheduled: true, // Set the scheduled option for one-time execution
+        timezone: customerDetails.timezone,
+      });
+      console.log('Scheduled job(Customer): ', scheduledJob);
+
+      appointment.scheduledJobCustomer = scheduledJob.options.name;
+      await appointment.save();
+
+      const startTime2 = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
+      const startTimeMoment2 = moment(startTime2, 'HH:mm').tz('UTC'); // Parse in UTC
+      const thirtyMinutesBeforeStartTime2 = startTimeMoment2.clone().subtract(30, 'minutes');
+      console.log('appointmentDate: ', appointmentDate);
+      console.log('startTime: ', startTime2);
+      console.log('startTimeMoment: ', startTimeMoment2);
+      console.log('thirtyMinutesBeforeStartTime: ', thirtyMinutesBeforeStartTime2);
+
+      const cronExpression2 = calculateCronExpression(appointmentDate, thirtyMinutesBeforeStartTime, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone));
+      console.log('CE: ', cronExpression2);
+
+      const scheduledJob2 = cron.schedule(cronExpression2, async () => {
+        // ** SEND AGENT SMS ** //
+        // if (allotedAgentUser) {
+        //   const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${allotedAgentUser.user.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+        //   console.log(agentSmsText);
+        //   await sendSMS(allotedAgentUser.user.phoneNumber, 'USEE360', agentSmsText);
+        // } else {
+        //   const agentSmsText = `You have an appointment scheduled on ${appointmentDate} at ${startTime} ${req.user.timezone}. Please click on the link to join the meeting: ${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+        //   console.log(agentSmsText);
+        //   await sendSMS(req.user.phoneNumber, 'USEE360', agentSmsText);
+        // }
+
+        // ** SEND AGENT EMAIL ** //
+        const agentEmailData = [];
+        agentEmailData.date = appointmentDate;
+        agentEmailData.time = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
+        agentEmailData.timezone = allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone;
+        agentEmailData.products = [];
+        agentEmailData.allotedAgent = allotedAgentUser?.user?.firstName ? `${allotedAgentUser.user.firstName} ${allotedAgentUser.user.lastName}` : `${req.user.firstName} ${req.user.lastName}`;
+        agentEmailData.companyName = req.user.companyName ? req.user.companyName : "";
+        agentEmailData.agentImage = allotedAgentUser?.user?.profileImage ? allotedAgentUser.user.profileImage : req.user.profileImage;
+        agentEmailData.agentPhoneNumber = allotedAgentUser?.user?.phoneNumber ? allotedAgentUser.user.phoneNumber : req.user.phoneNumber;
+        agentEmailData.agentEmail = allotedAgentUser?.user?.email ? allotedAgentUser.user.email : req.user.email
+        agentEmailData.customer = customerDetails.fullName;
+        agentEmailData.customerImage = customerDetails.profileImage;
+        agentEmailData.customerPhoneNumber = customerDetails.phoneNumber;
+        agentEmailData.customerEmail = customerDetails.email;
+        agentEmailData.meetingLink = `${utilsHelper.generateUrl('join-meeting')}/${appointment.id}/agent`;
+        agentEmailData.contactEmail = process.env.CONTACT_EMAIL;
+        agentEmailData.appUrl = process.env.APP_URL;
+
+        const agentEmailHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, (allotedAgentUser ? EMAIL_TEMPLATE_PATH.AGENT_UPCOMING_APPOINTMENT : EMAIL_TEMPLATE_PATH.AGENT_UPCOMING_APPOINTMENT)), agentEmailData);
+        const agentEmailPayload = {
+          to: allotedAgentUser ? allotedAgentUser.user.email : req.user.email,
+          subject: EMAIL_SUBJECT.UPCOMING_APPOINTMENT,
+          html: agentEmailHtmlData,
+        }
+        mailHelper.sendMail(agentEmailPayload);
+      }, {
+        scheduled: true, // Set the scheduled option for one-time execution
+        timezone: allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone,
+      });
+      console.log('Scheduled job(Agent): ', scheduledJob2);
+
+      appointment.scheduledJobAgent = scheduledJob2.options.name;
+      await appointment.save();
+
+      // Schedule cron job to update appointment status to 'expired' after 30 minutes when no one joins
+      const startTime3 = utilsHelper.convertGmtToTime(appointment.appointmentTimeGmt, (allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone), "HH:mm");
+      const startTimeMoment3 = moment(startTime3, 'HH:mm').tz((allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone));
+      const thirtyMinutesAfterStartTime = startTimeMoment3.clone().add(30, 'minutes');
+      console.log('startTime: ', startTime3);
+      console.log('startTimeMoment: ', startTimeMoment3);
+      console.log('thirtyMinutesAfterStartTime: ', thirtyMinutesAfterStartTime);
+
+      const cronExpression3 = calculateCronExpression(appointmentDate, thirtyMinutesAfterStartTime);
+      console.log('CE: ', cronExpression3);
+
+      const scheduledJob3 = cron.schedule(cronExpression3, async () => {
+        const appoinmentLatest = await dbInstance.appointment.findOne({
+          where: {
+            id: appointment.id,
+            status: 'pending'
+          }
+        });
+        if (appoinmentLatest) {
+          await dbInstance.appointment.update({
+            status: 'expired'
+          }, {
+            where: {
+              id: appointment.id,
+              status: 'pending'
+            }
+          });
+          console.log('Appointment status updated to expired');
+        } else {
+          console.log('Appointment status was not updated');
+        }
+      }, {
+        scheduled: true, // Set the scheduled option for one-time execution
+        timezone: allotedAgentUser ? allotedAgentUser.user.timezone : req.user.timezone,
+      });
+      console.log('Scheduled job(Expired): ', scheduledJob3);
+
       return appointment;
     });
 
     return (result.id) ? await getAppointmentDetailById(customerDetails, result.id, dbInstance) : result;
-  } catch(err) {
+  } catch (err) {
     console.log('createAppointmentServiceError', err)
-    return { error: true, message: 'Server not responding, please try again later.'}
+    return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
 
 export const getSessionToken = async (appointmentId, dbInstance) => {
-    try {
-        const appointment = await dbInstance.appointment.findOne({
-          where: { id: appointmentId },
-          attributes: ['id', 'sessionId']
-        });
-  
-        if (!appointment) {
-          return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
-        } 
-        
-        if (appointment && !appointment.sessionId) {
-          return { error: true, message: 'Session id not available for this meeting'}
-        }
-  
-        const token = await opentokHelper.getSessionEntryToken({firstName:'Zakria'}, '', appointment.sessionId);
-  
-        return { token };
-    } catch(err) {
-        console.log('getSessionTokenServiceError', err)
-        return { error: true, message: 'Server not responding, please try again later.'}
+  try {
+    const appointment = await dbInstance.appointment.findOne({
+      where: { id: appointmentId },
+      attributes: ['id', 'sessionId']
+    });
+
+    if (!appointment) {
+      return { error: true, message: 'Invalid appointment id or Appointment do not exist.' }
     }
+
+    if (appointment && !appointment.sessionId) {
+      return { error: true, message: 'Session id not available for this meeting' }
+    }
+
+    const token = await opentokHelper.getSessionEntryToken({ firstName: 'Zakria' }, '', appointment.sessionId);
+
+    return { token };
+  } catch (err) {
+    console.log('getSessionTokenServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
 }
 
 const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
-    const appointment = await dbInstance.appointment.findOne({
-        where: { id: appointmentId, customerId: user.id },
+  const appointment = await dbInstance.appointment.findOne({
+    where: { id: appointmentId, customerId: user.id },
+    include: [
+      {
+        model: dbInstance.product,
+        attributes: ["id", "title", "description", "price", "featuredImage"],
+        through: { attributes: [] }
+      },
+      {
+        model: dbInstance.user,
+        as: 'customerUser',
+        attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
+      },
+      {
+        model: dbInstance.user,
+        as: 'agentUser',
+        attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
         include: [
           {
-            model: dbInstance.product,
-            attributes: ["id", "title", "description", "price", "featuredImage"],
-            through: { attributes: [] }
+            model: dbInstance.agent,
+            attributes: ["id", "agentType"],
           },
-          { 
-            model: dbInstance.user, 
-            as: 'customerUser',
-            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
-          },
-          { 
-            model: dbInstance.user, 
-            as: 'agentUser',
-            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
-            include: [
-              {
-                model: dbInstance.agent,
-                attributes: ["id", "agentType"],
-              },
-            ]
-          },
-          { 
-            model: dbInstance.user, 
-            as: 'allotedAgentUser',
-            attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
-          },
-          { 
-            model: dbInstance.agentTimeSlot, 
-          },
-        ],
-    });
-  
-    if (!appointment) {
-      return false;
-    }
-  
-    return appointment;
+        ]
+      },
+      {
+        model: dbInstance.user,
+        as: 'allotedAgentUser',
+        attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
+      },
+      {
+        model: dbInstance.agentTimeSlot,
+      },
+    ],
+  });
+
+  if (!appointment) {
+    return false;
+  }
+
+  return appointment;
 }
 
 export const deleteAppointment = async (appointmentId, req) => {
   try {
-      const { dbInstance } = req;
+    const { dbInstance } = req;
 
-      const whereClause = { id: appointmentId, customerId: req.user.id };
-      const appointment = await dbInstance.appointment.findOne({ where: whereClause });
-      if (!appointment) {
-        return { error: true, message: 'Invalid appointment id or Appointment do not exist.'}
-      }
+    const whereClause = { id: appointmentId, customerId: req.user.id };
+    const appointment = await dbInstance.appointment.findOne({ where: whereClause });
+    if (!appointment) {
+      return { error: true, message: 'Invalid appointment id or Appointment do not exist.' }
+    }
 
-      await dbInstance.appointment.destroy({ where: whereClause });
+    await dbInstance.appointment.destroy({ where: whereClause });
 
-      return true;
-  } catch(err) {
-      console.log('deleteAppointmentServiceError', err)
-      return { error: true, message: 'Server not responding, please try again later.'}
+    return true;
+  } catch (err) {
+    console.log('deleteAppointmentServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
 
@@ -457,7 +648,7 @@ export const checkAvailability = async (req) => {
 
     // if both are available, then appointment can be created
     return true;
-  } catch(err) {
+  } catch (err) {
     console.log('checkAvailabilityServiceError', err);
     return { error: true, message: 'Server not responding, please try again later.' }
   }
