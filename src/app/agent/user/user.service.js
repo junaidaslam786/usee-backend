@@ -462,18 +462,20 @@ export const updateAgentUser = async (reqBody, req) => {
 
       const user = await dbInstance.user.findOne({ where: { id: userId } });
 
-      user.firstName = firstName;
-      user.lastName = lastName;
-      user.phoneNumber = phoneNumber;
-      user.cityName = cityName;
-      user.countryName = countryName;
-      user.status = status;
-      user.userType = userType;
-      user.signupStep = signupStep;
-      user.otpVerified = otpVerified;
-      user.timezone = selectedTimezone;
-      user.createdBy = agentInfo.id;
-      user.updatedBy = agentInfo.id;
+      if (firstName) user.firstName = firstName;
+      if (lastName) user.lastName = lastName;
+      if (phoneNumber) user.phoneNumber = phoneNumber;
+      if (cityName) user.cityName = cityName;
+      if (countryName) user.countryName = countryName;
+      if (status) user.status = status;
+      if (userType) user.userType = userType;
+      if (signupStep) user.signupStep = signupStep;
+      if (otpVerified) user.otpVerified = otpVerified;
+      if (selectedTimezone) user.timezone = selectedTimezone;
+      if (agentInfo && agentInfo.id) {
+        user.createdBy = agentInfo.id;
+        user.updatedBy = agentInfo.id;
+      }
       await user.save({ transaction });
 
       return agentUser;
