@@ -178,6 +178,12 @@ export const APPOINTMENT_STATUS = {
   EXPIRED: 'expired',
 };
 
+export const SUBSCRIPTION_STATUS = {
+  ACTIVE: 'active',
+  CANCELLED: 'cancelled',
+  EXPIRED: 'expired',
+};
+
 export const APPOINTMENT_LOG_TYPE = {
   JOINED: 'joined',
   LEFT: 'left',

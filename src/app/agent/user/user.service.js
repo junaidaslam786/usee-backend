@@ -423,7 +423,7 @@ export const updateAgentUser = async (reqBody, req) => {
       agentUser.ornNumber = ornNumber;
       agentUser.createdBy = agentInfo.id;
       agentUser.updatedBy = agentInfo.id;
-      
+
       if (req.files && req.files.document) {
         const documentFile = req.files.document;
         const newFileName = `${Date.now()}_${documentFile.name.replace(/ +/g, "")}`;
@@ -561,7 +561,7 @@ export const updateUserSubscription = async (userId, reqBody, req) => {
       throw new Error(`No user subscription found for user ${user.id} and subscription ${subscriptionId}`);
     } else {
       userSubscription.autoRenew = autoRenew;
-      userSubscription.autoRenewUnits = autoRenewUnits;      
+      userSubscription.autoRenewUnits = autoRenewUnits;
       await userSubscription.save();
     }
 

@@ -89,6 +89,10 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       field: 'scheduled_job_customer',
     },
+    co2Details: {
+      type: DataTypes.JSON,
+      field: 'co2_details',
+    },
     createdAt: {
       allowNull: false,
       field: 'created_at',

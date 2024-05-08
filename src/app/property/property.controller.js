@@ -236,6 +236,24 @@ export const listPropertiesToAllocate = async (req, res, next) => {
 };
 
 /**
+ * GET /property/carbon-footprint
+ * Get details of carbon footprint of the property
+ */
+export const getCarbonFootprintDetails = async (req, res, next) => {
+  try {
+    const result = await propertyService.getCarbonFootprintDetails((req.params?.id ? req.params?.id : 0), req.query, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('getCarbonFootprintDetailsError', err);
+    return next(err);
+  }
+}
+
+/**
  * DELETE /property/customer/offer/:id
  * Delete offer made by customer
  */

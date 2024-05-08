@@ -11,6 +11,7 @@ router.get('/to-allocate', isAuthenticated, propertyController.listPropertiesToA
 router.get('/to-allocate-customer', isAuthenticated, propertyController.listPropertiesAllocateToCustomer);
 router.get('/list-removal-reasons', isAuthenticated, propertyController.listRemovalReasons);
 router.get('/:id', isAuthenticated, propertyController.getProperty);
+router.get('/:id/carbon-footprint', isAuthenticated, propertyController.getCarbonFootprintDetails);
 router.post('/create', isAuthenticated, propertySubscription, validate(propertyValidations.createPropertyRules),
   propertyController.createProperty);
 router.put('/update', isAuthenticated, validate(propertyValidations.updatePropertyRules),

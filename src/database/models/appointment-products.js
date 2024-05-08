@@ -2,7 +2,10 @@ import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
   class AppointmentProducts extends Model {
-
+    static associate(models) {
+      AppointmentProducts.belongsTo(models.appointment, { foreignKey: 'appointmentId' });
+      AppointmentProducts.belongsTo(models.product, { foreignKey: 'productId' });
+    }
   }
 
   AppointmentProducts.init({
@@ -35,6 +38,10 @@ export default function (sequelize) {
       field: 'interest',
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    co2Details: {
+      field: 'co2_details',
+      type: DataTypes.JSON,
     },
     createdAt: {
       allowNull: false,

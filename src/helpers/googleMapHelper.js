@@ -43,7 +43,8 @@ export async function calculateTime(origin, destination) {
     longitude: destination.longitude,
   }];
 
-  const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${originStructure.origin}&destinations=${destinationStructure}&key=${MAPS_API_KEY}`;
+  const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&
+    origins=${originStructure.origin}&destinations=${destinationStructure}&key=${MAPS_API_KEY}`;
 
   return axios.get(url)
     .then((response) => {

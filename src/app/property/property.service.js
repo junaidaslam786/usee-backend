@@ -581,6 +581,34 @@ export const listPropertiesToAllocate = async (userId, dbInstance) => {
   }
 }
 
+export const getCarbonFootprintDetails = async (propertyId, reqBody, dbInstance) => {
+  try {
+    const appointmentWiseCarbonFootprint = await dbInstance.appointmentProduct.findAll({
+      where: {
+      productId: propertyId,
+      },
+      attributes: ['id', 'co2Details'],
+    });
+
+    const totalCo2SavedValue = appointmentWiseCarbonFootprint.reduce((total, appointment) => {
+      return total + parseFloat(appointment.co2Details.co2SavedValue);
+    }, 0);
+    const totalCo2SavedText = `${totalCo2SavedValue} ${process.env.CO2_UNIT}`;
+    console.log('totalCo2SavedValue', totalCo2SavedValue);
+
+    const totalAppointments = appointmentWiseCarbonFootprint.length;
+    return {
+      appointmentWiseCarbonFootprint,
+      totalAppointments,
+      totalCo2SavedText,
+      totalCo2SavedValue
+    };
+  } catch (err) {
+    console.log('getCarbonFootprintAnalyticsServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
 export const getProperty = async (propertyId, dbInstance) => {
   try {
     const property = await getPropertyDetailById(propertyId, dbInstance);

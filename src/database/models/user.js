@@ -101,6 +101,15 @@ export default function (sequelize) {
     countryName: {
       type: DataTypes.STRING,
     },
+    latitude: {
+      type: DataTypes.STRING,
+    },
+    longitude: {
+      type: DataTypes.STRING,
+    },
+    geometry: {
+      type: DataTypes.GEOMETRY,
+    },
     roleId: {
       type: DataTypes.INTEGER,
       references: {

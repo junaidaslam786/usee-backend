@@ -151,7 +151,7 @@ export const downloadSessionRecording = async (req, res, next) => {
  */
 export const updateStatusAppointment = async (req, res, next) => {
   try {
-    const result = await appointmentService.updateStatus(req);
+    const result = await appointmentService.updateStatus(req, res);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }

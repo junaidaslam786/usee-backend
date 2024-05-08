@@ -3,6 +3,7 @@ import { Sequelize, where } from 'sequelize';
 const OP = Sequelize.Op;
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
 import * as userService from '../../user/user.service';
+import { getCarbonFootprint } from '../analytics/analytics.service';
 import {
   EMAIL_TEMPLATE_PATH,
   EMAIL_SUBJECT,
@@ -682,7 +683,7 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
   }
 }
 
-export const updateStatus = async (req) => {
+export const updateStatus = async (req, res) => {
   try {
     const { id, status } = req.body;
     const { user: userInfo, dbInstance } = req;
@@ -692,7 +693,7 @@ export const updateStatus = async (req) => {
       include: [
         {
           model: dbInstance.product,
-          attributes: ["id", "title", "description", "price", "featuredImage", "address", "city", "region"],
+          attributes: ["id", "title", "description", "price", "featuredImage", "address", "city", "region", "latitude", "longitude"],
           through: { attributes: [] }
         },
         {
@@ -703,7 +704,12 @@ export const updateStatus = async (req) => {
         {
           model: dbInstance.user,
           as: 'allotedAgentUser',
-          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone", "latitude", "longitude"],
+        },
+        {
+          model: dbInstance.user,
+          as: 'agentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone", "latitude", "longitude"],
         },
         {
           model: dbInstance.agentTimeSlot,
@@ -730,6 +736,52 @@ export const updateStatus = async (req) => {
 
     if (status === APPOINTMENT_STATUS.COMPLETED) {
       appointment.endMeetingTime = Date.now();
+
+      let totalCo2SavedValue = 0;
+      // let productCo2 = [];
+      let propertyLocation = {};
+      const agentUser = appointment.agentUser;
+
+      const agentUserLocation = {
+        latitude: agentUser.latitude,
+        longitude: agentUser.longitude
+      }
+      req.body.agentLocation = agentUserLocation;
+
+      await Promise.all(appointment.products.map(async (product) => {
+        propertyLocation = {
+          latitude: product.latitude,
+          longitude: product.longitude
+        }
+        req.body.propertyLocation = propertyLocation;
+        const appoinmentProduct = await dbInstance.appointmentProduct.findOne({
+          where: {
+            appointmentId: appointment.id,
+            productId: product.id
+          }
+        });
+
+        const co2Details = await getCarbonFootprint(req, res);
+        // console.log('co2Details: ', co2Details);
+        co2Details.commuteType = 'car';
+        appoinmentProduct.co2Details = co2Details;
+
+        await appoinmentProduct.save();
+        // productCo2.push({
+        //   productId: product.id,
+        //   co2Saved: co2Details,
+        // });
+        
+        totalCo2SavedValue += co2Details.co2SavedValue;
+      }));
+      // console.log('totalCo2Saved: ', totalCo2SavedValue);
+      const totalCo2SavedText = `${totalCo2SavedValue} metric tons CO₂E`;
+      appointment.co2Details = {
+        // products: productCo2,
+        commuteType: 'car',
+        totalCo2SavedText,
+        totalCo2SavedValue,
+      };
     }
 
     if (status === APPOINTMENT_STATUS.COMPLETED || status === APPOINTMENT_STATUS.CANCELLED) {
