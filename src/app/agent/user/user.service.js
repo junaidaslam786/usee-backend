@@ -384,7 +384,7 @@ const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
 
 export const updateAgentUser = async (reqBody, req) => {
   try {
-    const { userId, companyName, role, firstName, lastName, countryName, cityName, companyPosition, jobTitle, licenseNo, otpVerified, ornNumber, phoneNumber, status, userType, signupStep, timezone } = reqBody;
+    const { userId, companyName, role, firstName, lastName, countryName, cityName, latitude, longitude, companyPosition, jobTitle, licenseNo, otpVerified, ornNumber, phoneNumber, status, userType, signupStep, timezone } = reqBody;
     const { user: agentInfo, dbInstance } = req;
 
     if (agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
@@ -467,6 +467,12 @@ export const updateAgentUser = async (reqBody, req) => {
       if (phoneNumber) user.phoneNumber = phoneNumber;
       if (cityName) user.cityName = cityName;
       if (countryName) user.countryName = countryName;
+      if (latitude && longitude) {
+        user.latitude = latitude;
+        user.longitude = longitude;
+        const point = db.fn('ST_GeomFromText', `POINT(${longitude} ${latitude})`, 4326);
+        user.geometry = point;
+      }
       if (status) user.status = status;
       if (userType) user.userType = userType;
       if (signupStep) user.signupStep = signupStep;
