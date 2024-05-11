@@ -29,6 +29,13 @@ export const updateCurrentUser = async (reqBody, req) => {
       user.cityName = reqBody.city;
     }
 
+    if (reqBody?.latitude && reqBody?.longitude) {
+      user.latitude = reqBody.latitude;
+      user.longitude = reqBody.longitude;
+      const point = db.fn('ST_GeomFromText', `POINT(${reqBody.longitude} ${reqBody.latitude})`, 4326);
+      user.geometry = point;
+    }
+
     if (reqBody?.otpVerified) {
       user.otpVerified = reqBody.otpVerified;
     }
