@@ -153,9 +153,18 @@ export const getPropertyOffers = async (req, res) => {
   }
 };
 
-export const getCarbonFootprint = async (req, res) => {
+export const getPropertyCarbonFootprintAnalytics = async (req, res) => {
   try {
-    const carbonFootprint = await analyticsService.getCarbonFootprint(req, res);
+    const carbonFootprint = await analyticsService.getPropertyCarbonFootprintAnalytics(req, res);
+    res.json(carbonFootprint);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+export const getAppointmentCarbonFootprintAnalytics = async (req, res) => {
+  try {
+    const carbonFootprint = await analyticsService.getAppointmentCarbonFootprintAnalytics(req, res);
     res.json(carbonFootprint);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });

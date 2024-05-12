@@ -1,5 +1,4 @@
 import "dotenv/config";
-
 import cors from "cors";
 import logger from "morgan";
 import express from "express";
@@ -19,6 +18,7 @@ import { utilsHelper, mailHelper } from '@/helpers';
 import { AGENT_TYPE, USER_TYPE, AGENT_USER_ACCESS_TYPE_VALUE, PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, PRODUCT_LOG_TYPE } from '@/config/constants';
 
 const axios = require('axios');
+const cron = require('node-cron');
 const crypto = require('crypto');
 const OAuth = require('oauth-1.0a');
 const qs = require('qs');
@@ -152,6 +152,36 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
     console.error(error);
     response.status(400).json({ success: false, message: error.raw.message });
   }
+});
+
+app.post('/webhook/toxbox', async (req, res) => {
+  const data = req.body;
+  console.log(data);
+
+  try {
+    if (data.event === 'connectionDestroyed') {
+      const sessionId = data.session.sessionId;
+      const reason = data.session.connectionDestroyedReason;
+  
+      console.log(`Session ${sessionId} ended. Reason: ${reason}`);
+  
+      // Perform actions based on session ending (e.g., update appointment status)
+      // Get appointment from db using sessionID
+      const appointment = await db.Appointment.findOne({ sessionId });
+      if (appointment) {
+        // Perform actions based on appointment
+        // For example, update appointment status
+        appointment.status = "completed";
+        await appointment.save();
+      } else {
+        console.log("Appointment not found");
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  res.status(200).end();
 });
 
 // Required middleware list

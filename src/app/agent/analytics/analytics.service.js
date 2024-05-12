@@ -1,11 +1,15 @@
-import { AGENT_TYPE, SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from '@/config/constants';
+/* eslint-disable no-unused-vars */
+import {
+  AGENT_TYPE,
+  USER_TYPE,
+} from '@/config/constants';
 // import { utilsHelper } from '@/helpers';
 import db from '@/database';
 import { Sequelize } from 'sequelize';
 import { calculateDistanceMatrix } from '@/helpers/googleMapHelper';
+
 const { Op } = Sequelize;
 const {
-  categoryField,
   user,
   userSubscription,
   agent,
@@ -18,30 +22,30 @@ const {
   productLog,
   productMetaTag,
   productOffer,
-  productReview,
-  productVideo,
-  productWishlist,
   productSnagList,
   productSnagListItem,
-  CustomerWishlist,
-  CustomerLog,
-  UserAlert,
-  ProductAllocation,
   agentAccessLevel,
-  UserCallBackgroundImage,
   token,
   tokenTransaction,
-  UserSubscription,
   role,
   feature,
   subscriptionFeature,
+  appointment,
 } = db.models;
 
 // GET /agent/analytics/users?startDate=2022-01-01&endDate=2022-01-31&search=john&page=1&limit=10
 export async function getUsersAnalytics(req, res, userInstance) {
-  const { userType, startDate, endDate, search, page, limit } = req.query;
+  const {
+    userType,
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
-  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+  const where = userInstance.agent.agentType === AGENT_TYPE.AGENT
+    ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -76,7 +80,7 @@ export async function getUsersAnalytics(req, res, userInstance) {
 
   try {
     const { rows, count } = await agent.findAndCountAll({
-      where: where,
+      where,
       include: [
         {
           model: user,
@@ -96,16 +100,31 @@ export async function getUsersAnalytics(req, res, userInstance) {
       // limit: limit,
     });
 
-    let activeUsers = 0,
-      nonActiveUsers = 0,
-      managerUsers = 0,
-      staffUsers = 0;
-    for (const agent of rows) {
-      agent.user.active ? activeUsers++ : nonActiveUsers++;
-      if (agent.agentType === USER_TYPE.AGENT) agentUsers++;
-      if (agent.agentType === AGENT_TYPE.MANAGER) managerUsers++;
-      if (agent.agentType === AGENT_TYPE.STAFF) staffUsers++;
-    }
+    let activeUsers = 0;
+    let nonActiveUsers = 0;
+    let agentUsers = 0;
+    let managerUsers = 0;
+    let staffUsers = 0;
+
+    rows.forEach((rowAgent) => {
+      if (rowAgent.user.active) {
+        activeUsers += 1;
+      } else {
+        nonActiveUsers += 1;
+      }
+
+      if (rowAgent.agentType === USER_TYPE.AGENT) {
+        agentUsers += 1;
+      }
+
+      if (rowAgent.agentType === AGENT_TYPE.MANAGER) {
+        managerUsers += 1;
+      }
+
+      if (rowAgent.agentType === AGENT_TYPE.STAFF) {
+        staffUsers += 1;
+      }
+    });
 
     return {
       rows,
@@ -116,13 +135,21 @@ export async function getUsersAnalytics(req, res, userInstance) {
       staffUsers,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     return res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getActiveUsersAnalytics(req, res) {
-  const { userType, startDate, endDate, search, page, limit } = req.query;
+  const {
+    userType,
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {
     userType: {
@@ -192,13 +219,21 @@ export async function getActiveUsersAnalytics(req, res) {
       count,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     return res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getNonActiveUsersAnalytics(req, res) {
-  const { userType, startDate, endDate, search, page, limit } = req.query;
+  const {
+    userType,
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {
     userType: {
@@ -268,13 +303,20 @@ export async function getNonActiveUsersAnalytics(req, res) {
       count,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     return res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getCustomersAnalytics(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {
     userType: USER_TYPE.CUSTOMER,
@@ -339,18 +381,27 @@ export async function getCustomersAnalytics(req, res) {
 
     const propertiesBought = await productOffer.findAndCountAll({});
 
-    let activeCustomers = 0,
-      nonActiveCustomers = 0,
-      revenue_generated = 0,
-      propertiesUnderOffer = 0,
-      propertiesRented = 0;
-    for (const customer of rows) {
-      customer.active ? activeCustomers++ : nonActiveCustomers++;
-    }
-    for (const productOffer of propertiesBought.rows) {
-      productOffer.status === 'accepted' ? (revenue_generated += Number(productOffer.amount)) : false;
-      productOffer.status === 'pending' ? propertiesUnderOffer++ : false;
-    }
+    let activeCustomers = 0;
+    let nonActiveCustomers = 0;
+    let revenueGenerated = 0;
+    let propertiesUnderOffer = 0;
+    let propertiesRented = 0;
+
+    activeCustomers = rows.reduce((totalActive, customer) => totalActive + (customer.active ? 1 : 0), 0);
+    nonActiveCustomers = rows.reduce((totalNonActive, customer) => totalNonActive + (customer.active ? 0 : 1), 0);
+    revenueGenerated = propertiesBought.rows.reduce((totalRevenue, offer) => {
+      if (offer.status === 'accepted') {
+        return totalRevenue + Number(offer.amount);
+      }
+      return totalRevenue;
+    }, 0);
+    propertiesUnderOffer = propertiesBought.rows.reduce((totalUnderOffer, offer) => {
+      if (offer.status === 'pending') {
+        return totalUnderOffer + 1;
+      }
+      return totalUnderOffer;
+    }, 0);
+    propertiesRented = 0; // Add your logic here to calculate the value of propertiesRented
 
     return {
       // rows,
@@ -360,16 +411,23 @@ export async function getCustomersAnalytics(req, res) {
       propertiesBought: propertiesBought.count,
       propertiesRented,
       propertiesUnderOffer,
-      revenue_generated,
+      revenueGenerated,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     return res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getActiveCustomersAnalytics(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {
     userType: USER_TYPE.CUSTOMER,
@@ -415,9 +473,16 @@ export async function getActiveCustomersAnalytics(req, res) {
 }
 
 export async function getAgentsAnalytics(req, res, userInstance) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
-  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+  const where = userInstance.agent.agentType === AGENT_TYPE.AGENT
+    ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -456,16 +521,16 @@ export async function getAgentsAnalytics(req, res, userInstance) {
 
     // const agentTokensTransactions = await getTokenTransactionsAnalytics(req, res, userInstance);
 
-    let totalAgents = 0,
-      activeAgents = 0,
-      inactiveAgents = 0;
-    for (const agent of agents) {
-      if (agent.user.active) {
-        activeAgents++;
+    let totalAgents = 0;
+    let activeAgents = 0;
+    let inactiveAgents = 0;
+    agents.forEach((a) => {
+      if (a.user.active) {
+        activeAgents += 1;
       } else {
-        inactiveAgents++;
+        inactiveAgents += 1;
       }
-    }
+    });
     totalAgents = activeAgents + inactiveAgents;
 
     return {
@@ -476,7 +541,7 @@ export async function getAgentsAnalytics(req, res, userInstance) {
       // servicesBought: agentTokensTransactions.count,
     };
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    return res.status(500).json({ message: 'Server error', error });
   }
 }
 
@@ -487,16 +552,23 @@ async function getSubAgentIds(userId) {
       attributes: ['userId'],
     });
 
-    const subAgentIds = subAgents.map(subAgent => subAgent.userId);
+    const subAgentIds = subAgents.map((subAgent) => subAgent.userId);
     return subAgentIds;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error retrieving sub-agent IDs:', error);
     throw error;
   }
 }
 
 export async function getActiveAgentsAnalytics(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -549,7 +621,13 @@ export async function getActiveAgentsAnalytics(req, res) {
 }
 
 export async function getSubscriptionsAnalytics(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -582,14 +660,14 @@ export async function getSubscriptionsAnalytics(req, res) {
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    let activeSubscriptions = 2,
-      cancelledSubscriptions = 1,
-      expiredSubscriptions = 0;
-    for (const subscription of rows) {
-      if (subscription.status === 'active') activeSubscriptions++;
-      if (subscription.status === 'cancelled') cancelledSubscriptions++;
-      if (subscription.status === 'expired') expiredSubscriptions++;
-    }
+    let activeSubscriptions = 1;
+    let cancelledSubscriptions = 1;
+    let expiredSubscriptions = 1;
+    rows.forEach((subscription) => {
+      if (subscription.status === 'active') activeSubscriptions += 1;
+      if (subscription.status === 'cancelled') cancelledSubscriptions += 1;
+      if (subscription.status === 'expired') expiredSubscriptions += 1;
+    });
 
     return {
       rows,
@@ -604,7 +682,13 @@ export async function getSubscriptionsAnalytics(req, res) {
 }
 
 export async function getTokensAnalytics(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -637,39 +721,63 @@ export async function getTokensAnalytics(req, res) {
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    let totalTokens = 0,
-      tokensUsed = 0,
-      tokensRemaining = 0,
-      pendingTokens = 0,
-      revenue_generated = 0;
-    for (const token of rows) {
-      if (token.valid) {
-        revenue_generated += token.totalAmount;
-        tokensUsed += token.quantity - token.remainingAmount;
-        tokensRemaining += token.remainingAmount;
-      }
+    let totalTokens = 0;
+    let tokensUsed = 0;
+    let tokensRemaining = 0;
+    let pendingTokens = 0;
+    let revenueGenerated = 0;
 
-      if (!token.valid) {
-        pendingTokens += token.totalAmount;
+    revenueGenerated = rows.reduce((total, currentToken) => {
+      if (currentToken.valid) {
+        return total + currentToken.totalAmount;
       }
-    }
+      return total;
+    }, 0);
+
+    tokensUsed = rows.reduce((total, currentToken) => {
+      if (currentToken.valid) {
+        return total + (currentToken.quantity - currentToken.remainingAmount);
+      }
+      return total;
+    }, 0);
+
+    tokensRemaining = rows.reduce((total, currentToken) => {
+      if (currentToken.valid) {
+        return total + currentToken.remainingAmount;
+      }
+      return total;
+    }, 0);
+
+    pendingTokens = rows.reduce((total, currentToken) => {
+      if (!currentToken.valid) {
+        return total + currentToken.totalAmount;
+      }
+      return total;
+    }, 0);
+
     totalTokens = tokensUsed + tokensRemaining + pendingTokens;
 
-    return {
+    res.status(200).json({
       rows,
       totalTokens,
       tokensUsed,
       tokensRemaining,
       pendingTokens,
-      revenue_generated,
-    };
+      revenueGenerated,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getFeaturesAnalytics(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -702,17 +810,23 @@ export async function getFeaturesAnalytics(req, res) {
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    return {
+    res.status(200).json({
       rows,
       count,
-    };
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getSubscriptionFeaturesAnalytics(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -745,19 +859,26 @@ export async function getSubscriptionFeaturesAnalytics(req, res) {
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    return {
+    res.status(200).json({
       rows,
       count,
-    };
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getTokenTransactionsAnalytics(req, res, userInstance) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
-  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+  const where = userInstance.agent.agentType === AGENT_TYPE.AGENT
+    ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -793,17 +914,23 @@ export async function getTokenTransactionsAnalytics(req, res, userInstance) {
       // limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    return {
+    res.status(200).json({
       rows,
       count,
-    };
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getPropertyVisits(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -836,17 +963,23 @@ export async function getPropertyVisits(req, res) {
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    return {
+    res.status(200).json({
       rows,
       count,
-    };
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getPropertyVisitsAlt(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   let where = {};
 
@@ -897,17 +1030,23 @@ export async function getPropertyVisitsAlt(req, res) {
       },
     });
 
-    return {
+    res.status(200).json({
       rows,
       allProductsViews: allProductsViews.count,
-    };
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getCallDuration(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -950,7 +1089,13 @@ export async function getCallDuration(req, res) {
 }
 
 export async function getUnresponsiveAgents(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -1013,7 +1158,13 @@ export async function getUnresponsiveAgents(req, res) {
 }
 
 export async function getRequestsSent(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
 
@@ -1076,9 +1227,16 @@ export async function getRequestsSent(req, res) {
 }
 
 export async function getPropertyOffers(req, res, userInstance) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {};
+  // eslint-disable-next-line prefer-const
   let agentIds = await getSubAgentIds(userInstance.id);
   agentIds.push(req.user.id);
 
@@ -1127,7 +1285,7 @@ export async function getPropertyOffers(req, res, userInstance) {
           attributes: ['id', 'title', 'price', 'description'],
           where: {
             userId: {
-              [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
+              [Op.in]: userInstance.agent.agentType === AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
             },
           },
         },
@@ -1148,14 +1306,15 @@ export async function getPropertyOffers(req, res, userInstance) {
       if (offer.status === 'pending') pendingOffers += 1;
     }
 
-    return {
+    res.status(200).json({
       rows,
       count,
       acceptedOffers,
       rejectedOffers,
       pendingOffers,
-    };
+    });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     res.status(500).json({ message: 'Server error', error });
   }
@@ -1166,27 +1325,187 @@ export async function getCarbonFootprint(req, res) {
 
   try {
     const distanceMatrix = await calculateDistanceMatrix(agentLocation, propertyLocation);
-    // console.log("distance", distance);
 
     if (distanceMatrix && distanceMatrix.length > 0 && distanceMatrix[0].status === 'OK') {
       const distanceMatrixValue = distanceMatrix[0].distance.value;
       // Assuming average CO2 emissions per mile
       const co2EmissionsPerMile = 0.404; // in kilograms
-      const co2SavedValue = distanceMatrixValue * co2EmissionsPerMile;
-      const co2SavedText = `${co2SavedValue} metric tons CO₂E`;
-      res.json({ distance: distanceMatrix[0].distance.text, time: distanceMatrix[0].duration.text, co2SavedText });
-    } else {
-      res.status(400).json({ message: 'Invalid distance matrix response' });
+      const co2SavedValue = (distanceMatrixValue * co2EmissionsPerMile).toFixed(2);
+      const co2SavedText = `${co2SavedValue} ${process.env.CO2_UNIT}`;
+      return {
+        distance: distanceMatrix[0].distance.text,
+        time: distanceMatrix[0].duration.text,
+        co2SavedText,
+        co2SavedValue,
+      };
     }
+    return { error: true, message: 'Invalid distance matrix response' };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error('Error calculating carbon footprint:', err);
-    res.status(500).json({ message: 'Server error', err });
+    return { error: true, message: 'Server error', err };
+  }
+}
+
+export async function getPropertyCarbonFootprintAnalytics(req, res) {
+  const { appointmentId, productId } = req.body;
+  const { userInstance } = req.user;
+
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
+
+  const where = { userId: req.user.id };
+
+  if (startDate && endDate) {
+    where.createdAt = {
+      [Op.between]: [startDate, endDate],
+    };
+  }
+
+  if (search) {
+    where[Op.or] = [
+      {
+        quantity: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        amount: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        description: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+    ];
+  }
+
+  console.log('UI: ', userInstance);
+
+  // let carbonSavingProperties = 0;
+  // let carbonSavingAppointments = 0;
+
+  // if (productId) {
+  //   // Assuming you have a function countCarbonSavingProperties that takes a productId and returns the count
+  //   carbonSavingProperties = await countCarbonSavingProperties(productId);
+  // }
+
+  // if (appointmentId) {
+  //   // Assuming you have a function countCarbonSavingAppointments that takes an appointmentId and returns the count
+  //   carbonSavingAppointments = await countCarbonSavingAppointments(appointmentId);
+  // }
+
+  try {
+    const { rows, count } = await product.findAndCountAll({
+      where,
+      include: [
+        {
+          model: appointment,
+          attributes: ['id', 'co2Details'],
+          where: {
+            co2Details: {
+              [Op.not]: null,
+            },
+          },
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
+    });
+
+    return {
+      rows,
+      count,
+    };
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error calculating carbon footprint:', err);
+    return { error: true, message: 'Server error', err };
+  }
+}
+
+export async function getAppointmentCarbonFootprintAnalytics(req, res) {
+  const { appointmentId, productId } = req.body;
+  const { userInstance } = req.user;
+
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
+
+  const where = req.user.agent.agentType === AGENT_TYPE.AGENT
+    ? { agentId: req.user.id } : { managerId: req.user.id };
+
+  where.co2Details = {
+    [Op.not]: null,
+  };
+
+  if (startDate && endDate) {
+    where.createdAt = {
+      [Op.between]: [startDate, endDate],
+    };
+  }
+
+  if (search) {
+    where[Op.or] = [
+      {
+        quantity: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        amount: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        description: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+    ];
+  }
+
+  try {
+    const { rows, count } = await appointment.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
+    });
+
+    return {
+      rows,
+      count,
+    };
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error calculating carbon footprint:', err);
+    return { error: true, message: 'Server error', err };
   }
 }
 
 export async function getPropertiesSoldRented(req, res, userInstance) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
+  // eslint-disable-next-line prefer-const
   let agentIds = await getSubAgentIds(userInstance.id);
   agentIds.push(req.user.id);
 
@@ -1196,7 +1515,7 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
     },
   };
   where.userId = {
-    [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
+    [Op.in]: userInstance.agent.agentType === AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
   };
 
   if (startDate && endDate) {
@@ -1368,25 +1687,34 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    return {
+    res.status(200).json({
       // propertiesSoldData: propertiesForSale.rows,
       // propertiesRentedData: propertiesForRent.rows,
       propertiesSold: propertiesForSale.count,
       propertiesRented: propertiesForRent.count,
-    };
+    });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getPropertiesListed(req, res, userInstance) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
+  // eslint-disable-next-line prefer-const
   let agentIds = await getSubAgentIds(userInstance.id);
   agentIds.push(req.user.id);
 
-  const where = userInstance.agent.agentType == AGENT_TYPE.AGENT ? { agentId: userInstance.id } : { managerId: userInstance.id };
+  const where = userInstance.agent.agentType === AGENT_TYPE.AGENT
+    ? { agentId: userInstance.id } : { managerId: userInstance.id };
 
   where.status = {
     [Op.in]: ['active'],
@@ -1444,7 +1772,7 @@ export async function getPropertiesListed(req, res, userInstance) {
           attributes: ['id', 'title', 'price', 'description', 'address', 'status'],
           where: {
             userId: {
-              [Op.in]: userInstance.agent.agentType == AGENT_TYPE.AGENT ? agentIds : [userInstance.id],
+              [Op.in]: userInstance.agent.agentType === AGENT_TYPE.AGENT ? agentIds : [userInstance.id],
             },
             status: {
               [Op.in]: ['active'],
@@ -1461,31 +1789,42 @@ export async function getPropertiesListed(req, res, userInstance) {
 
     const propertiesOffers = await productOffer.findAndCountAll({});
 
-    let revenue_generated = 0,
-      propertiesUnderOffer = 0;
+    let revenueGenerated = 0;
+    let propertiesUnderOffer = 0;
     // for (const total of rows) {
     //   customer.active ? activeCustomers++ : nonActiveCustomers++;
     // }
 
-    for (const productOffer of propertiesOffers.rows) {
-      productOffer.status === 'accepted' ? (revenue_generated += Number(productOffer.amount)) : false;
-      productOffer.status === 'pending' ? propertiesUnderOffer++ : false;
-    }
+    propertiesOffers.rows.forEach((rowProductOffer) => {
+      if (rowProductOffer.status === 'accepted') {
+        revenueGenerated += Number(rowProductOffer.amount);
+      }
+      if (rowProductOffer.status === 'pending') {
+        propertiesUnderOffer += 1;
+      }
+    });
 
     return {
       rows: propertiesListed.rows,
       propertiesListed: propertiesListed.count,
-      revenue_generated,
+      revenueGenerated,
       propertiesUnderOffer,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     return res.status(500).json({ message: 'Server error', error });
   }
 }
 
 export async function getAgentDetails(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
+  const {
+    startDate,
+    endDate,
+    search,
+    page,
+    limit,
+  } = req.query;
 
   const where = {
     branchId: {
@@ -1543,6 +1882,7 @@ export async function getAgentDetails(req, res) {
       // totalAgentDetails,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     return res.status(500).json({ message: 'Server error', error });
   }

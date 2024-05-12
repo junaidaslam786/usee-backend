@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as analyticsController from './analytics.controller';
 import { isAuthenticated } from '@/middleware';
+import * as analyticsController from './analytics.controller';
 
 const router = Router();
 
@@ -45,8 +45,13 @@ router.post('/requests-sent', isAuthenticated, analyticsController.getRequestsSe
 // 5. Number and status of offers on property list
 router.post('/property-offers', isAuthenticated, analyticsController.getPropertyOffers); // DONE
 
-// 6. Carbon footprint savings per usee360 call
-router.post('/carbon-footprint', isAuthenticated, analyticsController.getCarbonFootprint);
+// 6a. Carbon footprint savings per property
+router.post('/property-carbon-footprint',
+  isAuthenticated, analyticsController.getPropertyCarbonFootprintAnalytics);
+
+// 6b. Carbon footprint savings per property
+router.post('/appointment-carbon-footprint',
+  isAuthenticated, analyticsController.getAppointmentCarbonFootprintAnalytics);
 
 // 7. Number of properties sold or rented each month
 router.post('/properties-sold-rented', isAuthenticated, analyticsController.getPropertiesSoldRented);
