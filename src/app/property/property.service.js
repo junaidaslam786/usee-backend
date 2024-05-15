@@ -7,7 +7,6 @@ import * as userService from '../user/user.service';
 const path = require("path");
 const ejs = require("ejs");
 const OP = Sequelize.Op;
-// const literal = Sequelize.literal;
 
 export const createProperty = async (reqBody, req) => {
   try {
@@ -585,7 +584,10 @@ export const getCarbonFootprintDetails = async (propertyId, reqBody, dbInstance)
   try {
     const appointmentWiseCarbonFootprint = await dbInstance.appointmentProduct.findAll({
       where: {
-      productId: propertyId,
+        productId: propertyId,
+        co2Details: {
+          [OP.not]: null,
+        },
       },
       attributes: ['id', 'co2Details'],
     });
