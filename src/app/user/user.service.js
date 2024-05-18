@@ -150,6 +150,61 @@ export const createUserWithPassword = async (userData, transaction) => {
   }
 }
 
+export const getUserBasicDetails = async (agentUserId, dbInstance) => {
+  try {
+    const agentUser = await getAgentUserDetailByUserId(agentUserId, dbInstance);
+    if (!agentUser) {
+      return { error: true, message: "Invalid user id or user do not exist." };
+    }
+
+    return agentUser;
+  } catch (err) {
+    console.log("getAgentUserServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+const getAgentUserDetailByUserId = async (agentUserId, dbInstance) => {
+  const agentUser = await dbInstance.agent.findOne({
+    where: { userId: agentUserId },
+    attributes: ['id', 'userId', 'agentId', 'managerId', 'agentType', 'companyName', 'companyLogo', 'companyAddress', 'companyPosition', 'jobTitle', 'sortOrder'],
+    include: [
+      {
+        model: dbInstance.user,
+        attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'profileImage', 'cityName', 'latitude', 'longitude', 'geometry', 'otpVerified', 'otpCode', 'otpExpiry', 'signupStep'],
+        include: [
+          {
+            model: dbInstance.product,
+            attributes: ["id", "title", "description", "status"],
+          },
+          {
+            model: dbInstance.productAllocation,
+            include: [
+              {
+                model: dbInstance.product,
+                attributes: ["id", "title", "description", "status"],
+              },
+            ],
+          },
+          {
+            model: dbInstance.agentAccessLevel,
+          },
+        ],
+      },
+      {
+        model: dbInstance.agentBranch,
+        attributes: ["id", "name"],
+      },
+    ],
+  });
+
+  if (!agentUser) {
+    return false;
+  }
+
+  return agentUser;
+};
+
 export const getUserById = async (id) => {
   return await db.models.user.findOne({ where: { id } });
 }

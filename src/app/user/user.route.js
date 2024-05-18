@@ -10,6 +10,7 @@ router.route('/profile')
   .get(isAuthenticated, userController.getCurrentUser)
   .put(isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser);
 // .delete(isAuthenticated, userController.deleteCurrentUser);
+router.get('/:id', userController.getUserBasicDetails);
 router.put('/update-password', isAuthenticated, validate(userValidations.changePasswordRules),
   userController.updatePassword);
 router.put('/update-timezone', isAuthenticated, userController.updateTimezone);

@@ -36,6 +36,24 @@ export const updateCurrentUser = async (req, res, next) => {
 };
 
 /**
+ * GET /user/:id
+ * Get basic user details without authentication
+ */
+export const getUserBasicDetails = async (req, res, next) => {
+  try {
+    const result = await userService.getUserBasicDetails(req.params.id, req.dbInstance);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log('getUserBasicDetailsError', err);
+    return next(err);
+  }
+}
+
+/**
  * DELETE /user/profile
  * Delete current user
  */
