@@ -946,7 +946,7 @@ export const searchPolygon = async (req) => {
     const polygonPath = utilsHelper.createPolygonPath(coordinates);
     const polygon = db.fn('ST_GeomFromText', polygonPath, 4326);
     const whereClause = Sequelize.where(
-      Sequelize.fn('ST_Within', Sequelize.col('geometry'), polygon),
+      Sequelize.fn('ST_Within', Sequelize.col('product.geometry'), polygon),
       true
     );
     const results = await req.dbInstance.product.findAll({
