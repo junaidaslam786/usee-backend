@@ -82,6 +82,16 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
   try {
     // Handle the event
     switch (event.type) {
+      case 'customer.source.created':
+        const source = event.data.object;
+        console.log("source.created: ", source);
+        // Then define and call a function to handle the event customer.source.created
+        break;
+      case 'customer.source.updated':
+        const sourceUpdated = event.data.object;
+        console.log("source.Updated: ", sourceUpdated);
+        // Then define and call a function to handle the event customer.source.updated
+        break;
       case 'payment_method.attached':
         const paymentMethod = event.data.object;
         console.log("paymentMethod.Attached: ", paymentMethod);
