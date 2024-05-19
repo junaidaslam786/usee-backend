@@ -45,21 +45,19 @@ if (NODE_ENV !== "development") {
 }
 
 // Enviroment variables
-// const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-// const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
-const TWITTER_CONSUMER_KEY = process.env.TWITTER_API_KEY;
-const TWITTER_CONSUMER_SECRET = process.env.TWITTER_API_SECRET;
-const TWITTER_OAUTH_CLIENT_ID = process.env.TWITTER_OAUTH_CLIENT_ID;
-const TWITTER_OAUTH_CLIENT_SECRET = process.env.TWITTER_OAUTH_CLIENT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const LINKEDIN_PRIMARY_CLIENT_SECRET = process.env.LINKEDIN_PRIMARY_CLIENT_SECRET;
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const STRIPE_ENDPOINT_SECRET = process.env.STRIPE_ENDPOINT_SECRET;
+const TWITTER_CONSUMER_KEY = process.env.TWITTER_API_KEY;
+const TWITTER_CONSUMER_SECRET = process.env.TWITTER_API_SECRET;
+const TWITTER_OAUTH_CLIENT_ID = process.env.TWITTER_OAUTH_CLIENT_ID;
+const TWITTER_OAUTH_CLIENT_SECRET = process.env.TWITTER_OAUTH_CLIENT_SECRET;
 
 // Webhook endpoint to handle events from Stripe
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (request, response) => {
@@ -84,6 +82,16 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
   try {
     // Handle the event
     switch (event.type) {
+      case 'payment_method.attached':
+        const paymentMethod = event.data.object;
+        console.log("paymentMethod.Attached: ", paymentMethod);
+        // Then define and call a function to handle the event payment_method.attached
+        break;
+      case 'payment_method.updated':
+        const paymentMethodUpdated = event.data.object;
+        console.log("paymentMethod.Updated: ", paymentMethodUpdated);
+        // Then define and call a function to handle the event payment_method.updated
+        break;
       case 'invoice.payment_succeeded':
         const invoice = event.data.object;
         // console.log("invoice: ", invoice);
@@ -162,9 +170,9 @@ app.post('/webhook/toxbox', async (req, res) => {
     if (data.event === 'connectionDestroyed') {
       const sessionId = data.session.sessionId;
       const reason = data.session.connectionDestroyedReason;
-  
+
       console.log(`Session ${sessionId} ended. Reason: ${reason}`);
-  
+
       // Perform actions based on session ending (e.g., update appointment status)
       // Get appointment from db using sessionID
       const appointment = await db.Appointment.findOne({ sessionId });
@@ -1293,6 +1301,7 @@ app.get('/fetch-stripe-price-details', async (req, res) => {
   }
 });
 
+// Route to fetch customer invoices
 app.get('/fetch-customer-invoices', async (req, res) => {
   const { customerId } = req.query; // or req.body, depending on your client's request
 
@@ -1328,6 +1337,21 @@ app.get('/fetch-customer-invoice/:invoiceId', async (req, res) => {
     console.error('Error fetching invoice:', error.message);
     res.status(500).json({ error: 'Failed to fetch invoice' });
   }
+});
+
+// Endpoint to create a billing session
+app.post('/create-billing-session', async (req, res) => {
+  const { customerId } = req.body;
+
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${process.env.HOME_PANEL_URL}/agent/payment`,
+    });
+    res.status(200).json({ success: true, session: session });
+  } catch (error) {
+    console.error('Error creating billing session:', error.message);
+    res.status(500).json({ error: 'Failed to create billing session' });  }
 });
 
 // Endpoint to create a coupon

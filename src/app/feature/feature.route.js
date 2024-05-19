@@ -1,8 +1,8 @@
 import { Router } from 'express';
 
+import { isAuthenticated } from '@/middleware';
 import * as featureController from './feature.controller';
-import * as featureValidations from './feature.request';
-import { isAuthenticated, validate } from '@/middleware';
+// import * as featureValidations from './feature.request';
 
 const router = Router();
 
