@@ -287,7 +287,10 @@ app.get('/auth/facebook/callback', async (req, res) => {
           console.log("RESPONSE DATA: ", response.data);
 
           let user = await db.models.user.findOne({
-            where: { email: email },
+            where: {
+              email: email,
+              facebookId: id,
+            },
           });
           let agent = null;
 
@@ -392,7 +395,10 @@ app.get('/auth/twitter/callback', async (req, res) => {
     const { id, name, email } = userData;
 
     const user = await db.models.user.findOne({
-      where: { email: email },
+      where: {
+        email: email,
+        twitterId: id,
+      },
     });
     let agent = null;
 
@@ -555,7 +561,10 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     console.log("USER DATA: ", userData);
 
     let user = await db.models.user.findOne({
-      where: { email: email },
+      where: {
+        email: email,
+        linkedinId: sub,
+      },
     });
     let agent = null;
 
@@ -673,7 +682,10 @@ app.get('/auth/google/callback', async (req, res) => {
     console.log("USER DATA: ", userData);
 
     let user = await db.models.user.findOne({
-      where: { email: email },
+      where: {
+        email: email,
+        googleId: id,
+      },
     });
     let agent = null;
 
@@ -781,7 +793,10 @@ app.post('/auth/microsoft/callback', async (req, res) => {
     const { id, displayName, mail } = userData;
 
     let user = await db.models.user.findOne({
-      where: { email: mail },
+      where: {
+        email: mail,
+        microsoftId: id,
+      },
     });
     let agent = null;
 
