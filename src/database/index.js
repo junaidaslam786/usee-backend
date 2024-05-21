@@ -30,6 +30,7 @@ import productImageModel from './models/product-image';
 import productMetaTagModel from './models/product-meta-tag';
 import productRemoveReasonModel from './models/product-remove-reason';
 import productRemoveRequestModel from './models/product-remove-request';
+import productSubscription from './models/product-subscription';
 import appoinmentModel from './models/appointment';
 import roleModel from './models/role';
 import userModel from './models/user';
@@ -89,6 +90,7 @@ const modelDefiners = [
   productMetaTagModel,
   productRemoveReasonModel,
   productRemoveRequestModel,
+  productSubscription,
   roleModel,
   userModel,
   userAlertModel,

@@ -1,4 +1,10 @@
 import { DataTypes, Model } from 'sequelize';
+import { SUBSCRIPTION_STATUS } from '@/config/constants';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+});
 
 export default function (sequelize) {
   class UserSubscription extends Model {
@@ -22,13 +28,19 @@ export default function (sequelize) {
   }
 
   UserSubscription.init({
+    id: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+      unique: true,
+      defaultValue: DataTypes.UUIDV4,
+    },
     userId: {
       primaryKey: true,
       type: DataTypes.UUID,
       references: {
         model: 'users',
         key: 'id',
-      }
+      },
     },
     subscriptionId: {
       primaryKey: true,
@@ -36,7 +48,7 @@ export default function (sequelize) {
       references: {
         model: 'subscriptions',
         key: 'id',
-      }
+      },
     },
     featureId: {
       primaryKey: true,
@@ -44,7 +56,7 @@ export default function (sequelize) {
       references: {
         model: 'features',
         key: 'id',
-      }
+      },
     },
     freeRemainingUnits: {
       type: DataTypes.FLOAT,
@@ -89,10 +101,12 @@ export default function (sequelize) {
     // }
   });
 
+  // eslint-disable-next-line no-unused-vars
   UserSubscription.addHook('afterCreate', (instance) => {
     //
   });
 
+  // eslint-disable-next-line no-unused-vars
   UserSubscription.addHook('afterDestroy', (instance) => {
     //
   });

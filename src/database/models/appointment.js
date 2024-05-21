@@ -122,8 +122,33 @@ export default function (sequelize) {
   });
 
   // eslint-disable-next-line no-unused-vars
-  Appointment.addHook('afterCreate', (instance) => {
-    //
+  Appointment.addHook('afterSave', async (instance) => {
+    if (instance.status === 'inprogress') {
+      const userSubscription = await sequelize.models.userSubscription.findOne({
+        where: {
+          userId: instance.agentId,
+          subscriptionId: '35e0b998-53bc-4777-a207-261fff3489aa',
+          featureId: '159c869a-1b24-4cd3-ac61-425645b730c7',
+        },
+      });
+      // console.log('UserSubscription found:', userSubscription);
+
+      if (userSubscription) {
+        await Promise.all(instance.products.map(async (product) => {
+          const [productSubscription, created] = await sequelize.models.productSubscription.findOrCreate({
+            where: { userSubscriptionId: userSubscription.id, productId: product.id },
+          });
+          // console.log('Product created(ID):', productSubscription);
+          console.log('created:', created);
+
+          if (created) {
+            productSubscription.freeRemainingUnits = 4;
+            productSubscription.paidRemainingUnits = 0;
+            productSubscription.save();
+          }
+        }));
+      }
+    }
   });
 
   Appointment.addHook('beforeDestroy', async (instance) => {

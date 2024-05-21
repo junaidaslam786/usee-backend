@@ -1,14 +1,14 @@
 import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
-  class AppointmentProducts extends Model {
+  class AppointmentProduct extends Model {
     static associate(models) {
-      AppointmentProducts.belongsTo(models.appointment, { foreignKey: 'appointmentId' });
-      AppointmentProducts.belongsTo(models.product, { foreignKey: 'productId' });
+      AppointmentProduct.belongsTo(models.appointment, { foreignKey: 'appointmentId' });
+      AppointmentProduct.belongsTo(models.product, { foreignKey: 'productId' });
     }
   }
 
-  AppointmentProducts.init({
+  AppointmentProduct.init({
     id: {
       type: DataTypes.UUID,
       field: 'id',
@@ -59,17 +59,20 @@ export default function (sequelize) {
     sequelize,
   });
 
-  AppointmentProducts.addHook('beforeSave', async (instance) => {
+  // eslint-disable-next-line no-unused-vars
+  AppointmentProduct.addHook('beforeSave', async (instance) => {
     //
   });
 
-  AppointmentProducts.addHook('afterCreate', (instance) => {
+  // eslint-disable-next-line no-unused-vars
+  AppointmentProduct.addHook('afterCreate', (instance) => {
     //
   });
 
-  AppointmentProducts.addHook('afterDestroy', (instance) => {
+  // eslint-disable-next-line no-unused-vars
+  AppointmentProduct.addHook('afterDestroy', (instance) => {
     //
   });
 
-  return AppointmentProducts;
+  return AppointmentProduct;
 }
