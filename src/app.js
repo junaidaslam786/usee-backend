@@ -263,129 +263,117 @@ app.post('/auth/facebook', (req, res) => {
 app.get('/auth/facebook/callback', async (req, res) => {
   const { code, state } = req.query;
 
-  switch (state) {
-    case 'agent':
-    case 'customer':
-      break;
-    default:
-      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
+  if (!['agent', 'customer'].includes(state)) {
+    return res.status(400).json({ error: true, message: 'Invalid state parameter' });
   }
 
   try {
     const access_token_response = `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&redirect_uri=${process.env.APP_URL}/auth/facebook/callback&client_secret=${FACEBOOK_APP_SECRET}&code=${code}`;
 
-    await axios.get(access_token_response)
-      .then(async (response) => {
-        const { data } = response;
+    const accessTokenResponse = await axios.get(access_token_response);
+    const { access_token } = accessTokenResponse.data;
 
-        const { access_token } = data;
+    const detailsResponse = `https://graph.facebook.com/me?fields=id,name,email&access_token=${access_token}`;
+    const userDetailsResponse = await axios.get(detailsResponse);
+    const { id, name, email } = userDetailsResponse.data;
 
-        const detailsResponse = `https://graph.facebook.com/me?fields=id,name,email&access_token=${access_token}`;
-        await axios.get(detailsResponse).then(async (response) => {
-          const { id, name, email } = response.data;
+    console.log("RESPONSE DATA: ", userDetailsResponse.data);
 
-          console.log("RESPONSE DATA: ", response.data);
+    let user = await db.models.user.findOne({
+      where: { email: email }
+    });
 
-          let user = await db.models.user.findOne({
-            where: {
-              email: email,
-              facebookId: id,
-            },
-          });
-          let agent = null;
+    if (user) {
+      // If user exists, update the facebookId if it's not already set
+      if (!user.facebookId) {
+        user.facebookId = id;
+        await user.save();
+      }
+    } else {
+      // If user does not exist, create a new one
+      const nameArray = name.split(" ");
+      const firstName = nameArray[0];
+      const lastName = nameArray[1];
 
-          if (!user) {
-            const nameArray = name.split(" ");
-            const firstName = nameArray[0];
-            const lastName = nameArray[1];
-
-            user = await db.models.user.create({
-              firstName: firstName,
-              lastName: lastName,
-              email: email,
-              userType: state,
-              timezone: process.env.APP_DEFAULT_TIMEZONE,
-              signupStep: -1,
-              status: true,
-              active: false,
-              otpVerified: true,
-              facebookId: id,
-            });
-
-            // create agent using above user
-            if (state === 'agent') {
-              agent = await db.models.agent.create({
-                userId: user.id,
-                agentType: AGENT_TYPE.AGENT,
-                apiCode: utilsHelper.generateRandomString(10, true),
-                createdBy: user.id,
-                updatedBy: user.id,
-              });
-
-              console.log("AGENT: ", agent);
-
-              let sortWhere = { agentId: user.id };
-              const latestSortOrderData = await db.models.agent.findOne({
-                attributes: ["sortOrder"],
-                where: sortWhere,
-                order: [["createdAt", "desc"]],
-                limit: 1,
-              });
-              const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
-              await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
-            }
-          } else {
-            if (state === 'agent') {
-              agent = await db.models.agent.findOne({
-                where: { userId: user.id },
-              });
-            }
-          }
-
-          const token = await user.generateToken('4h', agent);
-          const refreshToken = await user.generateToken('4h');
-
-          res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=${state}`);
-        }).catch((error) => {
-          // eslint-disable-next-line no-console
-          console.error(error);
-        });
-      }).catch((error) => {
-        // eslint-disable-next-line no-console
-        console.error(error);
+      user = await db.models.user.create({
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        userType: state,
+        timezone: process.env.APP_DEFAULT_TIMEZONE,
+        signupStep: -1,
+        status: true,
+        active: false,
+        otpVerified: true,
+        facebookId: id,
       });
+    }
+
+    let agent = null;
+    if (state === 'agent') {
+      agent = await db.models.agent.findOne({
+        where: { userId: user.id },
+      });
+
+      if (!agent) {
+        agent = await db.models.agent.create({
+          userId: user.id,
+          agentType: AGENT_TYPE.AGENT,
+          apiCode: utilsHelper.generateRandomString(10, true),
+          createdBy: user.id,
+          updatedBy: user.id,
+        });
+
+        console.log("AGENT: ", agent);
+
+        const sortWhere = { agentId: user.id };
+        const latestSortOrderData = await db.models.agent.findOne({
+          attributes: ["sortOrder"],
+          where: sortWhere,
+          order: [["createdAt", "desc"]],
+          limit: 1,
+        });
+        const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
+        await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
+      }
+    }
+
+    const token = await user.generateToken('4h', agent);
+    const refreshToken = await user.generateToken('4h');
+
+    res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?token=${token}&onboarded=${user.status && user.active ? 'true' : 'false'}&userType=${state}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Failed to authenticate user' });
   }
 });
 
+
 // Twitter authentication callback route
 app.get('/auth/twitter/callback', async (req, res) => {
   const { code, state, oauth_token, oauth_verifier } = req.query;
 
-  switch (state) {
-    case 'agent':
-    case 'customer':
-      break;
-    default:
-      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
+  if (!['agent', 'customer'].includes(state)) {
+    return res.status(400).json({ error: true, message: 'Invalid state parameter' });
   }
 
   try {
     const response = await axios.post(`https://api.twitter.com/oauth/access_token?oauth_verifier=${oauth_verifier}&oauth_token=${oauth_token}`);
-    const data = response.data;
     const queryString = response.data;
     const params = new URLSearchParams(queryString);
 
     const oauth_token2 = params.get('oauth_token');
+    const oauth_token_secret = params.get('oauth_token_secret');
+    const user_id = params.get('user_id');
+    const screen_name = params.get('screen_name');
+
     console.log("OAUTH TOKEN: ", oauth_token);
     console.log("OAUTH TOKEN2: ", oauth_token2);
 
     // get user details from twitter api
     const userResponse = await axios.get(`https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true`, {
       headers: {
-        Authorization: `Bearer ${oauth_token}`
+        Authorization: `Bearer ${oauth_token2}`
       }
     });
 
@@ -394,15 +382,19 @@ app.get('/auth/twitter/callback', async (req, res) => {
 
     const { id, name, email } = userData;
 
-    const user = await db.models.user.findOne({
-      where: {
-        email: email,
-        twitterId: id,
-      },
+    let user = await db.models.user.findOne({
+      where: { email: email }
     });
     let agent = null;
 
-    if (!user) {
+    if (user) {
+      // If user exists, update the twitterId if it's not already set
+      if (!user.twitterId) {
+        user.twitterId = id;
+        await user.save();
+      }
+    } else {
+      // If user does not exist, create a new one
       const nameArray = name.split(" ");
       const firstName = nameArray[0];
       const lastName = nameArray[1];
@@ -419,9 +411,14 @@ app.get('/auth/twitter/callback', async (req, res) => {
         otpVerified: true,
         twitterId: id,
       });
+    }
 
-      // create agent using above user
-      if (state === 'agent') {
+    if (state === 'agent') {
+      agent = await db.models.agent.findOne({
+        where: { userId: user.id },
+      });
+
+      if (!agent) {
         agent = await db.models.agent.create({
           userId: user.id,
           agentType: AGENT_TYPE.AGENT,
@@ -432,7 +429,7 @@ app.get('/auth/twitter/callback', async (req, res) => {
 
         console.log("AGENT: ", agent);
 
-        let sortWhere = { agentId: user.id };
+        const sortWhere = { agentId: user.id };
         const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -441,12 +438,6 @@ app.get('/auth/twitter/callback', async (req, res) => {
         });
         const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
         await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
-      }
-    } else {
-      if (state === 'agent') {
-        agent = await db.models.agent.findOne({
-          where: { userId: user.id },
-        });
       }
     }
 
@@ -459,6 +450,7 @@ app.get('/auth/twitter/callback', async (req, res) => {
     res.status(500).json({ error: 'Failed to authenticate user' });
   }
 });
+
 
 // Twitter authentication route
 app.post('/auth/twitter', async (req, res) => {
@@ -529,30 +521,20 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     return res.status(400).json({ error: true, message: error_description });
   }
 
-  switch (state) {
-    case 'agent':
-    case 'customer':
-      break;
-    default:
-      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
+  if (!['agent', 'customer'].includes(state)) {
+    return res.status(400).json({ error: true, message: 'Invalid state parameter' });
   }
 
   try {
     const linkedinUrl = `https://www.linkedin.com/oauth/v2/accessToken?grant_type=authorization_code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${process.env.APP_URL}/auth/linkedin/callback&client_secret=${LINKEDIN_PRIMARY_CLIENT_SECRET}&code=${code}`;
 
     const response = await axios.post(linkedinUrl);
-    // const response = await axios.post(linkedinUrl, {}, {
-    //   headers: {
-    //     'Content-Type': 'application/x-www-form-urlencoded'
-    //   }
-    // });
 
     if (response.data.error) {
       return res.status(400).json({ error: true, message: decodeURI(response.data.error_description) });
     }
 
-    const data = response.data;
-    const { access_token } = data;
+    const { access_token } = response.data;
 
     const userResponse = await axios.get(`https://api.linkedin.com/v2/userinfo?oauth2_access_token=${access_token}`);
     const userData = userResponse.data;
@@ -561,14 +543,18 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     console.log("USER DATA: ", userData);
 
     let user = await db.models.user.findOne({
-      where: {
-        email: email,
-        linkedinId: sub,
-      },
+      where: { email: email }
     });
     let agent = null;
 
-    if (!user) {
+    if (user) {
+      // If user exists, update the linkedinId if it's not already set
+      if (!user.linkedinId) {
+        user.linkedinId = sub;
+        await user.save();
+      }
+    } else {
+      // If user does not exist, create a new one
       const nameArray = name.split(" ");
       const firstName = nameArray[0];
       const lastName = nameArray[1];
@@ -585,9 +571,14 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         otpVerified: true,
         linkedinId: sub,
       });
+    }
 
-      // create agent using above user
-      if (state === 'agent') {
+    if (state === 'agent') {
+      agent = await db.models.agent.findOne({
+        where: { userId: user.id },
+      });
+
+      if (!agent) {
         agent = await db.models.agent.create({
           userId: user.id,
           agentType: AGENT_TYPE.AGENT,
@@ -598,7 +589,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
 
         console.log("AGENT: ", agent);
 
-        let sortWhere = { agentId: user.id };
+        const sortWhere = { agentId: user.id };
         const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -607,12 +598,6 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         });
         const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
         await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
-      }
-    } else {
-      if (state === 'agent') {
-        agent = await db.models.agent.findOne({
-          where: { userId: user.id },
-        });
       }
     }
 
@@ -625,6 +610,7 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     res.status(500).json({ error: true, message: 'Failed to authenticate user' });
   }
 });
+
 
 // LinkedIn authentication route
 app.post('/auth/linkedin', (req, res) => {
@@ -652,17 +638,12 @@ app.post('/auth/linkedin', (req, res) => {
 app.get('/auth/google/callback', async (req, res) => {
   const { code, state } = req.query;
 
-  switch (state) {
-    case 'agent':
-    case 'customer':
-      break;
-    default:
-      return res.status(400).json({ error: true, message: 'Invalid state parameter' });
+  if (!['agent', 'customer'].includes(state)) {
+    return res.status(400).json({ error: true, message: 'Invalid state parameter' });
   }
 
   try {
     const redirectUrl = `${process.env.APP_URL}/auth/google/callback`;
-    // const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUrl}&scope=${scope}&state=${state}&response_type=code`;
 
     const response = await axios.post('https://oauth2.googleapis.com/token', {
       code: code,
@@ -672,8 +653,7 @@ app.get('/auth/google/callback', async (req, res) => {
       grant_type: 'authorization_code',
     });
 
-    const data = response.data;
-    const { access_token } = data;
+    const { access_token } = response.data;
 
     const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${access_token}`);
     const userData = userResponse.data;
@@ -683,13 +663,19 @@ app.get('/auth/google/callback', async (req, res) => {
 
     let user = await db.models.user.findOne({
       where: {
-        email: email,
-        googleId: id,
+        email: email
       },
     });
     let agent = null;
 
-    if (!user) {
+    if (user) {
+      // If user exists, update the googleId if it's not already set
+      if (!user.googleId) {
+        user.googleId = id;
+        await user.save();
+      }
+    } else {
+      // If user does not exist, create a new one
       const nameArray = name.split(" ");
       const firstName = nameArray[0];
       const lastName = nameArray[1];
@@ -706,9 +692,14 @@ app.get('/auth/google/callback', async (req, res) => {
         otpVerified: true,
         googleId: id,
       });
+    }
 
-      // create agent using above user
-      if (state === 'agent') {
+    if (state === 'agent') {
+      agent = await db.models.agent.findOne({
+        where: { userId: user.id },
+      });
+
+      if (!agent) {
         agent = await db.models.agent.create({
           userId: user.id,
           agentType: AGENT_TYPE.AGENT,
@@ -719,7 +710,7 @@ app.get('/auth/google/callback', async (req, res) => {
 
         console.log("AGENT: ", agent);
 
-        let sortWhere = { agentId: user.id };
+        const sortWhere = { agentId: user.id };
         const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -728,12 +719,6 @@ app.get('/auth/google/callback', async (req, res) => {
         });
         const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
         await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
-      }
-    } else {
-      if (state === 'agent') {
-        agent = await db.models.agent.findOne({
-          where: { userId: user.id },
-        });
       }
     }
 
@@ -746,6 +731,7 @@ app.get('/auth/google/callback', async (req, res) => {
     res.status(500).json({ error: 'Failed to authenticate user' });
   }
 });
+
 
 // Google authentication route
 app.post('/auth/google', (req, res) => {
