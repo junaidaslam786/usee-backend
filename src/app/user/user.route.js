@@ -10,7 +10,6 @@ router.route('/profile')
   .get(isAuthenticated, userController.getCurrentUser)
   .put(isAuthenticated, validate(userValidations.updateProfileRules), userController.updateCurrentUser);
 // .delete(isAuthenticated, userController.deleteCurrentUser);
-router.get('/:id', userController.getUserBasicDetails);
 router.put('/update-password', isAuthenticated, validate(userValidations.changePasswordRules),
   userController.updatePassword);
 router.put('/update-timezone', isAuthenticated, userController.updateTimezone);
@@ -23,5 +22,6 @@ router.delete('/call-background-image', isAuthenticated, validate(userValidation
 router.post('/verify-password', isAuthenticated, validate(userValidations.verifyPasswordRules),
   userController.verifyPassword);
 router.delete('/delete', isAuthenticated, userController.deleteUser);
+router.get('/:id', userController.getUserBasicDetails);
 
 export default router;
