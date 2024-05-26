@@ -832,6 +832,16 @@ export const getPropertyById = async (propertyId, dbInstance) => {
         model: dbInstance.user,
         attributes: ["id", "firstName", "lastName", "email"],
       },
+      {
+        model: dbInstance.productMetaTag,
+        attributes: ["value"],
+        include: [
+          {
+            model: dbInstance.categoryField,
+            attributes: ["id", "label", "type", "options", "required"],
+          },
+        ]
+      }
     ]
   });
   if (!property) {
