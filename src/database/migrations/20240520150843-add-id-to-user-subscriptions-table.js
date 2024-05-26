@@ -1,6 +1,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Add a new column to the table
     await queryInterface.addColumn('user_subscriptions', 'id', {
       type: Sequelize.UUID,
       primaryKey: true,
@@ -14,6 +15,9 @@ module.exports = {
 
     // Add a not-null constraint to the column
     await queryInterface.changeColumn('user_subscriptions', 'id', {
+      type: Sequelize.UUID,
+      primaryKey: true,
+      unique: true,
       allowNull: false,
     });
   },
