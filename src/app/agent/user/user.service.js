@@ -611,6 +611,7 @@ export const addUserToFeatureSubscription = async (userId, subscriptionId, featu
     }
 
     const linkedFeaturesMap = {
+      'Video Call': 'Property Listing',
       'Snag List': 'Property Listing',
       'Carbon Footprint': 'Video Call',
       'Video Call Recording': 'Video Call',

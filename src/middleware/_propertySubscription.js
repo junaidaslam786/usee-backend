@@ -19,7 +19,7 @@ export default async function (req, res, next) {
     if (!userSubscription) {
       return res.status(403).json({
         error: true,
-        message: 'Please subscribe to property listing feature to view properties.',
+        message: 'Please subscribe to property listing feature to create a property.',
       });
     }
 
