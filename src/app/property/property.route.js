@@ -40,6 +40,7 @@ router.post('/customer/make-offer', isAuthenticated, validate(propertyValidation
 router.delete('/customer/offer/:id', isAuthenticated, propertyController.deleteCustomerOffer);
 router.post('/agent/update-offer', isAuthenticated, validate(propertyValidations.updateOfferStatusRequestRules),
   propertyController.updateOfferStatus);
+router.post('/agent/enable-snaglist', isAuthenticated, propertyController.enableAgentSnaglist);
 router.post('/customer/snag-list', isAuthenticated, propertyController.updateCustomerSnaglist);
 router.post('/agent/snag-list', isAuthenticated, propertyController.updateAgentSnaglist);
 router.post('/log', isAuthenticated, validate(propertyValidations.addPropertyLogRules),

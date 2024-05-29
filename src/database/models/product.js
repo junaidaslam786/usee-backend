@@ -137,9 +137,27 @@ export default function (sequelize) {
     }
   });
 
-  // eslint-disable-next-line no-unused-vars
-  Product.addHook('afterCreate', (instance) => {
-    //
+  Product.addHook('afterCreate', async (instance, options) => {
+    const videoCallFeature = await sequelize.models.feature.findOne({
+      where: { name: 'Video Call' },
+    });
+
+    const videoCallSubscription = await sequelize.models.userSubscription.findOne({
+      where: {
+        userId: instance.userId,
+        featureId: videoCallFeature.id,
+      },
+    });
+
+    if (videoCallSubscription) {
+      // If video call feature is subscribed, add free call slots against property
+      await sequelize.models.productSubscription.create({
+        userSubscriptionId: videoCallSubscription.id,
+        productId: instance.id,
+        freeRemainingUnits: videoCallFeature.freeUnits || 4,
+        paidRemainingUnits: 0,
+      }, { transaction: options.transaction });
+    }
   });
 
   // eslint-disable-next-line no-unused-vars

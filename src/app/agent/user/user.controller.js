@@ -179,11 +179,11 @@ export const updateUserSubscription = async (req, res, next) => {
     console.log("updateUserSubscriptionError", err);
     next(err);
   }
-}
+};
 
-export const associateUserToSubscriptionFeatures = async (req, res, next) => {
+export const addSubscriptionFeatureToUser = async (req, res, next) => {
   try {
-    const result = await userService.associateUserToSubscriptionFeatures(req.params?.userId, req.body, req);
+    const result = await userService.addSubscriptionFeatureToUser(req.params?.userId, req.body, req);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }

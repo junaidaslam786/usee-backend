@@ -19,7 +19,7 @@ export const createProperty = async (reqBody, req) => {
 
     const videoCallFeature = await dbInstance.feature.findOne({
       where: {
-        id: "159c869a-1b24-4cd3-ac61-425645b730c7",
+        name: 'Video Call',
       },
       attributes: ['freeUnits']
     });
@@ -757,6 +757,57 @@ export const updateOfferStatus = async (reqBody, req) => {
     return true;
   } catch (err) {
     console.log('updateOfferStatusServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
+export const enableAgentSnaglist = async (reqBody, req) => {
+  try {
+    const { productId, userSubscriptionId } = reqBody;
+    const { dbInstance } = req;
+
+    const property = await dbInstance.product.findByPk(productId);
+    if (!property) {
+      return { error: true, message: 'Invalid property id or Property do not exist.' };
+    }
+
+    const snagListFeature = await dbInstance.feature.findOne({ where: { name: 'Snag List' } });
+    const propertyListingFeature = await dbInstance.feature.findOne({ where: { name: 'Property Listing' } });
+
+    if (!propertyListingFeature) {
+      return {
+        error: true,
+        message: `Unable to find "${propertyListingFeature.name}" feature, which is a pre-requisite for ${snagListFeature.name} feature.`,
+      };
+    }
+    
+    const snagListUserSubscription = await dbInstance.userSubscription.findOne({
+      where: {
+        id: userSubscriptionId,
+        featureId: snagListFeature.id
+      }
+    });
+    if (!snagListUserSubscription) {
+      return {
+        error: true,
+        message: `Could not enable snaglist for ${property.title}. No subscription found for "${snagListFeature.name}" feature.`
+      };
+    }
+
+    const product = await dbInstance.product.findOne({ where: { id: productId } });
+    if (!product) {
+      return { error: true, message: 'Invalid property id or Property do not exist.' };
+    }
+
+    const productSubscription = await dbInstance.productSubscription.findOrCreate({ where: { userSubscriptionId, productId } });
+
+    if (productSubscription[1]) {
+      return { success: true, message: 'Agent snag list enabled successfully.' };
+    } else {
+      return { error: true, message: 'Agent snag list is already enabled for this property.' };
+    }
+  } catch (err) {
+    console.log('enableAgentSnagListServiceError', err)
     return { error: true, message: 'Server not responding, please try again later.' }
   }
 }

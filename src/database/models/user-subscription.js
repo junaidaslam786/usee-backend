@@ -12,18 +12,6 @@ export default function (sequelize) {
       UserSubscription.belongsTo(models.user, { foreignKey: 'userId' });
       UserSubscription.belongsTo(models.subscription, { foreignKey: 'subscriptionId' });
       UserSubscription.belongsTo(models.feature, { foreignKey: 'featureId' });
-      // User.belongsTo(models.role, { foreignKey: 'roleId' })
-      // User.hasOne(models.agent, { foreignKey: 'userId' })
-      // User.hasMany(models.agentBranch, { foreignKey: 'userId' })
-      // User.hasMany(models.agentAvailability, { foreignKey: 'userId' })
-      // User.hasMany(models.product, { foreignKey: 'userId' })
-      // User.hasMany(models.customerWishlist, { foreignKey: 'customerId' })
-      // User.hasMany(models.customerLog, { foreignKey: 'userId' })
-      // User.hasMany(models.userAlert, { foreignKey: 'customerId' })
-      // User.hasMany(models.productAllocation, { foreignKey: 'userId' })
-      // User.hasMany(models.agentAccessLevel, { foreignKey: 'userId' })
-      // User.hasMany(models.userCallBackgroundImage, { foreignKey: 'userId' })
-      // User.hasMany(models.userSubscription, { foreignKey: 'userId' });
     }
   }
 
@@ -91,19 +79,56 @@ export default function (sequelize) {
     sequelize,
   });
 
-  UserSubscription.addHook('beforeSave', async (instance) => {
-    // if (instance.changed('password')) {
-    //   instance.password = await hash(instance.password, 10);
-    // }
+  UserSubscription.addHook('afterCreate', async (instance, options) => {
+    // Start Logic: to check if user has already subscribed to property listing when subscribing to video call feature
+    const feature = await sequelize.models.feature.findByPk(instance.featureId);
+    if (feature) {
+      if (feature.name === 'Video Call') {
+        const user = await sequelize.models.user.findByPk(instance.userId);
+        const propertyListingFeature = await sequelize.models.feature.findOne({
+          where: { name: 'Property Listing' },
+        });
 
-    // if (!instance.profileImage) {
-    //   instance.profileImage = '/dummy.png';
-    // }
+        const propertySubscription = await sequelize.models.userSubscription.findOne({
+          where: {
+            userId: user.id,
+            featureId: propertyListingFeature.id,
+          },
+        });
+        if (propertySubscription) {
+          const userProperties = await sequelize.models.product.findAll({
+            where: {
+              userId: user.id,
+              status: 'active',
+            },
+          });
+          const propertyIds = userProperties.map((property) => property.id);
+
+          // Add free call slots against user's properties
+          await sequelize.models.productSubscription.bulkCreate(propertyIds.map((propertyId) => ({
+            userSubscriptionId: instance.id,
+            productId: propertyId,
+            freeRemainingUnits: instance.freeUnits || 4,
+            paidRemainingUnits: 0,
+          })), { transaction: options.transaction });
+        }
+      }
+    }
   });
 
-  // eslint-disable-next-line no-unused-vars
-  UserSubscription.addHook('afterCreate', (instance) => {
-    //
+  UserSubscription.addHook('afterSave', async (instance) => {
+    if (instance.changed('paidRemainingUnits')) {
+      if (instance.paidRemainingUnits === 0) {
+        if (instance.autoRenew) {
+          // Renew the subscription using Stripe
+          await instance.renewSubscriptionIfRequired();
+        } else {
+          instance.status = SUBSCRIPTION_STATUS.EXPIRED;
+          // const updatedInstance = { ...instance.attributes, status: SUBSCRIPTION_STATUS.EXPIRED };
+          // instance.set(updatedInstance);
+        }
+      }
+    }
   });
 
   // eslint-disable-next-line no-unused-vars

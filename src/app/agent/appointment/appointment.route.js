@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { isAuthenticated, validate } from '@/middleware';
+import { isAuthenticated, videoCallSubscription, videoCallRecordingSubscription, validate } from '@/middleware';
 import * as appointmentController from './appointment.controller';
 import * as appointmentValidations from './appointment.request';
 
@@ -9,9 +9,10 @@ const router = Router();
 router.get('/list', isAuthenticated, appointmentController.listAppointments);
 router.get('/session-token/:id', isAuthenticated, appointmentController.getSessionToken);
 router.get('/session-details/:id', isAuthenticated, appointmentController.getSessionDetails);
-router.get('/download-archive/:archiveId', isAuthenticated, appointmentController.downloadSessionRecording);
+router.get('/download-archive/:archiveId', isAuthenticated,
+  videoCallRecordingSubscription, appointmentController.downloadSessionRecording);
 router.get('/:id', isAuthenticated, appointmentController.getAppointment);
-router.post('/create', isAuthenticated, validate(appointmentValidations.createAppointmentRules),
+router.post('/create', isAuthenticated, videoCallSubscription, validate(appointmentValidations.createAppointmentRules),
   appointmentController.createAppointment);
 router.delete('/:id', isAuthenticated, appointmentController.deleteAppointment);
 router.put('/status', isAuthenticated, validate(appointmentValidations.updateStatusAppointmentRules),

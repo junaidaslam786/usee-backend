@@ -1,9 +1,9 @@
 import authenticationMiddleware from './authentication';
+import propertySubscription from './_propertySubscription';
+import videoCallSubscription from './_videoCallSubscription';
+import videoCallRecordingSubscription from './_videoCallRecordingSubscription';
 import analyticsSubscription from './_analyticsSubscription';
 // import apiSubscription from './_apiSubscription';
-// import carbonFootprintSubscription from './_carbonFootprintSubscription';
-import propertySubscription from './_propertySubscription';
-// import videoCallSubscription from './_videoCallSubscription';
 import isAuthenticated from './isAuthenticated';
 import sentryMiddleware from './sentry';
 import validate from './validate';
@@ -12,11 +12,11 @@ import verifyPermissions from './verifyPermissions';
 
 export {
   authenticationMiddleware,
+  propertySubscription,
+  videoCallSubscription,
+  videoCallRecordingSubscription,
   analyticsSubscription,
   // apiSubscription,
-  // carbonFootprintSubscription,
-  propertySubscription,
-  // videoCallSubscription,
   isAuthenticated,
   sentryMiddleware,
   validate,

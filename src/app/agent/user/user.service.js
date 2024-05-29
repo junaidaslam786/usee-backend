@@ -578,29 +578,27 @@ export const updateUserSubscription = async (userId, reqBody, req) => {
   }
 };
 
-export const associateUserToSubscriptionFeatures = async (userId, reqBody, req) => {
+export const addSubscriptionFeatureToUser = async (userId, reqBody, req) => {
   try {
-    const { user, dbInstance } = req;
-    const { subscriptionId, featureIds } = reqBody;
+    const { dbInstance } = req;
+    const { subscriptionId, featureId } = reqBody;
 
-    // if (agentInfo.agent.agentType === AGENT_TYPE.STAFF) {
-    //   return { error: true, message: 'You do not have permission to subscribe user.' }
-    // }
+    const user = await dbInstance.user.findOne({ where: { id: userId } });
 
-    const result = await db.transaction(async (transaction) => {
-      const subscription = addUserToSubscription(userId, subscriptionId, featureIds, dbInstance, transaction);
+    if (user?.agent?.agentType === AGENT_TYPE.STAFF) {
+      return { error: true, message: "You do not have permission to subscribe user." };
+    }
 
-      return subscription;
-    });
+    const subscription = addUserToFeatureSubscription(userId, subscriptionId, featureId, dbInstance);
 
-    return result;
+    return subscription;
   } catch (err) {
-    console.log("associateUserToSubscriptionFeatures", err);
+    console.log("addSubscriptionFeatureToUser", err);
     return { error: true, message: "Server not responding, please try again later." };
-  }
-};
+  };
+}
 
-export const addUserToSubscription = async (userId, subscriptionId, featureIds, dbInstance, transaction) => {
+export const addUserToFeatureSubscription = async (userId, subscriptionId, featureId, dbInstance) => {
   try {
     const user = await dbInstance.user.findOne({ where: { id: userId } });
     if (!user) {
@@ -612,48 +610,80 @@ export const addUserToSubscription = async (userId, subscriptionId, featureIds, 
       return { error: true, message: "Invalid subscription id or subscription does not exist." };
     }
 
-    const userSubscriptions = [];
-    for (const featureId of featureIds) {
-      const feature = await dbInstance.feature.findOne({ where: { id: featureId } });
-      if (!feature) {
-        return { error: true, message: "Invalid feature id or feature does not exist." };
+    const linkedFeaturesMap = {
+      'Snag List': 'Property Listing',
+      'Carbon Footprint': 'Video Call',
+      'Video Call Recording': 'Video Call',
+    };
+
+    const feature = await dbInstance.feature.findOne({ where: { id: featureId } });
+    if (!feature) {
+      return { error: true, message: "Invalid feature id or feature does not exist." };
+    }
+
+    const linkedFeature = linkedFeaturesMap[feature.name];
+    if (linkedFeature) {
+      const linkedFeatureObject = await dbInstance.feature.findOne({ where: { name: linkedFeature } });
+      if (!linkedFeatureObject) {
+        return {
+          error: true,
+          message: `Unable to find "${linkedFeature}" feature, which is a pre-requisite for ${feature.name}.`,
+        };
       }
 
-      // Check if the user is already subscribed to this feature
-      const existingSubscription = await dbInstance.userSubscription.findOne({
+      const existingLinkedSubscription = await dbInstance.userSubscription.findOne({
         where: {
           userId: user.id,
           subscriptionId: subscription.id,
-          featureId: feature.id
-        }
+          featureId: linkedFeatureObject.id,
+        },
+        include: {
+          model: dbInstance.feature,
+          as: 'feature',
+        },
       });
 
-      if (!existingSubscription) {
-        userSubscriptions.push({
-          userId: user.id,
-          subscriptionId: subscription.id,
-          featureId: feature.id,
-          freeRemainingUnits: feature.freeUnits,
-          paidRemainingUnits: 0,
-          status: "active",
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        });
+      if (!existingLinkedSubscription) {
+        return {
+          error: true,
+          message: `Cannot subscribe to "${feature.name}" without an active "${linkedFeature}" subscription.`,
+        };
       }
     }
 
-    let results;
-    if (userSubscriptions?.length > 0) {
-      results = await dbInstance.userSubscription.bulkCreate(userSubscriptions, { transaction });
+    // Check if the user is already subscribed to this feature
+    const existingSubscription = await dbInstance.userSubscription.findOne({
+      where: {
+        userId: user.id,
+        subscriptionId: subscription.id,
+        featureId: feature.id
+      }
+    });
+
+    let result;
+    if (!existingSubscription) {
+      const userSubscription = {
+        userId: user.id,
+        subscriptionId: subscription.id,
+        featureId: feature.id,
+        freeRemainingUnits: feature.freeUnits,
+        paidRemainingUnits: 0,
+        status: "active",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      };
+
+      if (userSubscription) {
+        result = await dbInstance.userSubscription.create(userSubscription);
+      }
     }
 
-    return { success: true, message: "Subscription added successfully", data: results };
+    return { success: true, message: "Subscription added successfully", data: result };
   } catch (err) {
     console.log("addUserToSubscription", err);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
-
 
 export const getUserTokens = async (userId, dbInstance, valid = true, available) => {
   try {

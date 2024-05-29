@@ -49,6 +49,9 @@ export default function (sequelize) {
       type: DataTypes.STRING,
       enum: ['feature', 'addon'],
     },
+    order: {
+      type: DataTypes.INTEGER,
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',

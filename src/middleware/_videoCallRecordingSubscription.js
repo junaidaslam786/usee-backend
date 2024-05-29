@@ -7,7 +7,7 @@ export default async function (req, res, next) {
     where: { name: 'USEE360 Basic' },
   });
   const feature = await db.models.feature.findOne({
-    where: { name: 'Video Call' },
+    where: { name: 'Video Call Recording' },
   });
 
   try {
@@ -18,7 +18,7 @@ export default async function (req, res, next) {
     if (!userSubscription) {
       return res.status(403).json({
         error: true,
-        message: 'Please subscribe to video call feature to book an appointment.',
+        message: 'Please subscribe to video call recording feature to download.',
       });
     }
 
@@ -27,7 +27,7 @@ export default async function (req, res, next) {
     } else if (userSubscription.paidRemainingUnits > 0) {
       userSubscription.paidRemainingUnits -= 1; // Deduct one unit from paidRemainingUnits
     } else {
-      return res.status(403).json({ error: true, message: 'Not enough units to access video call feature.' });
+      return res.status(403).json({ error: true, message: 'Not enough units to access video call recording feature.' });
     }
 
     await userSubscription.save();

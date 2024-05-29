@@ -736,52 +736,67 @@ export const updateStatus = async (req, res) => {
 
     if (status === APPOINTMENT_STATUS.COMPLETED) {
       appointment.endMeetingTime = Date.now();
+      
+      const subscription = await db.models.subscription.findOne({
+        where: { name: 'USEE360 Basic' },
+      });
+      const feature = await db.models.feature.findOne({
+        where: { name: 'Carbon Footprint' },
+      });
 
-      let totalCo2SavedValue = 0;
-      // let productCo2 = [];
-      let propertyLocation = {};
-      const agentUser = appointment.agentUser;
+      const userSubscription = await userSubscription.findOne({
+        where: {
+          userId: appointment.agentUser.id,
+          subscriptionId: subscription.id,
+          featureId: feature.id,
+        },
+      });
 
-      const agentUserLocation = {
-        latitude: agentUser.latitude,
-        longitude: agentUser.longitude
-      }
-      req.body.agentLocation = agentUserLocation;
+      if (userSubscription) {
+        let totalCo2SavedValue = 0;
+        let propertyLocation = {};
+        const agentUser = appointment.agentUser;
 
-      await Promise.all(appointment.products.map(async (product) => {
-        propertyLocation = {
-          latitude: product.latitude,
-          longitude: product.longitude
-        }
-        req.body.propertyLocation = propertyLocation;
-        const appoinmentProduct = await dbInstance.appointmentProduct.findOne({
-          where: {
-            appointmentId: appointment.id,
-            productId: product.id
+
+        if (agentUser.latitude && agentUser.longitude) {
+          const agentUserLocation = {
+            latitude: agentUser.latitude,
+            longitude: agentUser.longitude
           }
-        });
+          req.body.agentLocation = agentUserLocation;
+          await Promise.all(appointment.products.map(async (product) => {
+            if (product.latitude && product.longitude) {
+              propertyLocation = {
+                latitude: product.latitude,
+                longitude: product.longitude
+              }
+              req.body.propertyLocation = propertyLocation;
+              const appoinmentProduct = await dbInstance.appointmentProduct.findOne({
+                where: {
+                  appointmentId: appointment.id,
+                  productId: product.id
+                }
+              });
 
-        const co2Details = await getCarbonFootprint(req, res);
-        // console.log('co2Details: ', co2Details);
-        co2Details.commuteType = 'car';
-        appoinmentProduct.co2Details = co2Details;
+              const co2Details = await getCarbonFootprint(req, res);
+              // console.log('co2Details: ', co2Details);
+              co2Details.commuteType = 'car';
+              appoinmentProduct.co2Details = co2Details;
+              await appoinmentProduct.save();
 
-        await appoinmentProduct.save();
-        // productCo2.push({
-        //   productId: product.id,
-        //   co2Saved: co2Details,
-        // });
-        
-        totalCo2SavedValue += co2Details.co2SavedValue;
-      }));
-      // console.log('totalCo2Saved: ', totalCo2SavedValue);
-      const totalCo2SavedText = `${totalCo2SavedValue} metric tons CO₂E`;
-      appointment.co2Details = {
-        // products: productCo2,
-        commuteType: 'car',
-        totalCo2SavedText,
-        totalCo2SavedValue,
-      };
+              totalCo2SavedValue += co2Details.co2SavedValue;
+            }
+          }));
+          // console.log('totalCo2Saved: ', totalCo2SavedValue);
+          const totalCo2SavedText = `${totalCo2SavedValue} metric tons CO₂E`;
+          appointment.co2Details = {
+            // products: productCo2,
+            commuteType: 'car',
+            totalCo2SavedText,
+            totalCo2SavedValue,
+          };
+        }
+      }
     }
 
     if (status === APPOINTMENT_STATUS.COMPLETED || status === APPOINTMENT_STATUS.CANCELLED) {
