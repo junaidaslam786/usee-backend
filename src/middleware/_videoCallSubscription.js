@@ -3,6 +3,8 @@ import db from '@/database';
 // eslint-disable-next-line consistent-return
 export default async function (req, res, next) {
   const userId = req.user.id; // Assuming you have user id from the request
+  const { properties } = req.body;
+
   const subscription = await db.models.subscription.findOne({
     where: { name: 'USEE360 Basic' },
   });
@@ -22,15 +24,25 @@ export default async function (req, res, next) {
       });
     }
 
-    if (userSubscription.freeRemainingUnits > 0) {
-      userSubscription.freeRemainingUnits -= 1; // Deduct one unit from freeRemainingUnits
-    } else if (userSubscription.paidRemainingUnits > 0) {
-      userSubscription.paidRemainingUnits -= 1; // Deduct one unit from paidRemainingUnits
+    const propertySubscription = await db.models.productSubscription.findOne({
+      where: { userSubscriptionId: userSubscription.id, productId: properties[0] },
+    });
+
+    if (!propertySubscription) {
+      return res.status(403).json({
+        error: true,
+        message: 'Please subscribe to video call feature to book an appointment for this property.',
+      });
+    }
+    if (propertySubscription.freeRemainingUnits > 0) {
+      propertySubscription.freeRemainingUnits -= 1; // Deduct one unit from freeRemainingUnits
+    } else if (propertySubscription.paidRemainingUnits > 0) {
+      propertySubscription.paidRemainingUnits -= 1; // Deduct one unit from paidRemainingUnits
     } else {
       return res.status(403).json({ error: true, message: 'Not enough units to access video call feature.' });
     }
 
-    await userSubscription.save();
+    await propertySubscription.save();
 
     return next(); // Continue to the actual route handler
   } catch (error) {
