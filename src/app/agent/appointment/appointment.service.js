@@ -175,7 +175,7 @@ export const getAppointment = async (appointmentId, req) => {
 }
 
 export const createAppointment = async (req, dbInstance) => {
-  try {
+  // try {
     const {
       properties,
       appointmentDate,
@@ -487,10 +487,10 @@ export const createAppointment = async (req, dbInstance) => {
     });
 
     return (result.id) ? await getAppointmentDetailById((allotedAgentUser ? allotedAgentUser : req.user.agent), result.id, dbInstance) : result;
-  } catch (err) {
-    console.log('createAppointmentServiceError', err)
-    return { error: true, message: 'Server not responding, please try again later.' }
-  }
+  // } catch (err) {
+  //   console.log('createAppointmentServiceError', err)
+  //   return { error: true, message: 'Server not responding, please try again later.' }
+  // }
 }
 
 export const deleteAppointment = async (appointmentId, req) => {

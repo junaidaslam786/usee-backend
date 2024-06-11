@@ -42,17 +42,17 @@ export const getAppointment = async (req, res, next) => {
  * Create new appointment
  */
 export const createAppointment = async (req, res, next) => {
-  try {
+  // try {
     const result = await appointmentService.createAppointment(req, req.dbInstance);
     if (result?.error && result?.message) {
       return next(createError(400, result.message));
     }
 
     res.status(201).json(result);
-  } catch (err) {
-    console.log('createAppointmentError', err);
-    next(err);
-  }
+  // } catch (err) {
+  //   console.log('createAppointmentError', err);
+  //   next(err);
+  // }
 };
 
 /**
