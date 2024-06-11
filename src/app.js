@@ -1385,7 +1385,20 @@ app.post('/create-coupon-amount', async (req, res) => {
       currency: 'aed',
     });
 
-    res.json({ success: true, message: 'Coupon created successfully', coupon });
+    if (!coupon) {
+      return res.status(404).json({ error: 'Coupon could not be created' });
+    }
+
+    const promotionCode = await stripe.promotionCodes.create({
+      coupon: coupon.id,
+      code: couponId,
+    });
+
+    if (!promotionCode) {
+      return res.status(404).json({ error: 'Promotion code could not be created' });
+    }
+
+    res.json({ success: true, message: 'Coupon created successfully', promotionCode });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: error.raw.message });
@@ -1399,13 +1412,25 @@ app.post('/create-coupon-percent', async (req, res) => {
 
     // Create a coupon on Stripe
     const coupon = await stripe.coupons.create({
-      id: couponId,
       name,
       duration,
       percent_off: percentOff,
     });
 
-    res.json({ success: true, message: 'Coupon created successfully', coupon });
+    if (!coupon) {
+      return res.status(404).json({ error: 'Coupon could not be created' });
+    }
+
+    const promotionCode = await stripe.promotionCodes.create({
+      coupon: coupon.id,
+      code: couponId,
+    });
+
+    if (!promotionCode) {
+      return res.status(404).json({ error: 'Promotion code could not be created' });
+    }
+
+    res.json({ success: true, message: 'Coupon created successfully', promotionCode });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: error.raw.message });
