@@ -348,7 +348,6 @@ app.get('/auth/facebook/callback', async (req, res) => {
   }
 });
 
-
 // Twitter authentication callback route
 app.get('/auth/twitter/callback', async (req, res) => {
   const { code, state, oauth_token, oauth_verifier } = req.query;
@@ -450,7 +449,6 @@ app.get('/auth/twitter/callback', async (req, res) => {
     res.status(500).json({ error: 'Failed to authenticate user' });
   }
 });
-
 
 // Twitter authentication route
 app.post('/auth/twitter', async (req, res) => {
@@ -611,7 +609,6 @@ app.get('/auth/linkedin/callback', async (req, res) => {
   }
 });
 
-
 // LinkedIn authentication route
 app.post('/auth/linkedin', (req, res) => {
   const { userType } = req.body;
@@ -731,7 +728,6 @@ app.get('/auth/google/callback', async (req, res) => {
     res.status(500).json({ error: 'Failed to authenticate user' });
   }
 });
-
 
 // Google authentication route
 app.post('/auth/google', (req, res) => {
@@ -1441,7 +1437,8 @@ app.post('/create-coupon-percent', async (req, res) => {
 app.get('/list-coupons', async (req, res) => {
   try {
     // Use the official Stripe coupons route to list all coupons
-    const coupons = await stripe.coupons.list();
+    // const coupons = await stripe.coupons.list();
+    const coupons = await stripe.promotionCodes.list();
 
     res.json({ success: true, coupons });
   } catch (error) {
