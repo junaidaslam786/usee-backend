@@ -914,6 +914,12 @@ app.post('/create-checkout-session', async (req, res) => {
         price: priceId,
         quantity: quantity,
       }],
+      payment_intent_data: {
+        setup_future_usage: 'off_session',
+      },
+      saved_payment_method_options: {
+        payment_method_save: 'enabled',
+      },
       mode: 'payment',
       allow_promotion_codes: true,
       invoice_creation: {
