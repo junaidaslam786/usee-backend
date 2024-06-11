@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as analyticsController from './analytics.controller';
 import { isAuthenticated, validate } from '@/middleware';
+import * as analyticsController from './analytics.controller';
 
 const router = Router();
 
@@ -21,7 +21,6 @@ router.get('/active-agents', isAuthenticated, analyticsController.getActiveAgent
 // router.get('/real-estates', isAuthenticated, analyticsController.getRealEstatesAnalytics);
 // // Freelancer analytics
 // router.get('/freelancers', isAuthenticated, analyticsController.getFreelancersAnalytics);
-
 
 // Subscription analytics
 router.get('/subscriptions', isAuthenticated, analyticsController.getSubscriptionsAnalytics);

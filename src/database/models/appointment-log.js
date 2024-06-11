@@ -2,7 +2,10 @@ import { DataTypes, Model } from 'sequelize';
 
 export default function (sequelize) {
   class AppointmentLog extends Model {
-
+    static associate(models) {
+      AppointmentLog.belongsTo(models.user, { foreignKey: 'userId' });
+      AppointmentLog.belongsTo(models.appointment, { foreignKey: 'appointmentId' });
+    }
   }
 
   AppointmentLog.init({

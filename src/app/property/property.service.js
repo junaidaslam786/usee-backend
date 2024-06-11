@@ -525,7 +525,18 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
     const searchStr = (reqBody && reqBody.search) ? reqBody.search : "";
     const selectedUser = (reqBody && reqBody.user) ? reqBody.user : userId;
 
+    const subscription = await db.models.subscription.findOne({
+      where: { name: 'USEE360 Basic' },
+    });
+    const feature = await db.models.feature.findOne({
+      where: { name: 'Video Call' },
+    });
+    const userSubscription = await db.models.userSubscription.findOne({
+      where: { userId, subscriptionId: subscription.id, featureId: feature.id },
+    });
+
     const { count, rows } = await dbInstance.product.findAndCountAll({
+      attributes: ['id', 'title', 'price', 'address', 'city', 'region', 'postalCode', 'latitude', 'longitude', 'virtualTourType', 'virtualTourUrl', 'featuredImage', 'soldDate', 'soldTime', 'status', 'createdAt'],
       where: {
         status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
         title: {
@@ -540,6 +551,12 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
         {
           model: dbInstance.productLog,
           as: 'productViews',
+        },
+        {
+          model: dbInstance.productSubscription,
+          attributes: [ 'freeRemainingUnits' ], 
+          where: { userSubscriptionId: userSubscription.id },
+          required: false,
         }
       ],
       order: [["createdAt", "DESC"]],

@@ -2,7 +2,6 @@ import { compare, hash } from 'bcrypt';
 import { DataTypes, Model } from 'sequelize';
 
 import { tokenHelper } from '@/helpers';
-// import agentAccessLevel from './agent-access-level';
 
 export default function (sequelize) {
   class User extends Model {
@@ -36,6 +35,7 @@ export default function (sequelize) {
       User.hasOne(models.agent, { foreignKey: 'userId' });
       User.hasMany(models.agentBranch, { foreignKey: 'userId' });
       User.hasMany(models.agentAvailability, { foreignKey: 'userId' });
+      User.hasMany(models.appointment, { foreignKey: 'agentId' });
       User.hasMany(models.product, { foreignKey: 'userId' });
       User.hasMany(models.customerWishlist, { foreignKey: 'customerId' });
       User.hasMany(models.customerLog, { foreignKey: 'userId' });

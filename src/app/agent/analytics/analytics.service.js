@@ -1,20 +1,22 @@
 /* eslint-disable no-unused-vars */
 import {
   AGENT_TYPE,
+  APPOINTMENT_LOG_TYPE,
   USER_TYPE,
 } from '@/config/constants';
-// import { utilsHelper } from '@/helpers';
 import db from '@/database';
 import { Sequelize } from 'sequelize';
 import { calculateDistanceMatrix } from '@/helpers/googleMapHelper';
 
 const { Op } = Sequelize;
 const {
-  user,
-  userSubscription,
   agent,
-  agentBranch,
+  agentAccessLevel,
   agentAvailability,
+  agentBranch,
+  appointment,
+  appointmentLog,
+  feature,
   product,
   productAllocation,
   productDocument,
@@ -24,13 +26,12 @@ const {
   productOffer,
   productSnagList,
   productSnagListItem,
-  agentAccessLevel,
+  role,
+  subscriptionFeature,
   token,
   tokenTransaction,
-  role,
-  feature,
-  subscriptionFeature,
-  appointment,
+  user,
+  userSubscription,
 } = db.models;
 
 // GET /agent/analytics/users?startDate=2022-01-01&endDate=2022-01-31&search=john&page=1&limit=10
@@ -973,6 +974,9 @@ export async function getPropertyVisits(req, res) {
 }
 
 export async function getPropertyVisitsAlt(req, res) {
+  // eslint-disable-next-line no-shadow
+  const { user } = req;
+
   const {
     startDate,
     endDate,
@@ -1006,6 +1010,8 @@ export async function getPropertyVisitsAlt(req, res) {
     ];
   }
 
+  where.userId = user.id;
+
   try {
     const rows = await product.findAll({
       where,
@@ -1026,6 +1032,7 @@ export async function getPropertyVisitsAlt(req, res) {
 
     const allProductsViews = await productLog.findAndCountAll({
       where: {
+        userId: user.id,
         log_type: 'viewed',
       },
     });
@@ -1039,7 +1046,31 @@ export async function getPropertyVisitsAlt(req, res) {
   }
 }
 
+function getClientStayDuration(startMeetingTime, endMeetingTime) {
+  const epochStartDateTime = new Date(startMeetingTime * 1000);
+  const epochEndDateTime = new Date(endMeetingTime * 1000);
+  const epochDuration = (endMeetingTime - startMeetingTime) * 1000;
+  const d = new Date(epochDuration);
+  // const durationInMinutes = Math.floor(durationInSeconds / 60);
+  // const durationInHours = Math.floor(durationInMinutes / 60);
+
+  const duration = {
+    epochStartDateTimeLoc: epochStartDateTime.toLocaleString(),
+    epochStartDateTimeUtc: epochStartDateTime.toUTCString(),
+    epochEndDateTimeLoc: epochEndDateTime.toLocaleString(),
+    epochEndDateTimeUtc: epochEndDateTime.toUTCString(),
+    d,
+    // hours: durationInHours % 24,
+    // minutes: durationInMinutes % 60,
+    // seconds: durationInSeconds % 60,
+  };
+
+  return duration;
+}
+
 export async function getCallDuration(req, res) {
+  const { user } = req;
+
   const {
     startDate,
     endDate,
@@ -1071,16 +1102,27 @@ export async function getCallDuration(req, res) {
     ];
   }
 
+  where.agentId = user.id;
+  where.status = 'completed';
+
   try {
-    const { rows, count } = await tokenTransaction.findAndCountAll({
+    const { rows, count } = await appointment.findAndCountAll({
       where,
       order: [['createdAt', 'DESC']],
       offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
+    const updatedRows = rows.map((row) => {
+      const checkInDate = row.startMeetingTime;
+      const checkOutDate = row.endMeetingTime;
+      const stayDuration = getClientStayDuration(checkInDate, checkOutDate);
+      return { ...row, clientStayDuration: stayDuration };
+    });
+
     return {
       rows,
+      updatedRows,
       count,
     };
   } catch (error) {
@@ -1129,32 +1171,182 @@ export async function getUnresponsiveAgents(req, res) {
       },
     ];
   }
+  // [Sequelize.fn('COUNT', Sequelize.col('appointments.id')), 'total_calls'],
+  // [Sequelize.fn('COUNT', Sequelize.col('appointments->appointmentLogs.id')), 'missed_calls'],
 
   try {
-    const { rows, count } = await agent.findAndCountAll({
-      where,
+    const agentsData = await user.findAll({
+      where: {
+        userType: USER_TYPE.AGENT,
+      },
+      attributes: [
+        'firstName',
+        'lastName',
+        'email',
+        'phoneNumber',
+        'profileImage',
+        [Sequelize.literal(`
+          (
+            SELECT COUNT(*)
+            FROM "appointments" AS a
+            WHERE a."alloted_agent" = "user"."id"
+          )
+        `), 'total_calls'],
+        [Sequelize.literal(`
+          (
+            SELECT COUNT(*)
+            FROM "appointments" a
+            WHERE a."agent_id" = "user"."id"
+            AND NOT EXISTS (
+              SELECT 1
+              FROM "appointment_logs" al
+              WHERE al."appointment_id" = a."id"
+              AND al."user_id" = "user"."id"
+              AND al."log_type" = '${APPOINTMENT_LOG_TYPE.JOINED}'
+            )
+          )
+        `), 'missed_calls'],
+      ],
       include: [
         {
-          model: agentBranch,
-          attributes: ['id', 'name'],
+          model: agent,
+          where: { agentId: req.user.id },
+          attributes: ['id', 'agentType', 'companyName', 'companyPosition', 'branchId', 'job_title'],
         },
         {
-          model: agentAvailability,
-          attributes: ['id', 'timeSlotId', 'dayId', 'status'],
+          model: appointment,
+          attributes: [],
+          include: [
+            {
+              model: appointmentLog,
+              attributes: [],
+              where: {
+                userType: USER_TYPE.AGENT,
+              },
+              required: false,
+            },
+          ],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      group: ['user.id', 'agent.id', 'appointments.id', 'appointments->appointmentLogs.id'],
+      // order: [[appointment, appointmentLog, 'createdAt', 'ASC']],
+      order: [
+        [Sequelize.literal('missed_calls'), 'ASC'],
+      ],
       offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
       limit: limit ? parseInt(limit, 10) : 10,
     });
 
+    if (agentsData.length === 0) {
+      return { success: true, message: 'No agents found with missed calls' };
+    }
+
+    // res.status(200).json(agents);
     return {
-      rows,
-      count,
+      agents: agentsData,
     };
   } catch (error) {
     return res.status(500).json({ message: 'Server error', error });
   }
+}
+
+export async function getUnresponsiveAgents2(req, res) {
+  const { startDate, endDate, search, page, limit } = req.query;
+
+  const where = {};
+
+  if (startDate && endDate) {
+    where.createdAt = {
+      [Op.between]: [startDate, endDate],
+    };
+  }
+
+  if (search) {
+    where[Op.or] = [
+      {
+        firstName: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        lastName: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        email: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      {
+        phoneNumber: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+    ];
+  }
+
+  // try {
+    const agentsData = await user.findAll({
+      where: {
+        userType: USER_TYPE.AGENT,
+      },
+      attributes: [
+        'firstName',
+        'lastName',
+        'email',
+        'phoneNumber',
+        'profileImage',
+        [
+          Sequelize.fn('COUNT', { column: 'appointments.id' }),
+          'total_calls',
+        ],
+      ],
+      include: [
+        {
+          model: agent,
+          where: { agentId: req.user.id },
+          attributes: ['id', 'agentType', 'companyName', 'companyPosition', 'branchId', 'job_title'],
+        },
+        {
+          model: appointment,
+          where: {
+            agentId: Sequelize.col('user.id'), // Match appointments for this agent
+          },
+          include: {
+            model: appointmentLog,
+            attributes: [],
+            where: {
+              logType: {
+                [Op.ne]: APPOINTMENT_LOG_TYPE.JOINED, // Exclude JOINED logs
+              },
+            },
+            required: false, // Ensure appointments are retrieved even if no logs exist
+          },
+        },
+      ],
+      group: ['user.id', 'agent.id', 'appointments.id'],
+      having: {
+        [Sequelize.fn('COUNT', Sequelize.col('appointments.id'))]: {
+          [Op.gt]: 0, // Only include agents with at least one appointment
+        },
+        [Sequelize.fn('COUNT', Sequelize.col('appointment_logs.id'))]: {
+          [Op.eq]: 0, // Only include appointments with no JOINED logs
+        },
+      },
+      order: [['appointments.id', 'ASC']], // Order by appointment ID
+    });
+
+    if (agentsData.length === 0) {
+      return { success: true, message: 'No agents found with missed calls' };
+    }
+
+    return {
+      agents: agentsData,
+    };
+  // } catch (error) {
+  //   return res.status(500).json({ message: 'Server error', error });
+  // }
 }
 
 export async function getRequestsSent(req, res) {
@@ -1787,28 +1979,11 @@ export async function getPropertiesListed(req, res, userInstance) {
       // limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    const propertiesOffers = await productOffer.findAndCountAll({});
-
-    let revenueGenerated = 0;
-    let propertiesUnderOffer = 0;
-    // for (const total of rows) {
-    //   customer.active ? activeCustomers++ : nonActiveCustomers++;
-    // }
-
-    propertiesOffers.rows.forEach((rowProductOffer) => {
-      if (rowProductOffer.status === 'accepted') {
-        revenueGenerated += Number(rowProductOffer.amount);
-      }
-      if (rowProductOffer.status === 'pending') {
-        propertiesUnderOffer += 1;
-      }
-    });
-
     return {
       rows: propertiesListed.rows,
       propertiesListed: propertiesListed.count,
-      revenueGenerated,
-      propertiesUnderOffer,
+      // revenueGenerated,
+      // propertiesUnderOffer,
     };
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -1818,6 +1993,7 @@ export async function getPropertiesListed(req, res, userInstance) {
 }
 
 export async function getAgentDetails(req, res) {
+  const { user: currentUser } = req;
   const {
     startDate,
     endDate,
@@ -1826,11 +2002,7 @@ export async function getAgentDetails(req, res) {
     limit,
   } = req.query;
 
-  const where = {
-    branchId: {
-      [Op.not]: null,
-    },
-  };
+  const where = {};
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -1862,6 +2034,9 @@ export async function getAgentDetails(req, res) {
       },
     ];
   }
+
+  where.agentId = currentUser.id;
+
   try {
     const { rows, count } = await agent.findAndCountAll({
       where,
@@ -1869,11 +2044,16 @@ export async function getAgentDetails(req, res) {
         {
           model: agentBranch,
           attributes: ['id', 'name'],
+          required: false,
+        },
+        {
+          model: user,
+          attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
       ],
       order: [['createdAt', 'DESC']],
-      // offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
-      // limit: limit ? parseInt(limit, 10) : 10,
+      offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
+      limit: limit ? parseInt(limit, 10) : 10,
     });
 
     return {
