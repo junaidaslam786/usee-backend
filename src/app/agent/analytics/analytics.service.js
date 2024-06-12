@@ -1701,11 +1701,7 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
   let agentIds = await getSubAgentIds(userInstance.id);
   agentIds.push(req.user.id);
 
-  const where = {
-    status: {
-      [Op.in]: ['active'],
-    },
-  };
+  const where = {};
   where.userId = {
     [Op.in]: userInstance.agent.agentType === AGENT_TYPE.AGENT ? [userInstance.id] : agentIds,
   };
@@ -1747,9 +1743,10 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
   }
 
   try {
-    const propertiesForSale = await product.findAndCountAll({
+    // Properties Sold
+    const { rows: propertiesSold, count: propertiesSoldCount } = await product.findAndCountAll({
       where,
-      // attributes: ["id", "title", "price", "description"],
+      attributes: ['id', 'title', 'price', 'description'],
       include: [
         {
           model: user,
@@ -1810,12 +1807,13 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
       distinct: true,
       order: [['createdAt', 'DESC']],
       offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
-      limit: limit ? parseInt(limit, 10) : 10,
+      // limit: limit ? parseInt(limit, 10) : 10,
     });
 
-    const propertiesForRent = await product.findAndCountAll({
+    // Properties Rented
+    const { rows: propertiesRented, count: propertiesRentedCount } = await product.findAndCountAll({
       where,
-      // attributes: ["id", "title", "price", "description"],
+      attributes: ['id', 'title', 'price', 'description'],
       include: [
         {
           model: user,
@@ -1876,14 +1874,14 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
       distinct: true,
       order: [['createdAt', 'DESC']],
       offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
-      limit: limit ? parseInt(limit, 10) : 10,
+      // limit: limit ? parseInt(limit, 10) : 10,
     });
 
     res.status(200).json({
-      // propertiesSoldData: propertiesForSale.rows,
-      // propertiesRentedData: propertiesForRent.rows,
-      propertiesSold: propertiesForSale.count,
-      propertiesRented: propertiesForRent.count,
+      propertiesSold,
+      propertiesSoldCount,
+      propertiesRented,
+      propertiesRentedCount,
     });
   } catch (error) {
     // eslint-disable-next-line no-console
