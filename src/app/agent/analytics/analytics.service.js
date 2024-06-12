@@ -1171,8 +1171,6 @@ export async function getUnresponsiveAgents(req, res) {
       },
     ];
   }
-  // [Sequelize.fn('COUNT', Sequelize.col('appointments.id')), 'total_calls'],
-  // [Sequelize.fn('COUNT', Sequelize.col('appointments->appointmentLogs.id')), 'missed_calls'],
 
   try {
     const agentsData = await user.findAll({
@@ -1195,11 +1193,11 @@ export async function getUnresponsiveAgents(req, res) {
         [Sequelize.literal(`
           (
             SELECT COUNT(*)
-            FROM "appointments" a
-            WHERE a."agent_id" = "user"."id"
+            FROM "appointments" AS a
+            WHERE a."alloted_agent" = "user"."id"
             AND NOT EXISTS (
               SELECT 1
-              FROM "appointment_logs" al
+              FROM "appointment_logs" AS al
               WHERE al."appointment_id" = a."id"
               AND al."user_id" = "user"."id"
               AND al."log_type" = '${APPOINTMENT_LOG_TYPE.JOINED}'
@@ -1234,7 +1232,7 @@ export async function getUnresponsiveAgents(req, res) {
         [Sequelize.literal('missed_calls'), 'ASC'],
       ],
       offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
-      limit: limit ? parseInt(limit, 10) : 10,
+      // limit: limit ? parseInt(limit, 10) : 10,
     });
 
     if (agentsData.length === 0) {
@@ -1248,105 +1246,6 @@ export async function getUnresponsiveAgents(req, res) {
   } catch (error) {
     return res.status(500).json({ message: 'Server error', error });
   }
-}
-
-export async function getUnresponsiveAgents2(req, res) {
-  const { startDate, endDate, search, page, limit } = req.query;
-
-  const where = {};
-
-  if (startDate && endDate) {
-    where.createdAt = {
-      [Op.between]: [startDate, endDate],
-    };
-  }
-
-  if (search) {
-    where[Op.or] = [
-      {
-        firstName: {
-          [Op.iLike]: `%${search}%`,
-        },
-      },
-      {
-        lastName: {
-          [Op.iLike]: `%${search}%`,
-        },
-      },
-      {
-        email: {
-          [Op.iLike]: `%${search}%`,
-        },
-      },
-      {
-        phoneNumber: {
-          [Op.iLike]: `%${search}%`,
-        },
-      },
-    ];
-  }
-
-  // try {
-    const agentsData = await user.findAll({
-      where: {
-        userType: USER_TYPE.AGENT,
-      },
-      attributes: [
-        'firstName',
-        'lastName',
-        'email',
-        'phoneNumber',
-        'profileImage',
-        [
-          Sequelize.fn('COUNT', { column: 'appointments.id' }),
-          'total_calls',
-        ],
-      ],
-      include: [
-        {
-          model: agent,
-          where: { agentId: req.user.id },
-          attributes: ['id', 'agentType', 'companyName', 'companyPosition', 'branchId', 'job_title'],
-        },
-        {
-          model: appointment,
-          where: {
-            agentId: Sequelize.col('user.id'), // Match appointments for this agent
-          },
-          include: {
-            model: appointmentLog,
-            attributes: [],
-            where: {
-              logType: {
-                [Op.ne]: APPOINTMENT_LOG_TYPE.JOINED, // Exclude JOINED logs
-              },
-            },
-            required: false, // Ensure appointments are retrieved even if no logs exist
-          },
-        },
-      ],
-      group: ['user.id', 'agent.id', 'appointments.id'],
-      having: {
-        [Sequelize.fn('COUNT', Sequelize.col('appointments.id'))]: {
-          [Op.gt]: 0, // Only include agents with at least one appointment
-        },
-        [Sequelize.fn('COUNT', Sequelize.col('appointment_logs.id'))]: {
-          [Op.eq]: 0, // Only include appointments with no JOINED logs
-        },
-      },
-      order: [['appointments.id', 'ASC']], // Order by appointment ID
-    });
-
-    if (agentsData.length === 0) {
-      return { success: true, message: 'No agents found with missed calls' };
-    }
-
-    return {
-      agents: agentsData,
-    };
-  // } catch (error) {
-  //   return res.status(500).json({ message: 'Server error', error });
-  // }
 }
 
 export async function getRequestsSent(req, res) {
