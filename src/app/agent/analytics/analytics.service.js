@@ -1669,7 +1669,7 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
         },
         {
           model: productOffer,
-          attributes: ['id', 'amount', 'notes', 'status', 'rejectReason'],
+          attributes: ['id', 'amount', 'notes', 'status', 'rejectReason', 'acceptedAt'],
           where: {
             status: {
               [Op.in]: ['accepted'],

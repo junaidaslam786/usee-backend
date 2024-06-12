@@ -47,6 +47,12 @@ export default function (sequelize) {
     rejectReason: {
       type: DataTypes.STRING,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+    },
+    acceptedAt: {
+      type: DataTypes.DATE,
+    },
   }, {
     modelName: 'productOffer',
     tableName: 'product_offers',
@@ -56,7 +62,12 @@ export default function (sequelize) {
 
   // eslint-disable-next-line no-unused-vars
   ProductOffer.addHook('beforeSave', async (instance) => {
-    //
+    if (instance.changed('status')) {
+      if (instance.status === 'accepted') {
+        const updatedProdutOffer = { ...instance.attributes, acceptedAt: new Date() };
+        instance.set(updatedProdutOffer);
+      }
+    }
   });
 
   // eslint-disable-next-line no-unused-vars
