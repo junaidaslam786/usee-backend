@@ -554,7 +554,10 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
         },
         {
           model: dbInstance.productSubscription,
-          attributes: [ 'freeRemainingUnits' ], 
+          attributes: [ 
+            'freeRemainingUnits',
+            [Sequelize.literal("(SELECT free_units FROM features WHERE name = 'Video Call')"), 'freeTotalUnits'],
+          ],
           where: { userSubscriptionId: userSubscription.id },
           required: false,
         }
