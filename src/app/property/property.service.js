@@ -536,7 +536,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
     });
 
     const { count, rows } = await dbInstance.product.findAndCountAll({
-      attributes: ['id', 'title', 'price', 'address', 'city', 'region', 'postalCode', 'latitude', 'longitude', 'virtualTourType', 'virtualTourUrl', 'featuredImage', 'soldDate', 'soldTime', 'status', 'createdAt'],
+      attributes: ['id', 'userId', 'title', 'price', 'address', 'city', 'region', 'postalCode', 'latitude', 'longitude', 'virtualTourType', 'virtualTourUrl', 'featuredImage', 'soldDate', 'soldTime', 'status', 'createdAt'],
       where: {
         status, categoryId: PRODUCT_CATEGORIES.PROPERTY,
         title: {
