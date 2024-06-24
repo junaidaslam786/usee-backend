@@ -45,5 +45,32 @@ export default function (sequelize) {
     sequelize,
   });
 
+  // eslint-disable-next-line no-unused-vars
+  ProductSubscription.addHook('beforeSave', async (instance) => {
+    //
+  });
+
+  ProductSubscription.addHook('afterSave', async (instance, options) => {
+    if (instance.changed('videoCallsMissed')) {
+      if (instance.videoCallsMissed === 2) {
+        await sequelize.models.productSubscription.update({
+          freeRemainingUnits: 0,
+        }, {
+          where: { id: instance.id },
+        }, { transaction: options.transaction });
+      }
+    }
+  });
+
+  // eslint-disable-next-line no-unused-vars
+  ProductSubscription.addHook('afterCreate', (instance) => {
+    //
+  });
+
+  // eslint-disable-next-line no-unused-vars
+  ProductSubscription.addHook('afterDestroy', (instance) => {
+    //
+  });
+
   return ProductSubscription;
 }

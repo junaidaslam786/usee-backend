@@ -1,4 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
+import { APPOINTMENT_LOG_TYPE, USER_TYPE } from '@/config/constants';
 
 const cron = require('node-cron');
 
@@ -121,32 +122,79 @@ export default function (sequelize) {
     //
   });
 
-  // eslint-disable-next-line no-unused-vars
-  Appointment.addHook('afterSave', async (instance) => {
+  Appointment.addHook('afterSave', async (instance, options) => {
+    const userSubscription = await sequelize.models.userSubscription.findOne({
+      where: {
+        userId: instance.agentId,
+        subscriptionId: '35e0b998-53bc-4777-a207-261fff3489aa',
+        featureId: '159c869a-1b24-4cd3-ac61-425645b730c7',
+      },
+    });
+    const videoCallFeature = await sequelize.models.feature.findOne({
+      where: {
+        name: 'Video Call',
+      },
+      attributes: ['freeUnits'],
+    });
+
+    // Deduct units based on subscription when the meeting starts
     if (instance.status === 'inprogress') {
-      const userSubscription = await sequelize.models.userSubscription.findOne({
-        where: {
-          userId: instance.agentId,
-          subscriptionId: '35e0b998-53bc-4777-a207-261fff3489aa',
-          featureId: '159c869a-1b24-4cd3-ac61-425645b730c7',
-        },
-      });
-      // console.log('UserSubscription found:', userSubscription);
-
       if (userSubscription) {
-        await Promise.all(instance.products.map(async (product) => {
-          const [productSubscription, created] = await sequelize.models.productSubscription.findOrCreate({
-            where: { userSubscriptionId: userSubscription.id, productId: product.id },
-          });
-          // console.log('Product created(ID):', productSubscription);
-          console.log('created:', created);
+        try {
+          await instance.reload({ include: ['products'] });
 
-          if (created) {
-            productSubscription.freeRemainingUnits = 4;
-            productSubscription.paidRemainingUnits = 0;
-            productSubscription.save();
-          }
-        }));
+          await Promise.all(instance.products.map(async (product) => {
+            const [productSubscription, created] = await sequelize.models.productSubscription.findOrCreate({
+              where: { userSubscriptionId: userSubscription.id, productId: product.id },
+            });
+
+            if (productSubscription) {
+              productSubscription.freeRemainingUnits = videoCallFeature.freeUnits;
+              productSubscription.paidRemainingUnits = 0;
+              productSubscription.save();
+            }
+          }));
+        } catch (error) {
+          console.error('Error reloading appointment or saving subscription:', error);
+        }
+      }
+      // Deduct from missed call quota of agent when they don't join the call
+    } else if (instance.status === 'expired') {
+      if (userSubscription) {
+        try {
+          await instance.reload({ include: ['products', 'appointmentLogs'] });
+
+          await Promise.all(instance.products.map(async (product) => {
+            const [productSubscription, created] = await sequelize.models.productSubscription.findOrCreate({
+              where: { userSubscriptionId: userSubscription.id, productId: product.id },
+              transaction: options.transaction,
+            });
+
+            if (productSubscription) {
+              // Check if there's NO joined appointment log for this appointment by the AGENT
+              const hasJoinedLog = await instance.appointmentLogs.some((log) => log.log_type
+                === APPOINTMENT_LOG_TYPE.JOINED
+                && log.userId === userSubscription.userId
+                && log.userType === USER_TYPE.AGENT);
+
+              if (!hasJoinedLog) {
+                // Deduct tokens based on remaining units
+                if (productSubscription.freeRemainingUnits > 0) {
+                  productSubscription.freeRemainingUnits -= 1;
+                } else if (productSubscription.paidRemainingUnits > 0) {
+                  productSubscription.paidRemainingUnits -= 1;
+                } else {
+                  console.warn('No remaining units for product subscription:', productSubscription.id);
+                }
+                productSubscription.videoCallsMissed += 1;
+              }
+
+              await productSubscription.save();
+            }
+          }));
+        } catch (error) {
+          console.error('Error reloading appointment or saving subscription:', error);
+        }
       }
     }
   });

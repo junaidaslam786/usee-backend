@@ -43,6 +43,7 @@ export default function (sequelize) {
     paranoid: true,
   });
 
+  // eslint-disable-next-line no-unused-vars
   AppConfiguration.addHook('beforeBulkUpdate', async (appConfiguration, options) => {
     if (appConfiguration.attributes.configKey === 'tokenPrice') {
       console.log('Updating token price on stripe');
@@ -68,6 +69,8 @@ export default function (sequelize) {
 
       if (productUpdate) {
         appConfiguration.attributes.stripePriceId = price.id;
+        // const updatedAppConfiguration = { ...appConfiguration.attributes, stripePriceId: price.id };
+        // appConfiguration.set(updatedAppConfiguration);
       }
     }
   });

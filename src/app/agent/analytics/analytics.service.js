@@ -14,7 +14,9 @@ const {
   agentAccessLevel,
   agentAvailability,
   agentBranch,
+  agentTimeSlot,
   appointment,
+  appointmentNote,
   appointmentLog,
   feature,
   product,
@@ -1538,9 +1540,9 @@ export async function getAppointmentCarbonFootprintAnalytics(req, res) {
   const where = req.user.agent.agentType === AGENT_TYPE.AGENT
     ? { agentId: req.user.id } : { managerId: req.user.id };
 
-  where.co2Details = {
-    [Op.not]: null,
-  };
+  // where.co2Details = {
+  //   [Op.not]: null,
+  // };
 
   if (startDate && endDate) {
     where.createdAt = {
@@ -1571,6 +1573,42 @@ export async function getAppointmentCarbonFootprintAnalytics(req, res) {
   try {
     const { rows, count } = await appointment.findAndCountAll({
       where,
+      include: [
+        {
+          model: product,
+          attributes: ['id', 'title', 'description', 'price', 'featuredImage'],
+          through: { attributes: [] },
+        },
+        {
+          model: user,
+          as: 'customerUser',
+          attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage', 'timezone'],
+        },
+        {
+          model: user,
+          as: 'agentUser',
+          attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage', 'timezone'],
+          include: [
+            {
+              model: agent,
+              attributes: ['id', 'agentType'],
+            },
+          ],
+        },
+        {
+          model: user,
+          as: 'allotedAgentUser',
+          attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage', 'timezone'],
+        },
+        {
+          model: agentTimeSlot,
+        },
+        {
+          model: appointmentNote,
+          attributes: ['id', 'notes'],
+          required: false,
+        },
+      ],
       order: [['createdAt', 'DESC']],
       offset: page ? parseInt(page, 10) * parseInt(limit, 10) : 0,
       limit: limit ? parseInt(limit, 10) : 10,

@@ -18,10 +18,10 @@ import { utilsHelper, mailHelper } from '@/helpers';
 import { AGENT_TYPE, USER_TYPE, AGENT_USER_ACCESS_TYPE_VALUE, PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, PRODUCT_LOG_TYPE } from '@/config/constants';
 
 const axios = require('axios');
-const cron = require('node-cron');
+// const cron = require('node-cron');
 const crypto = require('crypto');
 const OAuth = require('oauth-1.0a');
-const qs = require('qs');
+// const qs = require('qs');
 const { NODE_ENV } = process.env;
 
 const app = express();
@@ -206,18 +206,7 @@ app.post('/webhook/toxbox', async (req, res) => {
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// app.use(cors({
-//   origin: '*'
-// }));
-
 app.use(cors(configs.corsConfig));
-// if (NODE_ENV === "development") {
-//   app.use(cors(configs.corsConfig));
-// } else {
-//   app.use(cors({ origin: "*" }));
-// }
-
 app.use(express.static("assets"));
 app.use(express.static("uploads"));
 app.use(compression(configs.compressionConfig));
@@ -229,7 +218,6 @@ app.set("view engine", "ejs");
 
 // Custom middleware list
 app.use(authenticationMiddleware);
-// app.use(userSubscriptionMiddleware);
 if (NODE_ENV !== "development") {
   app.use(sentryMiddleware); // This should be loaded after authentication middleware.
 }
@@ -237,7 +225,9 @@ if (NODE_ENV !== "development") {
 // Load router paths
 configs.routerConfig(app);
 
-// SOCIAL MEDIA AUTHENTICATION ROUTES
+/*
+  SOCIAL MEDIA AUTHENTICATION ROUTES
+*/
 // Facebook authentication route
 app.post('/auth/facebook', (req, res) => {
   const { userType } = req.body;
@@ -864,7 +854,9 @@ app.post('/auth/microsoft', async (req, res) => {
   }
 });
 
-// TRADER ROUTES
+/*
+  TRADER ROUTES
+*/
 // Get app configuration by key 
 app.get('/config/:configKey', async (req, res) => {
   try {
@@ -877,7 +869,9 @@ app.get('/config/:configKey', async (req, res) => {
   }
 });
 
-// ROUTES THAT INTERACT WITH THE STRIPE API
+/*
+  ROUTES THAT INTERACT WITH THE STRIPE API
+*/
 // Create a checkout session on stripe
 app.post('/create-checkout-session', async (req, res) => {
   const { customerId, priceId, quantity, couponId } = req.body;
@@ -1462,8 +1456,5 @@ if (NODE_ENV !== "development") {
 app.use((err, req, res, next) => {
   res.status(err.status || 500).json(err);
 });
-
-// process.env.TZ = "Asia/Dubai";
-// console.log(new Date().toString());
 
 export default app;

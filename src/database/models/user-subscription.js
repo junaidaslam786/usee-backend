@@ -1,9 +1,10 @@
 import { DataTypes, Model } from 'sequelize';
-import { SUBSCRIPTION_STATUS } from '@/config/constants';
+// import { SUBSCRIPTION_STATUS } from '@/config/constants';
 import Stripe from 'stripe';
+import stripeConfig from '@/config/stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
+  apiVersion: stripeConfig.stripe.apiVersion,
 });
 
 export default function (sequelize) {
@@ -116,17 +117,79 @@ export default function (sequelize) {
     }
   });
 
-  UserSubscription.addHook('afterSave', async (instance) => {
-    if (instance.changed('paidRemainingUnits')) {
-      if (instance.paidRemainingUnits === 0) {
-        if (instance.autoRenew) {
-          // Renew the subscription using Stripe
-          await instance.renewSubscriptionIfRequired();
-        } else {
-          instance.status = SUBSCRIPTION_STATUS.EXPIRED;
-          // const updatedInstance = { ...instance.attributes, status: SUBSCRIPTION_STATUS.EXPIRED };
-          // instance.set(updatedInstance);
+  UserSubscription.addHook('afterSave', async (instance, options) => {
+    if (instance.changed('paidRemainingUnits') && instance.paidRemainingUnits === 0 && instance.autoRenew) {
+      try {
+        const user = await sequelize.models.user.findByPk(instance.userId);
+        const { stripeCustomerId } = user;
+
+        if (!stripeCustomerId) {
+          throw new Error('User does not have a Stripe customer ID');
         }
+
+        // Fetch price from stripe
+        const price = await sequelize.models.appConfiguration.findOne({
+          where: { configKey: 'tokenPrice' },
+          attributes: ['stripePriceId', 'configValue'],
+        });
+
+        if (!price) {
+          throw new Error('Price not found');
+        }
+
+        // Create an invoice for the customer
+        const invoice = await stripe.invoices.create({
+          customer: stripeCustomerId,
+          auto_advance: true,
+          collection_method: 'charge_automatically',
+        });
+
+        // Create an invoice item for the product
+        // eslint-disable-next-line no-unused-vars
+        const invoiceItem = await stripe.invoiceItems.create({
+          customer: stripeCustomerId,
+          invoice: invoice.id,
+          price: price.stripePriceId,
+          quantity: instance.autoRenewUnits,
+        });
+
+        // eslint-disable-next-line no-unused-vars
+        const invoicePaid = await stripe.invoices.pay(invoice.id);
+
+        const totalAmount = instance.autoRenewUnits * price.configValue;
+
+        // Add the tokens to the user's account in your database
+        const token = await sequelize.models.token.create({
+          userId: user.id,
+          quantity: instance.autoRenewUnits,
+          price: price.configValue,
+          totalAmount,
+          remainingAmount: instance.autoRenewUnits,
+          stripeInvoiceId: invoice.id,
+          stripeInvoiceStatus: invoice.status,
+          // stripeInvoiceStatus: invoicePaid.status === 'paid' ? invoicePaid.status : invoice.status,
+        }, { transaction: options.transaction });
+
+        if (invoicePaid.status !== 'paid') {
+          throw new Error('Invoice creation failed');
+        }
+
+        // Update userSubscription.paidRemainingUnits after successful payment
+        await sequelize.models.userSubscription.update(
+          {
+            paidRemainingUnits: instance.autoRenewUnits,
+          },
+          {
+            where: {
+              id: instance.id,
+            },
+            transaction: options.transaction,
+          },
+        );
+        console.log('Subscription auto-renewed successfully for user:', instance.userId, token);
+      } catch (error) {
+        console.error('Error during auto-renewal for user:', instance.userId, error);
+        // Implement further error handling (e.g., notify admins, retry logic)
       }
     }
   });

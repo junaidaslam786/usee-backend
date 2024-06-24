@@ -23,8 +23,8 @@ export const listCompletedAppointments = async (agentInfo, reqBody, dbInstance) 
           as: 'agentUser',
           attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
         },
-        { 
-          model: dbInstance.agentTimeSlot, 
+        {
+          model: dbInstance.agentTimeSlot,
         },
       ],
       order: [['id', 'DESC']],
@@ -41,7 +41,7 @@ export const listCompletedAppointments = async (agentInfo, reqBody, dbInstance) 
 };
 
 const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
-  const whereClause = user.agentType == AGENT_TYPE.AGENT ? { id: appointmentId, agentId: user.id } : { id: appointmentId, allotedAgent: user.id };
+  const whereClause = user.agentType === AGENT_TYPE.AGENT ? { id: appointmentId, agentId: user.id } : { id: appointmentId, allotedAgent: user.id };
   const appointment = await dbInstance.appointment.findOne({
     where: whereClause,
     include: [
@@ -60,8 +60,8 @@ const getAppointmentDetailById = async (user, appointmentId, dbInstance) => {
         as: 'agentUser',
         attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
       },
-      { 
-        model: dbInstance.agentTimeSlot, 
+      {
+        model: dbInstance.agentTimeSlot,
       },
     ],
   });
