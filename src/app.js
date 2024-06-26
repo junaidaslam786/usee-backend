@@ -279,6 +279,23 @@ app.get('/auth/facebook/callback', async (req, res) => {
         user.facebookId = id;
         await user.save();
       }
+      if (state === "customer") {
+        // Check if user is already an agent
+        const agent = await db.models.agent.findOne({
+          where: { userId: user.id },
+        });
+
+        if (agent) {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as an agent`);
+        }
+      }
+
+      if (state === "agent") {
+        // Check if user is already a customer
+        if (user.userType === 'customer') {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as a customer`);
+        }
+      }
     } else {
       // If user does not exist, create a new one
       const nameArray = name.split(" ");
@@ -381,6 +398,23 @@ app.get('/auth/twitter/callback', async (req, res) => {
       if (!user.twitterId) {
         user.twitterId = id;
         await user.save();
+      }
+      if (state === "customer") {
+        // Check if user is already an agent
+        const agent = await db.models.agent.findOne({
+          where: { userId: user.id },
+        });
+
+        if (agent) {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as an agent`);
+        }
+      }
+
+      if (state === "agent") {
+        // Check if user is already a customer
+        if (user.userType === 'customer') {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as a customer`);
+        }
       }
     } else {
       // If user does not exist, create a new one
@@ -541,6 +575,23 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         user.linkedinId = sub;
         await user.save();
       }
+      if (state === "customer") {
+        // Check if user is already an agent
+        const agent = await db.models.agent.findOne({
+          where: { userId: user.id },
+        });
+
+        if (agent) {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as an agent`);
+        }
+      }
+
+      if (state === "agent") {
+        // Check if user is already a customer
+        if (user.userType === 'customer') {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as a customer`);
+        }
+      }
     } else {
       // If user does not exist, create a new one
       const nameArray = name.split(" ");
@@ -660,6 +711,23 @@ app.get('/auth/google/callback', async (req, res) => {
       if (!user.googleId) {
         user.googleId = id;
         await user.save();
+      }
+      if (state === "customer") {
+        // Check if user is already an agent
+        const agent = await db.models.agent.findOne({
+          where: { userId: user.id },
+        });
+
+        if (agent) {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as an agent`);
+        }
+      }
+
+      if (state === "agent") {
+        // Check if user is already a customer
+        if (user.userType === 'customer') {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as a customer`);
+        }
       }
     } else {
       // If user does not exist, create a new one
