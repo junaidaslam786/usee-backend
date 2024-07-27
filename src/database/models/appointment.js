@@ -130,12 +130,12 @@ export default function (sequelize) {
         featureId: '159c869a-1b24-4cd3-ac61-425645b730c7',
       },
     });
-    const videoCallFeature = await sequelize.models.feature.findOne({
-      where: {
-        name: 'Video Call',
-      },
-      attributes: ['freeUnits'],
-    });
+    // const videoCallFeature = await sequelize.models.feature.findOne({
+    //   where: {
+    //     name: 'Video Call',
+    //   },
+    //   attributes: ['freeUnits'],
+    // });
 
     // Deduct units based on subscription when the meeting starts
     if (instance.status === 'inprogress') {
@@ -149,9 +149,16 @@ export default function (sequelize) {
             });
 
             if (productSubscription) {
-              productSubscription.freeRemainingUnits = videoCallFeature.freeUnits;
-              productSubscription.paidRemainingUnits = 0;
-              productSubscription.save();
+              // productSubscription.freeRemainingUnits = videoCallFeature.freeUnits;
+              // productSubscription.paidRemainingUnits = 0;
+              if (productSubscription.freeRemainingUnits > 0) {
+                productSubscription.freeRemainingUnits -= 1; // Deduct one unit from freeRemainingUnits
+              } else if (productSubscription.paidRemainingUnits > 0) {
+                productSubscription.paidRemainingUnits -= 1; // Deduct one unit from paidRemainingUnits
+              } else {
+                //
+              }
+              await productSubscription.save();
             }
           }));
         } catch (error) {
