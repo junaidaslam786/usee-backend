@@ -1061,13 +1061,15 @@ app.post('/create-payment-intent', async (req, res) => {
   const { customerId, invoiceId, paymentMethodId, amount } = req.body;
 
   try {
+    const customer = await stripe.customers.retrieve(customerId);
+
     const paymentIntent = await stripe.paymentIntents.create({
-      // customer: customerId,
+      customer: customerId,
       // invoice: invoiceId,
       payment_method: paymentMethodId,
       amount: amount * 100,
       currency: 'aed',
-      description: `Payment for Invoice# ${invoiceId}`,
+      description: `Payment from JMeter(testing)`,
       return_url: 'http://localhost:3000/success',
       // automatic_payment_methods: { enabled: true },
       // payment_method_types: ['card'],
@@ -1076,12 +1078,12 @@ app.post('/create-payment-intent', async (req, res) => {
     });
     console.log("PAYMENT INTENT: ", paymentIntent);
 
-    const invoice = await stripe.invoices.update(invoiceId, {
-      payment_intent: paymentIntent.id
-    });
-    console.log("INVOICE: ", invoice);
+    // const invoice = await stripe.invoices.update(invoiceId, {
+    //   payment_intent: paymentIntent.id
+    // });
+    // console.log("INVOICE: ", invoice);
 
-    res.json({ success: true, paymentIntent: paymentIntent, invoice: invoice });
+    res.json({ success: true, paymentIntent: paymentIntent });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create payment intent' });
