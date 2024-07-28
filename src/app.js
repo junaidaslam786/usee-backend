@@ -1056,73 +1056,72 @@ app.get('/success', async (req, res) => {
   res.render('success');
 });
 
-app.post('/create-payment-intentt', async (req, res) => {
-  const { tokenId, quantity, priceId, customerId, invoiceId, paymentMethodId, amount } = req.body;
+// app.post('/create-payment-intentt', async (req, res) => {
+//   const { tokenId, quantity, priceId, customerId, invoiceId, paymentMethodId, amount } = req.body;
 
-  try {
-    // Create a new invoice using the provided invoiceId
-    const invoice = await stripe.invoices.create({
-      customer: customerId,
-      description: 'Invoice for JMeter testing',
-      auto_advance: true,
-    });
+//   try {
+//     // Create a new invoice using the provided invoiceId
+//     const invoice = await stripe.invoices.create({
+//       customer: customerId,
+//       description: 'Invoice for JMeter testing',
+//       auto_advance: true,
+//     });
 
-    // Create an invoice item for the product
-    const invoiceItem = await stripe.invoiceItems.create({
-      customer: customerId,
-      invoice: invoice.id,
-      price: priceId,
-      quantity: quantity,
-    });
+//     // Create an invoice item for the product
+//     const invoiceItem = await stripe.invoiceItems.create({
+//       customer: customerId,
+//       invoice: invoice.id,
+//       price: priceId,
+//       quantity: quantity,
+//     });
 
-    // Finalize the invoice
-    const finalizedInvoice = await stripe.invoices.finalizeInvoice(
-      invoice.id
-    );
+//     // Finalize the invoice
+//     const finalizedInvoice = await stripe.invoices.finalizeInvoice(
+//       invoice.id
+//     );
 
-    // Create a checkout session with the newly created invoice
-    const checkoutSession = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price: priceId,
-          quantity: quantity,
-        },
-      ],
-      mode: 'payment',
-      success_url: 'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'http://localhost:3000/cancel',
-      customer: customerId,
-      // payment_method: paymentMethodId,
-    });
+//     // Create a checkout session with the newly created invoice
+//     const checkoutSession = await stripe.checkout.sessions.create({
+//       line_items: [
+//         {
+//           price: priceId,
+//           quantity: quantity,
+//         },
+//       ],
+//       mode: 'payment',
+//       success_url: 'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
+//       cancel_url: 'http://localhost:3000/cancel',
+//       customer: customerId,
+//       // payment_method: paymentMethodId,
+//     });
 
-    const token = await db.models.token.findOne({
-      where: { id: tokenId },
-    });
-    console.log('T:', token);
+//     const token = await db.models.token.findOne({
+//       where: { id: tokenId },
+//     });
+//     console.log('T:', token);
 
-    token.stripeCheckoutSessionId = checkoutSession.id;
-    await token.save();
+//     token.stripeCheckoutSessionId = checkoutSession.id;
+//     await token.save();
 
-    // Create a payment intent with success
-    const paymentIntent = await stripe.paymentIntents.create({
-      customer: customerId,
-      amount: amount,
-      currency: 'aed',
-      description: `Payment from JMeter testing`,
-      confirm: true,
-      payment_method: paymentMethodId,
-      return_url: 'http://localhost:3000/success',
-    });
+//     // Create a payment intent with success
+//     const paymentIntent = await stripe.paymentIntents.create({
+//       customer: customerId,
+//       amount: amount,
+//       currency: 'aed',
+//       description: `Payment from JMeter testing`,
+//       confirm: true,
+//       payment_method: paymentMethodId,
+//       return_url: 'http://localhost:3000/success',
+//     });
 
-    console.log('PAYMENT INTENT:', paymentIntent);
+//     console.log('PAYMENT INTENT:', paymentIntent);
 
-    res.json({ success: true, paymentIntent: paymentIntent });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create payment intent' });
-  }
-});
-
+//     res.json({ success: true, paymentIntent: paymentIntent });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Failed to create payment intent' });
+//   }
+// });
 
 // Create a PaymentIntent
 app.post('/create-payment-intent', async (req, res) => {

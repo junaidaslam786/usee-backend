@@ -683,10 +683,10 @@ export const checkFieldExists = async (reqBody, dbInstance) => {
 }
 
 export const fetchTokenPrice = async (req, configKey) => {
-  // try {
-  console.log("configKey", configKey);
-  return await req.dbInstance.appConfiguration.findOne({ where: { configKey } });
-  // } catch (error) {
-  //     throw new Error(`Fetching configuration by key failed: ${error.message}`);
-  // }
+  try {
+    console.log("configKey", configKey);
+    return await req.dbInstance.appConfiguration.findOne({ where: { configKey } });
+  } catch (error) {
+    throw new Error(`Fetching configuration by key failed: ${error.message}`);
+  }
 }

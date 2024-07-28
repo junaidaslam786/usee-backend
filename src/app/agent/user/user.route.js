@@ -21,6 +21,7 @@ router.put('/:userId/subscription', isAuthenticated, userController.updateUserSu
 router.post('/:userId/subscribe', userController.addSubscriptionFeatureToUser);
 router.get('/:userId/tokens', isAuthenticated, userController.getUserTokens);
 router.get('/:userId/token-transactions', isAuthenticated, userController.getUserTokenTransactions);
-router.post('/:userId/token-transaction', isAuthenticated, userController.createTokenTransaction);
+router.post('/:userId/token-transaction', isAuthenticated, validate(userValidations.createTokenTransactionRules),
+  userController.createTokenTransaction);
 
 export default router;

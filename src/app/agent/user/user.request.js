@@ -94,3 +94,17 @@ export const updateAgentUserSortingRules = [
   }),
   body('sort').exists().notEmpty(),
 ];
+
+export const createTokenTransactionRules = [
+  body('quantity')
+    .exists()
+    .withMessage('Please provide quantity')
+    .isNumeric()
+    .withMessage('Quantity must be a number')
+    .custom((value) => {
+      if (Number(value) <= 0) {
+        throw new Error('Quantity must be greater than zero');
+      }
+      return true;
+    }),
+];
