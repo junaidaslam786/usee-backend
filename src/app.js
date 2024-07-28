@@ -1056,12 +1056,91 @@ app.get('/success', async (req, res) => {
   res.render('success');
 });
 
-// Create a PaymentIntent
-app.post('/create-payment-intent', async (req, res) => {
-  const { customerId, invoiceId, paymentMethodId, amount } = req.body;
+app.post('/create-payment-intentt', async (req, res) => {
+  const { tokenId, quantity, priceId, customerId, invoiceId, paymentMethodId, amount } = req.body;
 
   try {
-    const customer = await stripe.customers.retrieve(customerId);
+    // Create a new invoice using the provided invoiceId
+    const invoice = await stripe.invoices.create({
+      customer: customerId,
+      description: 'Invoice for JMeter testing',
+      auto_advance: true,
+    });
+
+    // Create an invoice item for the product
+    const invoiceItem = await stripe.invoiceItems.create({
+      customer: customerId,
+      invoice: invoice.id,
+      price: priceId,
+      quantity: quantity,
+    });
+
+    // Finalize the invoice
+    const finalizedInvoice = await stripe.invoices.finalizeInvoice(
+      invoice.id
+    );
+
+    // Create a checkout session with the newly created invoice
+    const checkoutSession = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price: priceId,
+          quantity: quantity,
+        },
+      ],
+      mode: 'payment',
+      success_url: 'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'http://localhost:3000/cancel',
+      customer: customerId,
+      // payment_method: paymentMethodId,
+    });
+
+    const token = await db.models.token.findOne({
+      where: { id: tokenId },
+    });
+    console.log('T:', token);
+
+    token.stripeCheckoutSessionId = checkoutSession.id;
+    await token.save();
+
+    // Create a payment intent with success
+    const paymentIntent = await stripe.paymentIntents.create({
+      customer: customerId,
+      amount: amount,
+      currency: 'aed',
+      description: `Payment from JMeter testing`,
+      confirm: true,
+      payment_method: paymentMethodId,
+      return_url: 'http://localhost:3000/success',
+    });
+
+    console.log('PAYMENT INTENT:', paymentIntent);
+
+    res.json({ success: true, paymentIntent: paymentIntent });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create payment intent' });
+  }
+});
+
+
+// Create a PaymentIntent
+app.post('/create-payment-intent', async (req, res) => {
+  const { priceId, customerId, invoiceId, paymentMethodId, amount } = req.body;
+
+  try {
+    // const customer = await stripe.customers.retrieve(customerId);
+
+    const invoice = await stripe.invoices.create({
+      customer: customerId,
+      description: 'Invoice for JMeter testing',
+      line_items: [
+        {
+          price: priceId, // Assuming invoiceId is a price ID
+          quantity: 1,
+        },
+      ],
+    });
 
     const paymentIntent = await stripe.paymentIntents.create({
       customer: customerId,
@@ -1069,7 +1148,7 @@ app.post('/create-payment-intent', async (req, res) => {
       payment_method: paymentMethodId,
       amount: amount * 100,
       currency: 'aed',
-      description: `Payment from JMeter(testing)`,
+      description: `Payment from JMeter testing`,
       return_url: 'http://localhost:3000/success',
       // automatic_payment_methods: { enabled: true },
       // payment_method_types: ['card'],
@@ -1077,6 +1156,8 @@ app.post('/create-payment-intent', async (req, res) => {
       confirm: true,
     });
     console.log("PAYMENT INTENT: ", paymentIntent);
+
+    // create 
 
     // const invoice = await stripe.invoices.update(invoiceId, {
     //   payment_intent: paymentIntent.id
@@ -1428,7 +1509,8 @@ app.post('/create-billing-session', async (req, res) => {
     res.status(200).json({ success: true, session: session });
   } catch (error) {
     console.error('Error creating billing session:', error.message);
-    res.status(500).json({ error: 'Failed to create billing session' });  }
+    res.status(500).json({ error: 'Failed to create billing session' });
+  }
 });
 
 // Endpoint to create a coupon
