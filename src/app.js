@@ -14,6 +14,7 @@ import db from "@/database";
 import * as configs from "@/config";
 import { authenticationMiddleware, sentryMiddleware } from "@/middleware";
 import { utilsHelper, mailHelper } from '@/helpers';
+import { createTokenTransactionMultiple2 } from '@/app/agent/user/user.service';
 
 import { AGENT_TYPE, USER_TYPE, AGENT_USER_ACCESS_TYPE_VALUE, PRODUCT_STATUS, PRODUCT_CATEGORIES, PROPERTY_ROOT_PATHS, VIRTUAL_TOUR_TYPE, USER_ALERT_MODE, USER_ALERT_TYPE, OFFER_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, PRODUCT_LOG_TYPE } from '@/config/constants';
 
@@ -104,19 +105,45 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
         break;
       case 'invoice.payment_succeeded':
         const invoice = event.data.object;
-        // console.log("invoice: ", invoice);
+        console.log("invoice: ", invoice.id);
+
+        // Begin transaction
+        const transaction = await db.transaction();
 
         // find token by invoice id
         const token1 = await db.models.token.findOne({
           where: { stripe_invoice_id: invoice.id },
+          transaction,
         });
 
         if (token1) {
+          console.log('token updated through stripe webhook')
           token1.stripeInvoiceStatus = invoice.status;
           token1.stripeInvoiceData = invoice;
           if (invoice.status === "paid") {
             token1.acquiredDate = new Date();
             token1.valid = true;
+            
+            // check if invoice contains a subscriptionId in meta_data of stripe invoice, if it does update the required usersbuscription
+            if (invoice.metadata && invoice.metadata.subscriptionId && invoice.metadata.description) {
+              console.log('subscription updated through stripe webhook')
+              const subscriptionId = invoice.metadata.subscriptionId;
+              const userSubscription = await db.models.userSubscription.findByPk(subscriptionId, { transaction } );
+              const feature = await userSubscription.getFeature();
+              if (userSubscription) {
+                userSubscription.paidRemainingUnits = token1.quantity;
+                await userSubscription.save();
+
+                const requestBody = {
+                  userId: token1.userId,
+                  featureId: userSubscription.featureId,
+                  quantity: token1.quantity,
+                  amount: token1.quantity * token1.price,
+                  description: `Used for renewing ${feature.name}`,
+                };
+                const deductToken = await createTokenTransactionMultiple2(token1.userId, requestBody, transaction );
+              }
+            }
           }
           await token1.save();
         }

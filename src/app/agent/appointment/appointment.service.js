@@ -16,7 +16,7 @@ import {
 
 const cron = require('node-cron');
 const moment = require('moment-timezone');
-const path = require("path")
+const path = require("path");
 const ejs = require("ejs");
 const { Auth } = require('@vonage/auth');
 const { Vonage } = require('@vonage/server-sdk');
@@ -175,7 +175,7 @@ export const getAppointment = async (appointmentId, req) => {
 }
 
 export const createAppointment = async (req, dbInstance) => {
-  // try {
+  try {
     const {
       properties,
       appointmentDate,
@@ -487,10 +487,10 @@ export const createAppointment = async (req, dbInstance) => {
     });
 
     return (result.id) ? await getAppointmentDetailById((allotedAgentUser ? allotedAgentUser : req.user.agent), result.id, dbInstance) : result;
-  // } catch (err) {
-  //   console.log('createAppointmentServiceError', err)
-  //   return { error: true, message: 'Server not responding, please try again later.' }
-  // }
+  } catch (err) {
+    console.log('createAppointmentServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
 }
 
 export const deleteAppointment = async (appointmentId, req) => {
@@ -684,7 +684,7 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
 }
 
 export const updateStatus = async (req, res) => {
-  try {
+  try  {
     const { id, status } = req.body;
     const { user: userInfo, dbInstance } = req;
 
@@ -730,13 +730,14 @@ export const updateStatus = async (req, res) => {
     }
 
     appointment.status = status;
+
     if (status === APPOINTMENT_STATUS.INPROGRESS) {
       appointment.startMeetingTime = Date.now();
     }
 
     if (status === APPOINTMENT_STATUS.COMPLETED) {
       appointment.endMeetingTime = Date.now();
-      
+
       const subscription = await db.models.subscription.findOne({
         where: { name: 'USEE360 Basic' },
       });

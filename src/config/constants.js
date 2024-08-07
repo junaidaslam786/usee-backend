@@ -128,6 +128,7 @@ export const EMAIL_SUBJECT = {
   COMPLETED_APPOINTMENT: 'Usee-360 Appointment Completed',
   CANCELLED_APPOINTMENT: 'Usee-360 Appointment Cancelled',
   SEND_OTP: 'Usee-360 One Time Passcode (OTP)',
+  AGENT_ACCOUNT_APPROVAL: 'Account Approval Confirmation',
   AGENT_ACCOUNT_DELETION: 'Account Deletion Confirmation',
   CONTACT_US: 'Usee-360 Query',
 };
@@ -157,6 +158,7 @@ export const EMAIL_TEMPLATE_PATH = {
   AGENT_STATUS_UPDATE_APPOINTMENT: 'email-template/agent-status-update-appointment.ejs',
   CUSTOMER_STATUS_UPDATE_APPOINTMENT: 'email-template/customer-status-update-appointment.ejs',
   SEND_OTP: 'email-template/send-otp.ejs',
+  AGENT_ACCOUNT_APPROVAL: 'email-template/agent-account-approval.ejs',
   AGENT_ACCOUNT_DELETION: 'email-template/agent-account-deletion.ejs',
   CONTACT_US: 'email-template/contact-us.ejs',
 };

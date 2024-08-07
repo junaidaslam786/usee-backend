@@ -8,6 +8,13 @@ import { Sequelize } from "sequelize";
 const OP = Sequelize.Op;
 import timezoneJson from "../../../../timezones.json";
 
+import Stripe from 'stripe';
+import stripeConfig from '@/config/stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: stripeConfig.stripe.apiVersion,
+});
+
 export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
   try {
     const itemPerPage = reqBody && reqBody.size ? reqBody.size : 10;
@@ -173,6 +180,8 @@ export const createAgentUser = async (reqBody, req) => {
 
       if (agentAccessLevels?.length > 0) {
         await dbInstance.agentAccessLevel.bulkCreate(agentAccessLevels, { transaction });
+      } else {
+        throw new Error("Sub-agent user requires at least one permission.");
       }
 
       const emailData = [];
@@ -688,6 +697,7 @@ export const addUserToFeatureSubscription = async (userId, subscriptionId, featu
 
 export const getUserTokens = async (userId, dbInstance, valid = true, available) => {
   try {
+
     if (!userId) {
       return { error: true, message: "User ID is required." };
     }
@@ -703,7 +713,7 @@ export const getUserTokens = async (userId, dbInstance, valid = true, available)
       whereClause.remainingAmount = available ? { [OP.gt]: 0 } : { [OP.gte]: 0 };
     }
 
-    const tokens = await dbInstance.token.findAll({
+    const tokens = await db.models.token.findAll({
       where: whereClause,
       order: [["createdAt", "DESC"]],
     });
@@ -809,7 +819,7 @@ export const createTokenTransaction = async (userId, reqBody, dbInstance) => {
   }
 };
 
-export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance, res) => {
+export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance) => {
   try {
     const { featureId, quantity, amount, description } = reqBody;
 
@@ -830,7 +840,7 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
       return { error: true, message: "Insufficient balance" };
     }
 
-    const results = await db.transaction(async (transaction) => {
+    const results = await dbInstance.transaction(async (transaction) => {
       const createdTransactions = [];
       let balance = amount;
       let deductedAmount = 0;
@@ -847,7 +857,7 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
         }
 
         token.remainingAmount -= deductedAmount;
-        await token.save({ transaction });
+        await token.save({ transaction: transaction });
 
         const createdTransaction = await dbInstance.tokenTransaction.create(
           {
@@ -859,7 +869,7 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
             createdBy: userId,
             updatedBy: userId,
           },
-          { transaction }
+          { transaction: transaction }
         );
 
         createdTransactions.push(createdTransaction);
@@ -868,12 +878,12 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
       return { success: true, message: "Token transactions created successfully.", createdTransactions };
     });
 
-    if (results?.success) {
-      if (userSubscription) {
-        userSubscription.paidRemainingUnits += quantity;
-        await userSubscription.save();
-      }
-    }
+    // if (results?.success) {
+    //   if (userSubscription) {
+    //     userSubscription.paidRemainingUnits += quantity;
+    //     await userSubscription.save();
+    //   }
+    // }
 
     return results;
   } catch (err) {
@@ -881,3 +891,128 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
+
+export const createTokenTransactionMultiple2 = async (userId, reqBody, transaction) => {
+  try {
+    const { featureId, quantity, amount, description } = reqBody;
+    console.log(' !---Q: ', quantity)
+    console.log(' !---A: ', amount)
+
+    const userSubscription = await db.models.userSubscription.findOne({
+      where: { userId, subscriptionId: "35e0b998-53bc-4777-a207-261fff3489aa", featureId },
+    });
+
+    if (!userSubscription) {
+      return { error: true, message: "You are not subscribed to buy this feature." };
+    }
+
+    reqBody.available = true;
+    const tokens = await getUserTokens(userId, db);
+
+    if (tokens?.error) {
+      return { error: true, message: "Invalid user id or user do not exist." };
+    }
+
+    if (tokens.totalTokensRemaining < quantity) {
+      return { error: true, message: "Insufficient balance" };
+    }
+
+    const createdTransactions = [];
+    let balance = amount;
+    let deductedAmount = 0;
+
+    for (const token of tokens.tokens) {
+      if (token.remainingAmount >= balance) {
+        console.log(' __A__');
+        console.log(' !---T.RA: ', token.remainingAmount);
+        console.log(' !---B: ', balance)
+
+        deductedAmount = balance;
+        balance = 0;
+      } else if (token.remainingAmount < balance) {
+        console.log('__B__');
+        console.log(' !---T.RA: ', token.remainingAmount);
+        console.log(' !---B: ', balance);
+        deductedAmount = token.remainingAmount;
+        balance -= token.remainingAmount;
+      } else {
+        // 
+      }
+
+      token.remainingAmount -= deductedAmount;
+      await token.save({ transaction });
+
+      if (deductedAmount !== 0) {
+        const singleTransaction = await db.models.tokenTransaction.create({
+          userId,
+          featureId,
+          quantity,
+          amount: deductedAmount,
+          description,
+          createdBy: userId,
+          updatedBy: userId,
+        });
+
+        createdTransactions.push(singleTransaction);
+
+      }
+
+      return { success: true, message: "Token transactions created successfully.", createdTransactions };
+    }
+  } catch (err) {
+    console.error("createTokenTransactionMultipleServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const purchaseTokensWithStripe = async (user, userSubscription, quantity, price, transaction) => {
+  try {
+    const { stripeCustomerId } = user;
+    if (!stripeCustomerId) {
+      throw new Error('User does not have a Stripe customer ID');
+    }
+
+    // Create an invoice for the customer
+    const invoice = await stripe.invoices.create({
+      customer: stripeCustomerId,
+      auto_advance: true,
+      collection_method: 'charge_automatically',
+      metadata: {
+        subscriptionId: userSubscription.id,
+        description: `Used for renewing ${userSubscription.feature.name}`
+      }
+    });
+
+    // Create an invoice item for the product
+    // eslint-disable-next-line no-unused-vars
+    const invoiceItem = await stripe.invoiceItems.create({
+      customer: stripeCustomerId,
+      invoice: invoice.id,
+      price: price.stripePriceId,
+      quantity: userSubscription.autoRenewUnits,
+    });
+
+    // eslint-disable-next-line no-unused-vars
+    const invoicePaid = await stripe.invoices.pay(invoice.id);
+
+    // Add the tokens to the user's account in your database
+    const token = await db.models.token.create({
+      userId: user.id,
+      quantity: quantity,
+      price: price.configValue,
+      totalAmount: quantity,
+      remainingAmount: quantity,
+      stripeInvoiceId: invoice.id,
+      stripeInvoiceStatus: invoice.status,
+    }, { transaction: transaction });
+
+    if (invoicePaid.status !== 'paid') {
+      throw new Error('Invoice created with pending payment');
+    }
+
+    console.log('Successfully purchased tokens auto-renewed successfully for %s : %s', userSubscription.feature.name, token);
+  } catch (error) {
+    console.error('Error purchasing tokens with Stripe:', error);
+    throw error;
+  }
+}

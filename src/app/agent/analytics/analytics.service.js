@@ -1774,7 +1774,7 @@ export async function getPropertiesSoldRented(req, res, userInstance) {
         },
         {
           model: productOffer,
-          attributes: ['id', 'amount', 'notes', 'status', 'rejectReason'],
+          attributes: ['id', 'amount', 'notes', 'status', 'rejectReason', 'acceptedAt'],
           where: {
             status: {
               [Op.in]: ['accepted'],
@@ -1984,6 +1984,10 @@ export async function getAgentDetails(req, res) {
         {
           model: user,
           attributes: ['firstName', 'lastName', 'email', 'phoneNumber', 'profileImage'],
+        },
+        {
+          model: productAllocation,
+          attributes: ['id'],
         },
       ],
       order: [['createdAt', 'DESC']],

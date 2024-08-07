@@ -53,6 +53,7 @@ export default function (sequelize) {
   ProductSubscription.addHook('afterSave', async (instance, options) => {
     if (instance.changed('videoCallsMissed')) {
       if (instance.videoCallsMissed === 2) {
+        // Discard the remaining free units if agent misses two consecutive calls
         await sequelize.models.productSubscription.update({
           freeRemainingUnits: 0,
         }, {

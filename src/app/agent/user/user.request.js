@@ -6,8 +6,14 @@ export const createAgentUserRules = [
     .withMessage('Please provide first name'),
   body('lastName').exists().withMessage('Please provide last name').notEmpty()
     .withMessage('Please provide last name'),
-  body('role').exists().withMessage('Please provide user role').notEmpty()
-    .withMessage('Please provide user role'),
+  body('role').exists().notEmpty().withMessage('Please provide user access level')
+    .custom((value, { req }) => {
+      const accessLevels = Object.keys(req.body).filter(key => key.startsWith('accessLevels['));
+      if (accessLevels.length === 0) {
+        throw new Error('At least one access level is required for sub-agent users');
+      }
+      return true;
+    }),
   body('email').isEmail().withMessage('Please provide valid email').exists()
     .withMessage('Please provide email')
     // eslint-disable-next-line arrow-body-style

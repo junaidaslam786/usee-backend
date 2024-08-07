@@ -1,10 +1,11 @@
-import { SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from "@/config/constants";
-
-import { utilsHelper } from "@/helpers";
+import { EMAIL_TEMPLATE_PATH, EMAIL_SUBJECT, SUPERADMIN_PROFILE_PATHS, PROPERTY_ROOT_PATHS, USER_TYPE } from "@/config/constants";
+import { utilsHelper, mailHelper } from "@/helpers";
 import db from "@/database";
 import { Sequelize } from "sequelize";
 
 const OP = Sequelize.Op;
+const path = require("path");
+const ejs = require("ejs");
 
 export const updateCurrentUser = async (reqBody, req) => {
   try {
@@ -89,6 +90,7 @@ export const blockTraderById = async (id, dbInstance) => {
     return { error: true, message: 'Error blocking trader.' };
   }
 };
+
 export const updateUserById = async (reqBody, req) => {
   try {
     const user = await db.models.user.findOne({
@@ -105,6 +107,11 @@ export const updateUserById = async (reqBody, req) => {
     if (reqBody.cityName) user.cityName = reqBody.cityName;
     if (reqBody.timezone) user.timezone = reqBody.timezone;
     await user.save();
+
+    // Check if active is set to true and user has an email
+    if (( reqBody.active !== user.active ) && reqBody.active === true && user.email) {
+      await sendEmailToTrader(user, req);
+    }
 
     // feature image upload
     if (req.files && req.files.image) {
@@ -148,12 +155,35 @@ export const updateUserById = async (reqBody, req) => {
         where: { user_id: reqBody.id },
       }
     );
+
     return { user };
   } catch (err) {
     console.log("updateUserByIdServiceError", err);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
+
+export const sendEmailToTrader = async (user, req) => {
+  try {
+    const agentEmailData = [];
+    agentEmailData.primaryAgent = user.fullName;
+    agentEmailData.appUrl = process.env.APP_URL;
+    agentEmailData.login = utilsHelper.generateUrl("agent-login", user.userType);
+
+    const agentEmailHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_ACCOUNT_APPROVAL), agentEmailData);
+    const agentEmailPayload = {
+      to: user.email,
+      subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
+      html: agentEmailHtmlData,
+    }
+    mailHelper.sendMail(agentEmailPayload);
+
+    return { message: 'Email sent successfully.' };
+  } catch (err) {
+    console.log('sendEmailToTraderServiceError', err);
+    return { error: true, message: 'Error sending email.' };
+  }
+}
 
 export const updatePassword = async (user, reqBody) => {
   try {
@@ -274,7 +304,7 @@ export const listAgentUsers = async (params, dbInstance) => {
       where: { status: true },
       include: [{
         model: dbInstance.agent,
-        where: {agent_id: params.id}
+        where: { agent_id: params.id }
       }],
       order: [['id', 'DESC']],
     });

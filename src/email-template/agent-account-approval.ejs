@@ -1,0 +1,20 @@
+<%- include('layout/header.ejs', { subject: "Account Approval Confirmation" }) %>
+
+<tr>
+  <td valign="top" style="color:#92778a;text-align:left;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px;">
+    <span>Dear <b><%= primaryAgent %></b>,<br><br></span>
+    <span><b>We are pleased to inform you that your account has been successfully approved. You can now access and utilize all the features and functionalities of our platform.</b><br><br></span>
+    <span><b>To log in, please visit .</b><br><br></span>
+    <span>
+      <a target="_blank" href="<%= login %>" style="border-radius:50px;text-decoration:none;font-size:14px;font-family:'Manrope', sans-serif;background-color:#00CB04;padding:12px 50px;display:inline-block;color:#fff;">
+          <b>Login</b>
+      </a>
+  </span>
+    <span><b>If you have any questions or require assistance, please don't hesitate to contact our support team at {process.env.CONTACT_EMAIL}.</b><br><br></span>
+
+    <span><b>Best regards,</b><br></span>
+    <span><b>The Usee-360 Team</b><br><br></span>
+  </td>
+</tr>
+
+<%- include('layout/footer.ejs') %>

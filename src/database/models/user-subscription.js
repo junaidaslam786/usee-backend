@@ -2,6 +2,8 @@ import { DataTypes, Model } from 'sequelize';
 // import { SUBSCRIPTION_STATUS } from '@/config/constants';
 import Stripe from 'stripe';
 import stripeConfig from '@/config/stripe';
+import { getUserTokens, createTokenTransactionMultiple2, purchaseTokensWithStripe }
+  from '@/app/agent/user/user.service';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: stripeConfig.stripe.apiVersion,
@@ -118,7 +120,9 @@ export default function (sequelize) {
   });
 
   UserSubscription.addHook('afterSave', async (instance, options) => {
-    if (instance.changed('paidRemainingUnits') && instance.paidRemainingUnits === 0 && instance.autoRenew) {
+    if (instance.changed('paidRemainingUnits') && instance.paidRemainingUnits === 0
+      && instance.autoRenew) {
+      // Auto Renew Logic: use previously available usee coins otherwise buy minimum required coins from stripe
       try {
         const user = await sequelize.models.user.findByPk(instance.userId);
         const { stripeCustomerId } = user;
@@ -127,7 +131,7 @@ export default function (sequelize) {
           throw new Error('User does not have a Stripe customer ID');
         }
 
-        // Fetch price from stripe
+        // Fetch stripe price from local db
         const price = await sequelize.models.appConfiguration.findOne({
           where: { configKey: 'tokenPrice' },
           attributes: ['stripePriceId', 'configValue'],
@@ -137,59 +141,63 @@ export default function (sequelize) {
           throw new Error('Price not found');
         }
 
-        // Create an invoice for the customer
-        const invoice = await stripe.invoices.create({
-          customer: stripeCustomerId,
-          auto_advance: true,
-          collection_method: 'charge_automatically',
-        });
+        console.log(' instance.autoRenewUnits: ',instance.autoRenewUnits);
+        await instance.reload({ include: ['feature'] });
+        console.log(' -instance.autoRenewUnits: ',instance.autoRenewUnits);
+        console.log(' -instance.feature.tokensPerUnit: ', instance.feature.tokensPerUnit);
+        const { totalTokensRemaining } = await getUserTokens(user.id, null, true, true);
+        const totalAmount = (instance.autoRenewUnits * instance.feature.tokensPerUnit);
+        const totalTokensRequired = instance.autoRenewUnits;
 
-        // Create an invoice item for the product
-        // eslint-disable-next-line no-unused-vars
-        const invoiceItem = await stripe.invoiceItems.create({
-          customer: stripeCustomerId,
-          invoice: invoice.id,
-          price: price.stripePriceId,
-          quantity: instance.autoRenewUnits,
-        });
+        // Start logic to check remaining tokens scenarios
+        if (totalTokensRemaining >= totalTokensRequired) {
+          // A) Use existing tokens and record the transaction
+          console.log('(A)');
+          const requestBody = {
+            userId: user.id,
+            featureId: instance.featureId,
+            quantity: totalTokensRequired,
+            amount: totalAmount,
+            description: `Used for renewing ${instance.feature.name}`,
+          };
+          const deductToken = await createTokenTransactionMultiple2(user.id, requestBody, options.transaction);
 
-        // eslint-disable-next-line no-unused-vars
-        const invoicePaid = await stripe.invoices.pay(invoice.id);
+          // console.log(deductToken);
 
-        const totalAmount = instance.autoRenewUnits * price.configValue;
+          if (deductToken?.success) {
+            instance.paidRemainingUnits += instance.autoRenewUnits;
+            await instance.save();
+          }
 
-        // Add the tokens to the user's account in your database
-        const token = await sequelize.models.token.create({
-          userId: user.id,
-          quantity: instance.autoRenewUnits,
-          price: price.configValue,
-          totalAmount,
-          remainingAmount: instance.autoRenewUnits,
-          stripeInvoiceId: invoice.id,
-          stripeInvoiceStatus: invoice.status,
-          // stripeInvoiceStatus: invoicePaid.status === 'paid' ? invoicePaid.status : invoice.status,
-        }, { transaction: options.transaction });
+          console.log('Tokens deducted successfully for user:', user.id);
+        } else if (totalTokensRemaining === 0) {
+          // B) Purchase the required tokens if no tokens are remaining
+          console.log('(B)');
+          await purchaseTokensWithStripe(user, instance, totalTokensRequired, price, options.transaction);
 
-        if (invoicePaid.status !== 'paid') {
-          throw new Error('Invoice creation failed');
+          console.log('Tokens purchased successfully for user:', user.id);
+        } else {
+          // C) Partially use existing tokens and purchase the rest
+          console.log('(C)');
+          const tokensToPurchase = totalTokensRequired - totalTokensRemaining;
+
+          const requestBody = {
+            userId: user.id,
+            featureId: instance.featureId,
+            quantity: totalTokensRequired,
+            amount: totalAmount,
+            description: `Used for renewing ${instance.feature.name}`,
+          };
+
+          const deductToken = await createTokenTransactionMultiple2(user.id, requestBody, options.transaction);
+          console.log(deductToken);
+          console.log('Partial tokens deducted for user:', user.id);
+
+          await purchaseTokensWithStripe(user, instance, tokensToPurchase, price, options.transaction);
+          console.log('Remaining tokens purchased for user:', user.id);
         }
-
-        // Update userSubscription.paidRemainingUnits after successful payment
-        await sequelize.models.userSubscription.update(
-          {
-            paidRemainingUnits: instance.autoRenewUnits,
-          },
-          {
-            where: {
-              id: instance.id,
-            },
-            transaction: options.transaction,
-          },
-        );
-        console.log('Subscription auto-renewed successfully for user:', instance.userId, token);
       } catch (error) {
         console.error('Error during auto-renewal for user:', instance.userId, error);
-        // Implement further error handling (e.g., notify admins, retry logic)
       }
     }
   });
