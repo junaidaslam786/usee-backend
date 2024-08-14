@@ -141,13 +141,10 @@ export default function (sequelize) {
           throw new Error('Price not found');
         }
 
-        console.log(' instance.autoRenewUnits: ',instance.autoRenewUnits);
         await instance.reload({ include: ['feature'] });
-        console.log(' -instance.autoRenewUnits: ',instance.autoRenewUnits);
-        console.log(' -instance.feature.tokensPerUnit: ', instance.feature.tokensPerUnit);
         const { totalTokensRemaining } = await getUserTokens(user.id, null, true, true);
         const totalAmount = (instance.autoRenewUnits * instance.feature.tokensPerUnit);
-        const totalTokensRequired = instance.autoRenewUnits;
+        const totalTokensRequired = instance.feature.tokensPerUnit * instance.autoRenewUnits;
 
         // Start logic to check remaining tokens scenarios
         if (totalTokensRemaining >= totalTokensRequired) {
@@ -156,7 +153,7 @@ export default function (sequelize) {
           const requestBody = {
             userId: user.id,
             featureId: instance.featureId,
-            quantity: totalTokensRequired,
+            quantity: instance.autoRenewUnits,
             amount: totalAmount,
             description: `Used for renewing ${instance.feature.name}`,
           };
@@ -173,25 +170,36 @@ export default function (sequelize) {
         } else if (totalTokensRemaining === 0) {
           // B) Purchase the required tokens if no tokens are remaining
           console.log('(B)');
-          await purchaseTokensWithStripe(user, instance, totalTokensRequired, price, options.transaction);
+          const stripePurchase = await purchaseTokensWithStripe(user, instance, totalTokensRequired, price, options.transaction);
+
+          if (stripePurchase?.success) {
+            instance.paidRemainingUnits += instance.autoRenewUnits;
+            await instance.save();
+          }
 
           console.log('Tokens purchased successfully for user:', user.id);
         } else {
-          // C) Partially use existing tokens and purchase the rest
+          // C) Partially use existing tokens and purchase the remaining
           console.log('(C)');
           const tokensToPurchase = totalTokensRequired - totalTokensRemaining;
 
           const requestBody = {
             userId: user.id,
             featureId: instance.featureId,
-            quantity: totalTokensRequired,
-            amount: totalAmount,
+            quantity: totalTokensRemaining / instance.feature.tokensPerUnit,
+            amount: totalTokensRemaining,
             description: `Used for renewing ${instance.feature.name}`,
           };
 
           const deductToken = await createTokenTransactionMultiple2(user.id, requestBody, options.transaction);
-          console.log(deductToken);
           console.log('Partial tokens deducted for user:', user.id);
+
+          // console.log(deductToken);
+
+          if (deductToken?.success) {
+            instance.paidRemainingUnits += instance.autoRenewUnits;
+            await instance.save();
+          }
 
           await purchaseTokensWithStripe(user, instance, tokensToPurchase, price, options.transaction);
           console.log('Remaining tokens purchased for user:', user.id);

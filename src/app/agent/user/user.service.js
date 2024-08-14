@@ -823,8 +823,12 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
   try {
     const { featureId, quantity, amount, description } = reqBody;
 
+    const subscription = await db.models.subscription.findOne({
+      where: { name: 'USEE360 Basic' },
+    });
+
     const userSubscription = await dbInstance.userSubscription.findOne({
-      where: { userId, subscriptionId: "35e0b998-53bc-4777-a207-261fff3489aa", featureId },
+      where: { userId, subscriptionId: subscription.id, featureId },
     });
     if (!userSubscription) {
       return { error: true, message: "You are not subscribed to buy this feature." };
@@ -840,8 +844,7 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
       return { error: true, message: "Insufficient balance" };
     }
 
-    const results = await dbInstance.transaction(async (transaction) => {
-      const createdTransactions = [];
+    const results = await db.transaction(async (transaction) => {
       let balance = amount;
       let deductedAmount = 0;
 
@@ -849,41 +852,39 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
         if (token.remainingAmount >= balance) {
           deductedAmount = balance;
           balance = 0;
-        }
-
-        if (token.remainingAmount < balance) {
+        } else if (token.remainingAmount < balance) {
           deductedAmount = token.remainingAmount;
           balance -= token.remainingAmount;
+        } else {
+          // 
         }
 
         token.remainingAmount -= deductedAmount;
         await token.save({ transaction: transaction });
-
-        const createdTransaction = await dbInstance.tokenTransaction.create(
-          {
-            userId,
-            featureId,
-            quantity,
-            amount: deductedAmount,
-            description,
-            createdBy: userId,
-            updatedBy: userId,
-          },
-          { transaction: transaction }
-        );
-
-        createdTransactions.push(createdTransaction);
       }
 
-      return { success: true, message: "Token transactions created successfully.", createdTransactions };
+      let createdTransaction = await dbInstance.tokenTransaction.create(
+        {
+          userId,
+          featureId,
+          quantity,
+          amount,
+          description,
+          createdBy: userId,
+          updatedBy: userId,
+        },
+        { transaction: transaction }
+      );
+
+      return { success: true, message: "Token transactions created successfully.", createdTransaction };
     });
 
-    // if (results?.success) {
-    //   if (userSubscription) {
-    //     userSubscription.paidRemainingUnits += quantity;
-    //     await userSubscription.save();
-    //   }
-    // }
+    if (results?.success) {
+      if (userSubscription) {
+        userSubscription.paidRemainingUnits += quantity;
+        await userSubscription.save();
+      }
+    }
 
     return results;
   } catch (err) {
@@ -895,11 +896,13 @@ export const createTokenTransactionMultiple = async (userId, reqBody, dbInstance
 export const createTokenTransactionMultiple2 = async (userId, reqBody, transaction) => {
   try {
     const { featureId, quantity, amount, description } = reqBody;
-    console.log(' !---Q: ', quantity)
-    console.log(' !---A: ', amount)
+
+    const subscription = await db.models.subscription.findOne({
+      where: { name: 'USEE360 Basic' },
+    });
 
     const userSubscription = await db.models.userSubscription.findOne({
-      where: { userId, subscriptionId: "35e0b998-53bc-4777-a207-261fff3489aa", featureId },
+      where: { userId, subscriptionId: subscription.id, featureId },
     });
 
     if (!userSubscription) {
@@ -917,22 +920,14 @@ export const createTokenTransactionMultiple2 = async (userId, reqBody, transacti
       return { error: true, message: "Insufficient balance" };
     }
 
-    const createdTransactions = [];
     let balance = amount;
     let deductedAmount = 0;
 
     for (const token of tokens.tokens) {
       if (token.remainingAmount >= balance) {
-        console.log(' __A__');
-        console.log(' !---T.RA: ', token.remainingAmount);
-        console.log(' !---B: ', balance)
-
         deductedAmount = balance;
         balance = 0;
       } else if (token.remainingAmount < balance) {
-        console.log('__B__');
-        console.log(' !---T.RA: ', token.remainingAmount);
-        console.log(' !---B: ', balance);
         deductedAmount = token.remainingAmount;
         balance -= token.remainingAmount;
       } else {
@@ -941,26 +936,22 @@ export const createTokenTransactionMultiple2 = async (userId, reqBody, transacti
 
       token.remainingAmount -= deductedAmount;
       await token.save({ transaction });
-
-      if (deductedAmount !== 0) {
-        const singleTransaction = await db.models.tokenTransaction.create({
-          userId,
-          featureId,
-          quantity,
-          amount: deductedAmount,
-          description,
-          createdBy: userId,
-          updatedBy: userId,
-        });
-
-        createdTransactions.push(singleTransaction);
-
-      }
-
-      return { success: true, message: "Token transactions created successfully.", createdTransactions };
     }
+
+    let createdTransaction = await db.models.tokenTransaction.create({
+      userId,
+      featureId,
+      quantity,
+      amount,
+      description,
+      createdBy: userId,
+      updatedBy: userId,
+    }, { transaction: transaction });
+
+    return { success: true, message: "Token transactions created successfully.", createdTransaction };
   } catch (err) {
     console.error("createTokenTransactionMultipleServiceError", err);
+    await transaction.abort();
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
@@ -989,7 +980,7 @@ export const purchaseTokensWithStripe = async (user, userSubscription, quantity,
       customer: stripeCustomerId,
       invoice: invoice.id,
       price: price.stripePriceId,
-      quantity: userSubscription.autoRenewUnits,
+      quantity,
     });
 
     // eslint-disable-next-line no-unused-vars
@@ -1000,7 +991,7 @@ export const purchaseTokensWithStripe = async (user, userSubscription, quantity,
       userId: user.id,
       quantity: quantity,
       price: price.configValue,
-      totalAmount: quantity,
+      totalAmount: price.configValue * quantity,
       remainingAmount: quantity,
       stripeInvoiceId: invoice.id,
       stripeInvoiceStatus: invoice.status,
@@ -1011,6 +1002,7 @@ export const purchaseTokensWithStripe = async (user, userSubscription, quantity,
     }
 
     console.log('Successfully purchased tokens auto-renewed successfully for %s : %s', userSubscription.feature.name, token);
+    return { success: true, message: "Purchased tokens successfully for stripe." };
   } catch (error) {
     console.error('Error purchasing tokens with Stripe:', error);
     throw error;

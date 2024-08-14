@@ -107,13 +107,10 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
         const invoice = event.data.object;
         console.log("invoice: ", invoice.id);
 
-        // Begin transaction
-        const transaction = await db.transaction();
 
         // find token by invoice id
         const token1 = await db.models.token.findOne({
           where: { stripe_invoice_id: invoice.id },
-          transaction,
         });
 
         if (token1) {
@@ -123,29 +120,32 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (reques
           if (invoice.status === "paid") {
             token1.acquiredDate = new Date();
             token1.valid = true;
-            
+            token1.save();
+
             // check if invoice contains a subscriptionId in meta_data of stripe invoice, if it does update the required usersbuscription
             if (invoice.metadata && invoice.metadata.subscriptionId && invoice.metadata.description) {
               console.log('subscription updated through stripe webhook')
               const subscriptionId = invoice.metadata.subscriptionId;
-              const userSubscription = await db.models.userSubscription.findByPk(subscriptionId, { transaction } );
+              const userSubscription = await db.models.userSubscription.findByPk(subscriptionId);
               const feature = await userSubscription.getFeature();
               if (userSubscription) {
-                userSubscription.paidRemainingUnits = token1.quantity;
-                await userSubscription.save();
+                // Begin transaction
+                const transaction = await db.transaction();
 
                 const requestBody = {
                   userId: token1.userId,
                   featureId: userSubscription.featureId,
-                  quantity: token1.quantity,
-                  amount: token1.quantity * token1.price,
+                  quantity: token1.quantity / feature.tokensPerUnit,
+                  amount: token1.quantity,
                   description: `Used for renewing ${feature.name}`,
                 };
-                const deductToken = await createTokenTransactionMultiple2(token1.userId, requestBody, transaction );
+                const deductToken = await createTokenTransactionMultiple2(token1.userId, requestBody, transaction);
+                if (deductToken?.success) {
+                  await transaction.commit();
+                }
               }
             }
           }
-          await token1.save();
         }
         break;
 
