@@ -1,9 +1,14 @@
 /* eslint-disable no-console */
 import db from '@/database';
+import { AGENT_TYPE } from '../config/constants';
 
 // eslint-disable-next-line consistent-return
 export default async function (req, res, next) {
-  const userId = req.user.id; // Assuming you have user id from the request
+  const userId = req.user.id;
+
+  // User id for using subscription units of main agent/trader
+  const agentId = req.user.agent.agentType === AGENT_TYPE.AGENT ? userId : req.user.agent.agentId;
+
   const subscription = await db.models.subscription.findOne({
     where: { name: 'USEE360 Basic' },
   });
@@ -13,7 +18,7 @@ export default async function (req, res, next) {
 
   try {
     const userSubscription = await db.models.userSubscription.findOne({
-      where: { userId, subscriptionId: subscription.id, featureId: feature.id },
+      where: { userId: agentId, subscriptionId: subscription.id, featureId: feature.id },
     });
 
     if (!userSubscription) {
