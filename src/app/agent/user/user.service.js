@@ -1,4 +1,4 @@
-import { AGENT_TYPE, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE, PROPERTY_ROOT_PATHS } from "@/config/constants";
+import { AGENT_TYPE, APPOINTMENT_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE, PROPERTY_ROOT_PATHS } from "@/config/constants";
 import { utilsHelper, mailHelper } from "@/helpers";
 import db from "@/database";
 import * as userService from "../../user/user.service";
@@ -10,6 +10,8 @@ import timezoneJson from "../../../../timezones.json";
 
 import Stripe from 'stripe';
 import stripeConfig from '@/config/stripe';
+import agent from "@/database/models/agent";
+import appointment from "@/database/models/appointment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: stripeConfig.stripe.apiVersion,
@@ -22,7 +24,7 @@ export const listAgentUsers = async (agentInfo, reqBody, dbInstance) => {
     const search = reqBody && reqBody.search ? reqBody.search : "";
 
     const whereClause =
-      agentInfo.agent.agentType == AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { managerId: agentInfo.id };
+      agentInfo.agent.agentType === AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { managerId: agentInfo.id };
     const { count, rows } = await dbInstance.agent.findAndCountAll({
       where: whereClause,
       include: [
@@ -79,6 +81,80 @@ export const listAgentUsersToAllocate = async (req) => {
     });
   } catch (err) {
     console.log("listAgentUsersToAllocateServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) => {
+  try {
+    // const itemPerPage = reqBody && reqBody.size ? reqBody.size : 10;
+    // const page = reqBody && reqBody.page ? reqBody.page : 1;
+    const search = reqBody && reqBody.search ? reqBody.search : "";
+
+    const whereClause =
+      agentInfo.agent.agentType === AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { managerId: agentInfo.id };
+    const { count, rows } = await dbInstance.agent.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: dbInstance.user,
+          where: {
+            [OP.or]: [{ firstName: { [OP.iLike]: `%${search}%` } }, { lastName: { [OP.iLike]: `%${search}%` } }],
+          },
+          include: [
+            {
+              model: dbInstance.agentAccessLevel,
+            },
+            {
+              model: dbInstance.productAllocation,
+            },
+            // {
+            //   model: dbInstance.appointment,
+            //   attributes: ["id", "status", "appointmentDate", "agentId"],
+            //   required: false,
+            // },
+          ],
+        },
+      ],
+      order: [["id", "DESC"]],
+      // offset: itemPerPage * (page - 1),
+      // limit: itemPerPage,
+    });
+
+    const formattedData = rows.map(agent => {
+      // Convert Sequelize instances to plain objects
+      const agentObj = agent.toJSON();
+      const appointments = agentObj.user.appointments || [];
+
+      // Filter appointments by status
+      const pendingAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.PENDING);
+      const completedAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.COMPLETED);
+      const cancelledAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.CANCELLED);
+      const missedAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.MISSED);
+
+      return {
+        ...agentObj,
+        pendingAppointments,
+        completedAppointments,
+        cancelledAppointments,
+        missedAppointments,
+      };
+    });
+    
+    return {
+      agents: formattedData,
+    }
+    // return formattedData;
+
+    // return {
+    //   data: rows,
+    //   // page,
+    //   size: itemPerPage,
+    //   totalPage: Math.ceil(count / itemPerPage),
+    //   totalItems: count,
+    // };
+  } catch (err) {
+    console.log("listAgentUsersReportsServiceError", err);
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
@@ -517,7 +593,7 @@ export const getUserSubscriptionDetails = async (userId, dbInstance) => {
         subscription_id: "35e0b998-53bc-4777-a207-261fff3489aa",
         status: "active",
       },
-      attributes: ["freeRemainingUnits", "paidRemainingUnits", "autoRenew", "autoRenewUnits", "startDate", "endDate", "status"],
+      attributes: ["id", "freeRemainingUnits", "paidRemainingUnits", "autoRenew", "autoRenewUnits", "startDate", "endDate", "status"],
       include: [
         {
           model: dbInstance.feature,
