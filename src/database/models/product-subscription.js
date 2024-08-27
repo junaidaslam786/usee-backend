@@ -64,8 +64,23 @@ export default function (sequelize) {
   });
 
   // eslint-disable-next-line no-unused-vars
-  ProductSubscription.addHook('afterCreate', (instance) => {
-    //
+  ProductSubscription.addHook('afterCreate', async (instance, options) => {
+    const userSubscription = await sequelize.models.userSubscription.findByPk(instance.userSubscriptionId);
+    const feature = await sequelize.models.feature.findByPk(userSubscription.featureId);
+
+    if (feature) {
+      if (feature.name === 'Snag List') {
+        if (userSubscription.freeRemainingUnits > 0) {
+          userSubscription.freeRemainingUnits -= 1;
+          await userSubscription.save();
+        } else if (userSubscription.paidRemainingUnits > 0) {
+          userSubscription.paidRemainingUnits -= 1;
+          await userSubscription.save();
+        } else {
+          console.log({ error: true, message: 'Not enough units to use snag list feature.' });
+        }
+      }
+    }
   });
 
   // eslint-disable-next-line no-unused-vars
