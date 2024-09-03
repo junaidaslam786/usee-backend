@@ -181,9 +181,29 @@ export async function getPropertiesData(req, res, userInstance) {
             },
             {
               model: productAllocation,
+              attributes: [],
+              include: [
+                {
+                  model: user,
+                  attributes: ['firstName', 'lastName'],
+                },
+              ],
             },
             {
               model: appointment,
+              attributes: ['id', 'appointmentDate', 'status', 'startMeetingTime', 'endMeetingTime', 'appointmentTimeGmt', 'co2Details'],
+              include: [
+                {
+                  model: user,
+                  as: 'customerUser',
+                  attributes: ['firstName', 'lastName'],
+                },
+                {
+                  model: user,
+                  as: 'allotedAgentUser',
+                  attributes: ['firstName', 'lastName'],
+                },
+              ],
             },
           ],
           distinct: true,
@@ -295,9 +315,29 @@ export async function getPropertiesData(req, res, userInstance) {
             },
             {
               model: productAllocation,
+              attributes: [],
+              include: [
+                {
+                  model: user,
+                  attributes: ['firstName', 'lastName'],
+                },
+              ],
             },
             {
               model: appointment,
+              attributes: ['id', 'appointmentDate', 'status', 'startMeetingTime', 'endMeetingTime', 'appointmentTimeGmt', 'co2Details'],
+              include: [
+                {
+                  model: user,
+                  as: 'customerUser',
+                  attributes: ['firstName', 'lastName'],
+                },
+                {
+                  model: user,
+                  as: 'allotedAgentUser',
+                  attributes: ['firstName', 'lastName'],
+                },
+              ],
             },
           ],
           distinct: true,
@@ -406,9 +446,29 @@ export async function getPropertiesData(req, res, userInstance) {
             },
             {
               model: productAllocation,
+              attributes: [],
+              include: [
+                {
+                  model: user,
+                  attributes: ['firstName', 'lastName'],
+                },
+              ],
             },
             {
               model: appointment,
+              attributes: ['id', 'appointmentDate', 'status', 'startMeetingTime', 'endMeetingTime', 'appointmentTimeGmt', 'co2Details'],
+              include: [
+                {
+                  model: user,
+                  as: 'customerUser',
+                  attributes: ['firstName', 'lastName'],
+                },
+                {
+                  model: user,
+                  as: 'allotedAgentUser',
+                  attributes: ['firstName', 'lastName'],
+                },
+              ],
             },
           ],
           distinct: true,
