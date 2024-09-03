@@ -123,32 +123,36 @@ export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) =
       // limit: itemPerPage,
     });
 
-    console.log('rows: ', rows);
+    // console.log('rows: ', rows);
 
-    const formattedData = rows.map(async (agent) => {
-      // Convert Sequelize instances to plain objects
-      const agentObj = agent.toJSON();
-      // const appointments = agentObj.user.appointments || [];
-      reqBody.selectedUser = agent.id;
-      console.log('  reqBody.selectedUser: ', reqBody.selectedUser);
-      reqBody.selectedUser = agent.id;
-      const appointments = await listAppointments(agentInfo, reqBody, dbInstance);
-      console.log('apps: ', appointments);
-
-      // Filter appointments by status
-      const pendingAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.PENDING);
-      const completedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.COMPLETED);
-      const cancelledAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.CANCELLED);
-      const missedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.MISSED);
-
-      return {
-        ...agentObj,
-        pendingAppointments,
-        completedAppointments,
-        cancelledAppointments,
-        missedAppointments,
-      };
-    });
+    const formattedData = await Promise.all(
+      rows.map(async (agent) => {
+        // Convert Sequelize instances to plain objects
+        const agentObj = agent.toJSON();
+        // const appointments = agentObj.user.appointments || [];
+        reqBody.selectedUser = agent.id;
+        console.log(' agentInfo.email: ', agentInfo.email);
+        console.log('  reqBody.selectedUser: ', reqBody.selectedUser);
+        // reqBody.selectedUser = agent.id;
+        const appointments = await listAppointments(agentInfo, reqBody, dbInstance);
+        console.log('apps: ', appointments);
+  
+        // Filter appointments by status
+        const pendingAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.PENDING);
+        const completedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.COMPLETED);
+        const cancelledAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.CANCELLED);
+        const missedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.MISSED);
+  
+        return {
+          ...agentObj,
+          pendingAppointments,
+          completedAppointments,
+          cancelledAppointments,
+          missedAppointments,
+        };
+      }),
+    ); 
+    console.log(' formattedData: ', formattedData);
 
     return {
       agents: formattedData,
