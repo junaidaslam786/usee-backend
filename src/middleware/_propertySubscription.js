@@ -29,16 +29,16 @@ export default async function (req, res, next) {
     }
 
     if (userSubscription.freeRemainingUnits > 0) {
-      userSubscription.freeRemainingUnits -= 1; // Deduct one unit from freeRemainingUnits
+      userSubscription.freeRemainingUnits -= 1;
     } else if (userSubscription.paidRemainingUnits > 0) {
-      userSubscription.paidRemainingUnits -= 1; // Deduct one unit from paidRemainingUnits
+      userSubscription.paidRemainingUnits -= 1;
     } else {
       return res.status(403).json({ error: true, message: 'Not enough units to access property listing feature.' });
     }
 
     await userSubscription.save();
 
-    return next(); // Continue to the actual route handler
+    return next();
   } catch (error) {
     console.error('Error in deductUnitsMiddleware:', error);
     res.status(500).json({ error: 'Internal Server Error' });

@@ -2,7 +2,7 @@ import db from '@/database';
 import { Sequelize, where } from 'sequelize';
 const OP = Sequelize.Op;
 import { opentokHelper, utilsHelper, mailHelper } from '@/helpers';
-import * as userService from '../../user/user.service';
+import { getUserById, getUserByEmail, createUserWithPassword } from '../../user/user.service';
 import { getCarbonFootprint } from '../analytics/analytics.service';
 import {
   EMAIL_TEMPLATE_PATH,
@@ -639,7 +639,7 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
   let customerDetails;
   const customerId = reqBody.customerId;
   if (customerId) {
-    customerDetails = await userService.getUserById(customerId);
+    customerDetails = await getUserById(customerId);
     if (!customerDetails) {
       return { error: true, message: 'Invalid customer id or customer do not exist.' }
     }
@@ -648,12 +648,12 @@ const getOrCreateCustomer = async (agentId, reqBody, transaction) => {
   }
 
   if (!customerId && reqBody.customerEmail) {
-    customerDetails = await userService.getUserByEmail(reqBody.customerEmail);
+    customerDetails = await getUserByEmail(reqBody.customerEmail);
     if (customerDetails && customerDetails.userType != USER_TYPE.CUSTOMER) {
       return { error: true, message: 'User is not registered as customer in our platform. Try another email.' }
     } else if (!customerDetails) {
       const tempPassword = utilsHelper.generateRandomString(10);
-      customerDetails = await userService.createUserWithPassword({
+      customerDetails = await createUserWithPassword({
         firstName: reqBody.customerFirstName,
         lastName: reqBody.customerLastName,
         email: reqBody.customerEmail.toLowerCase(),

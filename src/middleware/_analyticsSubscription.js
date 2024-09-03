@@ -1,8 +1,13 @@
 import db from '@/database';
+import { AGENT_TYPE } from '../config/constants';
 
 // eslint-disable-next-line consistent-return
 export default async function (req, res, next) {
   const userId = req.user.id; // Assuming you have user id from the request
+
+  // User id for using subscription units of main agent/trader
+  const agentId = req.user.agent.agentType === AGENT_TYPE.AGENT ? userId : req.user.agent.agentId;
+
   const subscription = await db.models.subscription.findOne({
     where: { name: 'USEE360 Basic' },
   });
@@ -12,7 +17,7 @@ export default async function (req, res, next) {
 
   try {
     const userSubscription = await db.models.userSubscription.findOne({
-      where: { userId, subscriptionId: subscription.id, featureId: feature.id },
+      where: { userId: agentId, subscriptionId: subscription.id, featureId: feature.id },
     });
 
     if (!userSubscription) {
@@ -20,16 +25,16 @@ export default async function (req, res, next) {
     }
 
     if (userSubscription.freeRemainingUnits > 0) {
-      userSubscription.freeRemainingUnits -= 1; // Deduct one unit from freeRemainingUnits
+      userSubscription.freeRemainingUnits -= 1;
     } else if (userSubscription.paidRemainingUnits > 0) {
-      userSubscription.paidRemainingUnits -= 1; // Deduct one unit from paidRemainingUnits
+      userSubscription.paidRemainingUnits -= 1;
     } else {
       return res.status(403).json({ error: true, message: 'Not enough units to access analytics feature.' });
     }
 
     await userSubscription.save();
 
-    return next(); // Continue to the actual route handler
+    return next();
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error in deductUnitsMiddleware:', error);

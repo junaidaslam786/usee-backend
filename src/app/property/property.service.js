@@ -517,7 +517,7 @@ export const deletePropertyImage = async (reqBody, dbInstance) => {
 
 export const listProperties = async (userId, reqBody, dbInstance) => {
   try {
-    const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
+    const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 12;
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
     const status = (reqBody && reqBody.status) ? reqBody.status : {
       [OP.notIn]: [PRODUCT_STATUS.SOLD, PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
@@ -531,8 +531,18 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
     const feature = await db.models.feature.findOne({
       where: { name: 'Video Call' },
     });
+
+    const user = await db.models.user.findByPk(userId, {
+      include: [{
+        model: dbInstance.agent,
+      }]
+    });
+
+    // User id for using subscription units of main agent/trader
+    const agentId = user.agent.agentType === AGENT_TYPE.AGENT ? userId : user.agent.agentId;
+
     const userSubscription = await db.models.userSubscription.findOne({
-      where: { userId, subscriptionId: subscription.id, featureId: feature.id },
+      where: { userId: agentId, subscriptionId: subscription.id, featureId: feature.id },
     });
 
     const { count, rows } = await dbInstance.product.findAndCountAll({
@@ -554,7 +564,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
         },
         {
           model: dbInstance.productSubscription,
-          attributes: [ 
+          attributes: [
             'freeRemainingUnits',
             [Sequelize.literal("(SELECT free_units FROM features WHERE name = 'Video Call')"), 'freeTotalUnits'],
           ],
@@ -800,7 +810,7 @@ export const enableAgentSnaglist = async (reqBody, req) => {
         message: `Unable to find "${propertyListingFeature.name}" feature, which is a pre-requisite for ${snagListFeature.name} feature.`,
       };
     }
-    
+
     const snagListUserSubscription = await dbInstance.userSubscription.findOne({
       where: {
         id: userSubscriptionId,

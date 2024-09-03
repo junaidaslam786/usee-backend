@@ -1,7 +1,9 @@
-import { AGENT_TYPE, APPOINTMENT_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE, PROPERTY_ROOT_PATHS } from "@/config/constants";
+import { AGENT_TYPE, APPOINTMENT_TYPES, APPOINTMENT_STATUS, EMAIL_SUBJECT, EMAIL_TEMPLATE_PATH, USER_TYPE, PROPERTY_ROOT_PATHS } from "@/config/constants";
 import { utilsHelper, mailHelper } from "@/helpers";
 import db from "@/database";
-import * as userService from "../../user/user.service";
+import { createUserWithPassword } from "../../user/user.service";
+// import { listAppointments } from '@/app/agent/appointment/appointment.service';
+// import { listAppointments } from "../appointment/appointment.service";
 const path = require("path");
 const ejs = require("ejs");
 import { Sequelize } from "sequelize";
@@ -10,8 +12,8 @@ import timezoneJson from "../../../../timezones.json";
 
 import Stripe from 'stripe';
 import stripeConfig from '@/config/stripe';
-import agent from "@/database/models/agent";
-import appointment from "@/database/models/appointment";
+// import agent from "@/database/models/agent";
+// import appointment from "@/database/models/appointment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: stripeConfig.stripe.apiVersion,
@@ -121,16 +123,23 @@ export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) =
       // limit: itemPerPage,
     });
 
-    const formattedData = rows.map(agent => {
+    console.log('rows: ', rows);
+
+    const formattedData = rows.map(async (agent) => {
       // Convert Sequelize instances to plain objects
       const agentObj = agent.toJSON();
-      const appointments = agentObj.user.appointments || [];
+      // const appointments = agentObj.user.appointments || [];
+      reqBody.selectedUser = agent.id;
+      console.log('  reqBody.selectedUser: ', reqBody.selectedUser);
+      reqBody.selectedUser = agent.id;
+      const appointments = await listAppointments(agentInfo, reqBody, dbInstance);
+      console.log('apps: ', appointments);
 
       // Filter appointments by status
-      const pendingAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.PENDING);
-      const completedAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.COMPLETED);
-      const cancelledAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.CANCELLED);
-      const missedAppointments = appointments.filter(appointment => appointment.status === APPOINTMENT_STATUS.MISSED);
+      const pendingAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.PENDING);
+      const completedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.COMPLETED);
+      const cancelledAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.CANCELLED);
+      const missedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.MISSED);
 
       return {
         ...agentObj,
@@ -140,7 +149,7 @@ export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) =
         missedAppointments,
       };
     });
-    
+
     return {
       agents: formattedData,
     }
@@ -158,6 +167,201 @@ export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) =
     return { error: true, message: "Server not responding, please try again later." };
   }
 };
+
+export const listAgentPropertiesReportData = async (agentInfo, reqBody, dbInstance) => {
+  try {
+    // const itemPerPage = reqBody && reqBody.size ? reqBody.size : 10;
+    // const page = reqBody && reqBody.page ? reqBody.page : 1;
+    const search = reqBody && reqBody.search ? reqBody.search : "";
+
+    const whereClause =
+      agentInfo.agent.agentType === AGENT_TYPE.AGENT ? { agentId: agentInfo.id } : { managerId: agentInfo.id };
+    const { count, rows } = await dbInstance.agent.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: dbInstance.user,
+          where: {
+            [OP.or]: [{ firstName: { [OP.iLike]: `%${search}%` } }, { lastName: { [OP.iLike]: `%${search}%` } }],
+          },
+          include: [
+            {
+              model: dbInstance.agentAccessLevel,
+            },
+            {
+              model: dbInstance.productAllocation,
+            },
+            // {
+            //   model: dbInstance.appointment,
+            //   attributes: ["id", "status", "appointmentDate", "agentId"],
+            //   required: false,
+            // },
+          ],
+        },
+      ],
+      order: [["id", "DESC"]],
+      // offset: itemPerPage * (page - 1),
+      // limit: itemPerPage,
+    });
+
+    console.log('rows: ', rows);
+
+    const formattedData = rows.map(async (agent) => {
+      // Convert Sequelize instances to plain objects
+      const agentObj = agent.toJSON();
+      // const appointments = agentObj.user.appointments || [];
+      reqBody.selectedUser = agent.id;
+      console.log('  reqBody.selectedUser: ', reqBody.selectedUser);
+      reqBody.selectedUser = agent.id;
+      const appointments = await listAppointments(agentInfo, reqBody, dbInstance);
+      console.log('apps: ', appointments);
+
+      // Filter appointments by status
+      const pendingAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.PENDING);
+      const completedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.COMPLETED);
+      const cancelledAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.CANCELLED);
+      const missedAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.MISSED);
+
+      return {
+        ...agentObj,
+        pendingAppointments,
+        completedAppointments,
+        cancelledAppointments,
+        missedAppointments,
+      };
+    });
+
+    return {
+      agents: formattedData,
+    }
+    // return formattedData;
+
+    // return {
+    //   data: rows,
+    //   // page,
+    //   size: itemPerPage,
+    //   totalPage: Math.ceil(count / itemPerPage),
+    //   totalItems: count,
+    // };
+  } catch (err) {
+    console.log("listAgentUsersReportsServiceError", err);
+    return { error: true, message: "Server not responding, please try again later." };
+  }
+};
+
+const listAppointments = async (agentInfo, reqBody, dbInstance) => {
+  try {
+    const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 10;
+    const page = (reqBody && reqBody.page) ? reqBody.page : 1;
+    const appointmentType = (reqBody && reqBody.type) ? reqBody.type : APPOINTMENT_TYPES.UPCOMING;
+
+    const selectedUser = (reqBody && reqBody?.selectedUser) ? reqBody?.selectedUser : agentInfo.id;
+    const whereClause = {
+      [OP.or]: [
+        { agentId: selectedUser },
+        { allotedAgent: selectedUser }
+      ]
+    };
+
+    whereClause.status = {
+      [OP.in]: [APPOINTMENT_STATUS.INPROGRESS, APPOINTMENT_STATUS.PENDING, APPOINTMENT_STATUS.EXPIRED]
+    };
+
+    if (appointmentType === APPOINTMENT_TYPES.UPCOMING) {
+      whereClause.status = APPOINTMENT_STATUS.PENDING;
+    }
+
+    if (appointmentType === APPOINTMENT_TYPES.COMPLETED) {
+      whereClause.status = APPOINTMENT_STATUS.COMPLETED;
+    }
+
+    if (appointmentType === APPOINTMENT_TYPES.CANCELLED) {
+      whereClause.status = APPOINTMENT_STATUS.CANCELLED;
+    }
+
+    if (appointmentType === APPOINTMENT_TYPES.EXPIRED) {
+      whereClause.status = APPOINTMENT_STATUS.EXPIRED;
+    }
+
+    if (reqBody?.filter) {
+      switch (reqBody?.filter) {
+        case DASHBOARD_FILTER.CUSTOM:
+          if (reqBody?.startDate && reqBody?.endDate) {
+            whereClause.appointmentDate = {
+              [OP.between]: [reqBody.startDate, reqBody.endDate]
+            };
+          }
+          break;
+        case DASHBOARD_FILTER.TODAY:
+          whereClause.appointmentDate = utilsHelper.getCustomDate("today");
+          break;
+        case DASHBOARD_FILTER.YESTERDAY:
+          whereClause.appointmentDate = utilsHelper.getCustomDate("yesterday");
+          break;
+        case DASHBOARD_FILTER.CURRENT_MONTH:
+          whereClause.appointmentDate = {
+            [OP.between]: [utilsHelper.getCustomDate("thisMonthStart"), utilsHelper.getCustomDate("thisMonthEnd")]
+          };
+          break;
+        case DASHBOARD_FILTER.PAST_MONTH:
+          whereClause.appointmentDate = {
+            [OP.between]: [utilsHelper.getCustomDate("lastMonthStart"), utilsHelper.getCustomDate("lastMonthEnd")]
+          };
+          break;
+        case DASHBOARD_FILTER.PAST_3_MONTH:
+          whereClause.appointmentDate = {
+            [OP.between]: [utilsHelper.getCustomDate("startOfPeriod"), utilsHelper.getCustomDate("endOfPeriod")]
+          };
+          break;
+        default:
+          break;
+      }
+    }
+
+    const { count, rows } = await dbInstance.appointment.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: dbInstance.product,
+          attributes: ["id"],
+          through: { attributes: [] }
+        },
+        {
+          model: dbInstance.user,
+          as: 'customerUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
+        },
+        {
+          model: dbInstance.user,
+          as: 'allotedAgentUser',
+          attributes: ["firstName", "lastName", "email", "phoneNumber", "profileImage", "timezone"],
+        },
+        {
+          model: dbInstance.agentTimeSlot,
+        },
+        {
+          model: dbInstance.appointmentNote,
+          attributes: ["id", "notes"],
+          required: false,
+        },
+      ],
+      order: [["appointmentDate", "DESC"]],
+      offset: (itemPerPage * (page - 1)),
+      limit: itemPerPage
+    });
+
+    return {
+      data: rows,
+      page,
+      size: itemPerPage,
+      totalPage: Math.ceil(count / itemPerPage),
+      totalItems: count
+    };
+  } catch (err) {
+    console.log('listAppointmentsServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
 
 export const createAgentUser = async (reqBody, req) => {
   try {
@@ -193,7 +397,7 @@ export const createAgentUser = async (reqBody, req) => {
       }
 
       // create user data
-      const newUser = await userService.createUserWithPassword(
+      const newUser = await createUserWithPassword(
         {
           firstName,
           lastName,
