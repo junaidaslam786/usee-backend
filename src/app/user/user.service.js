@@ -249,7 +249,8 @@ export const validateOtp = async (user, reqBody) => {
     user.signupStep = 2;
     await user.save();
 
-    return true;
+    // return true;
+    return { success: true, user: user }
   } catch (err) {
     console.log('validateOtpError', err)
     return { error: true, message: 'Server not responding, please try again later.' }
