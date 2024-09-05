@@ -89,8 +89,8 @@ export const listAgentUsersToAllocate = async (req) => {
 
 export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) => {
   try {
-    // const itemPerPage = reqBody && reqBody.size ? reqBody.size : 10;
-    // const page = reqBody && reqBody.page ? reqBody.page : 1;
+    const itemPerPage = reqBody && reqBody.size ? reqBody.size : 10;
+    const page = reqBody && reqBody.page ? reqBody.page : 1;
     const search = reqBody && reqBody.search ? reqBody.search : "";
 
     const whereClause =
@@ -110,17 +110,12 @@ export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) =
             {
               model: dbInstance.productAllocation,
             },
-            // {
-            //   model: dbInstance.appointment,
-            //   attributes: ["id", "status", "appointmentDate", "agentId"],
-            //   required: false,
-            // },
           ],
         },
       ],
       order: [["id", "DESC"]],
-      // offset: itemPerPage * (page - 1),
-      // limit: itemPerPage,
+      offset: itemPerPage * (page - 1),
+      limit: itemPerPage,
     });
 
     // console.log('rows: ', rows);
@@ -130,12 +125,10 @@ export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) =
         // Convert Sequelize instances to plain objects
         const agentObj = agent.toJSON();
         // const appointments = agentObj.user.appointments || [];
-        reqBody.selectedUser = agent.id;
-        console.log(' agentInfo.email: ', agentInfo.email);
-        console.log('  reqBody.selectedUser: ', reqBody.selectedUser);
-        // reqBody.selectedUser = agent.id;
+        reqBody.selectedUser = agent.user.id;
+        // console.log('  reqBody.selectedUser: ', reqBody.selectedUser);
         const appointments = await listAppointments(agentInfo, reqBody, dbInstance);
-        console.log('apps: ', appointments);
+        // console.log('apps: ', appointments);
   
         // Filter appointments by status
         const pendingAppointments = appointments.data.filter(appointment => appointment.status === APPOINTMENT_STATUS.PENDING);
@@ -152,20 +145,11 @@ export const listAgentUsersReportData = async (agentInfo, reqBody, dbInstance) =
         };
       }),
     ); 
-    console.log(' formattedData: ', formattedData);
+    // console.log(' formattedData: ', formattedData);
 
     return {
       agents: formattedData,
     }
-    // return formattedData;
-
-    // return {
-    //   data: rows,
-    //   // page,
-    //   size: itemPerPage,
-    //   totalPage: Math.ceil(count / itemPerPage),
-    //   totalItems: count,
-    // };
   } catch (err) {
     console.log("listAgentUsersReportsServiceError", err);
     return { error: true, message: "Server not responding, please try again later." };
