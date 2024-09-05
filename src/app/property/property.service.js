@@ -520,7 +520,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
     const itemPerPage = (reqBody && reqBody.size) ? reqBody.size : 12;
     const page = (reqBody && reqBody.page) ? reqBody.page : 1;
     const status = (reqBody && reqBody.status) ? reqBody.status : {
-      [OP.notIn]: [PRODUCT_STATUS.SOLD, PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
+      [OP.notIn]: [PRODUCT_STATUS.REMOVED, PRODUCT_STATUS.INACTIVE]
     };
     const searchStr = (reqBody && reqBody.search) ? reqBody.search : "";
     const selectedUser = (reqBody && reqBody.user) ? reqBody.user : userId;
