@@ -249,8 +249,11 @@ export const validateOtp = async (user, reqBody) => {
     user.signupStep = 2;
     await user.save();
 
-    // return true;
-    return { success: true, user: user }
+    return { 
+      success: true, 
+      message: 'Otp verified successfully.',
+      user
+    }
   } catch (err) {
     console.log('validateOtpError', err)
     return { error: true, message: 'Server not responding, please try again later.' }
@@ -410,7 +413,7 @@ export const deleteUser = async (dbInstance, req) => {
     }
 
     const agentUsers = await listAgentUsers(req.user, req.body, dbInstance);
-    
+
     if (agentUsers.data.length > 0) {
       const transactionResult = await db.transaction(async (transaction) => {
         for (const agentUser of agentUsers.data) {
