@@ -836,38 +836,62 @@ app.post('/auth/google', (req, res) => {
 });
 
 // Microsoft authentication callback route
+// Microsoft authentication callback route
 app.post('/auth/microsoft/callback', async (req, res) => {
-  // const { code, state } = req.query;
-  const { access_token, code, id_token, state } = req.body;
+  const { access_token, state } = req.body;
 
   switch (state) {
-    case '11111':
-    case '00000':
+    case '11111': // agent
+    case '00000': // customer
       break;
     default:
       return res.status(400).json({ error: true, message: 'Invalid state parameter' });
   }
 
   try {
+    // Fetch user info from Microsoft Graph API
     const userResponse = await axios.get('https://graph.microsoft.com/v1.0/me', {
       headers: {
-        Authorization: `Bearer ${access_token}`
-      }
+        Authorization: `Bearer ${access_token}`,
+      },
     });
     const userData = userResponse.data;
     console.log("USER DATA: ", userData);
 
     const { id, displayName, mail } = userData;
-
     let user = await db.models.user.findOne({
-      where: {
-        email: mail,
-        microsoftId: id,
-      },
+      where: { email: mail },
     });
+
     let agent = null;
 
-    if (!user) {
+    if (user) {
+      // If user exists, update the microsoftId if it's not already set
+      if (!user.microsoftId) {
+        user.microsoftId = id;
+        await user.save();
+      }
+
+      if (state === "00000") {
+        // Check if user is already an agent
+        const agent = await db.models.agent.findOne({
+          where: { userId: user.id },
+        });
+
+        if (agent) {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as an agent`);
+        }
+      }
+
+      if (state === "11111") {
+        // Check if user is already a customer
+        if (user.userType === 'customer') {
+          return res.redirect(`${process.env.HOME_PANEL_URL}/oauth/users?error=User is already registered as a customer`);
+        }
+      }
+
+    } else {
+      // If user does not exist, create a new one
       const nameArray = displayName.split(" ");
       const firstName = nameArray[0];
       const lastName = nameArray[1];
@@ -884,9 +908,14 @@ app.post('/auth/microsoft/callback', async (req, res) => {
         otpVerified: true,
         microsoftId: id,
       });
+    }
 
-      // create agent using above user
-      if (state === 'agent') {
+    if (state === '11111') { // Agent logic
+      agent = await db.models.agent.findOne({
+        where: { userId: user.id },
+      });
+
+      if (!agent) {
         agent = await db.models.agent.create({
           userId: user.id,
           agentType: AGENT_TYPE.AGENT,
@@ -897,7 +926,7 @@ app.post('/auth/microsoft/callback', async (req, res) => {
 
         console.log("AGENT: ", agent);
 
-        let sortWhere = { agentId: user.id };
+        const sortWhere = { agentId: user.id };
         const latestSortOrderData = await db.models.agent.findOne({
           attributes: ["sortOrder"],
           where: sortWhere,
@@ -907,14 +936,9 @@ app.post('/auth/microsoft/callback', async (req, res) => {
         const sortOrder = latestSortOrderData?.sortOrder ? latestSortOrderData.sortOrder + 1 : 1;
         await db.models.agent.update({ sortOrder: sortOrder }, { where: { userId: user.id } });
       }
-    } else {
-      if (state === 'agent') {
-        agent = await db.models.agent.findOne({
-          where: { userId: user.id },
-        });
-      }
     }
 
+    // Generate tokens for the authenticated user
     const token = await user.generateToken('4h', agent);
     const refreshToken = await user.generateToken('4h');
 
@@ -924,6 +948,7 @@ app.post('/auth/microsoft/callback', async (req, res) => {
     res.status(500).json({ error: true, message: 'Microsoft authentication failure' });
   }
 });
+
 
 // Microsoft authentication route
 app.post('/auth/microsoft', async (req, res) => {
