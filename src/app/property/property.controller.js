@@ -218,6 +218,25 @@ export const enableAgentSnaglist = async (req, res, next) => {
 };
 
 /**
+ * POST /property/agent/check-snaglist
+ * Check snaglist feature for a property
+ */
+export const checkAgentSnaglist = async (req, res, next) => {
+  try {
+    const result = await propertyService.checkAgentSnaglist(req.body, req);
+    if (result?.error && result?.message) {
+      return next(createError(400, result.message));
+    }
+
+    return res.json(result);
+    // return res.json({ success: true, message: "Snaglist is enabled for property." });
+  } catch (err) {
+    console.log('enableAgentSnaglistError', err);
+    next(err);
+  }
+};
+
+/**
  * GET /property/list-removal-reasons
  * List all removal reasons
  */

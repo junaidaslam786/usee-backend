@@ -41,6 +41,7 @@ router.delete('/customer/offer/:id', isAuthenticated, propertyController.deleteC
 router.post('/agent/update-offer', isAuthenticated, validate(propertyValidations.updateOfferStatusRequestRules),
   propertyController.updateOfferStatus);
 router.post('/agent/enable-snaglist', isAuthenticated, propertyController.enableAgentSnaglist);
+router.post('/agent/check-snaglist', isAuthenticated, propertyController.checkAgentSnaglist);
 router.post('/customer/snag-list', isAuthenticated, propertyController.updateCustomerSnaglist);
 router.post('/agent/snag-list', isAuthenticated, propertyController.updateAgentSnaglist);
 router.post('/log', isAuthenticated, validate(propertyValidations.addPropertyLogRules),

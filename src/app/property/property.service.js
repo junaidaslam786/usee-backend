@@ -545,6 +545,25 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
       where: { userId: agentId, subscriptionId: subscription.id, featureId: feature.id },
     });
 
+    // Conditional query based on video call subscription availability
+    const productSubscriptionInclude = userSubscription?.id
+      ? [{
+        model: dbInstance.productLog,
+        as: 'productViews',
+      }, {
+        model: dbInstance.productSubscription,
+        attributes: [
+          'freeRemainingUnits',
+          [Sequelize.literal("(SELECT free_units FROM features WHERE name = 'Video Call')"), 'freeTotalUnits'],
+        ],
+        where: { userSubscriptionId: userSubscription.id },
+        required: false,
+      }]
+      : [{
+        model: dbInstance.productLog,
+        as: 'productViews',
+      }];
+
     const { count, rows } = await dbInstance.product.findAndCountAll({
       attributes: ['id', 'userId', 'title', 'price', 'address', 'city', 'region', 'postalCode', 'latitude', 'longitude', 'virtualTourType', 'virtualTourUrl', 'featuredImage', 'soldDate', 'soldTime', 'status', 'createdAt'],
       where: {
@@ -557,21 +576,7 @@ export const listProperties = async (userId, reqBody, dbInstance) => {
           { id: { [OP.in]: Sequelize.literal(`(select product_id from product_allocations where user_id = '${selectedUser}')`) } }
         ]
       },
-      include: [
-        {
-          model: dbInstance.productLog,
-          as: 'productViews',
-        },
-        {
-          model: dbInstance.productSubscription,
-          attributes: [
-            'freeRemainingUnits',
-            [Sequelize.literal("(SELECT free_units FROM features WHERE name = 'Video Call')"), 'freeTotalUnits'],
-          ],
-          where: { userSubscriptionId: userSubscription.id },
-          required: false,
-        }
-      ],
+      include: productSubscriptionInclude,
       order: [["createdAt", "DESC"]],
       offset: (itemPerPage * (page - 1)),
       limit: itemPerPage
@@ -838,6 +843,57 @@ export const enableAgentSnaglist = async (reqBody, req) => {
     }
   } catch (err) {
     console.log('enableAgentSnagListServiceError', err)
+    return { error: true, message: 'Server not responding, please try again later.' }
+  }
+}
+
+export const checkAgentSnaglist = async (reqBody, req) => {
+  try {
+    const { productId, userSubscriptionId } = reqBody;
+    const { dbInstance } = req;
+
+    const property = await dbInstance.product.findByPk(productId);
+    if (!property) {
+      return { error: true, message: 'Invalid property id or Property do not exist.' };
+    }
+
+    const snagListFeature = await dbInstance.feature.findOne({ where: { name: 'Snag List' } });
+    const propertyListingFeature = await dbInstance.feature.findOne({ where: { name: 'Property Listing' } });
+
+    if (!propertyListingFeature) {
+      return {
+        error: true,
+        message: `Unable to find "${propertyListingFeature.name}" feature, which is a pre-requisite for ${snagListFeature.name} feature.`,
+      };
+    }
+
+    const snagListUserSubscription = await dbInstance.userSubscription.findOne({
+      where: {
+        id: userSubscriptionId,
+        featureId: snagListFeature.id
+      }
+    });
+    if (!snagListUserSubscription) {
+      return {
+        error: true,
+        message: `Could not enable snaglist for ${property.title}. No subscription found for "${snagListFeature.name}" feature.`
+      };
+    }
+
+    const product = await dbInstance.product.findOne({ where: { id: productId } });
+    if (!product) {
+      return { error: true, message: 'Invalid property id or Property do not exist.' };
+    }
+
+    const productSubscription = await dbInstance.productSubscription.findOne({ where: { userSubscriptionId, productId } });
+
+    if (productSubscription) {
+      return { success: true, message: 'Snag list is enabled for property.', productSubscription };
+    } else {
+      return { error: true, message: 'Agent snag list is already enabled for this property.' };
+    }
+  } catch (err) {
+    console.log('checkAgentSnagListServiceError', err)
     return { error: true, message: 'Server not responding, please try again later.' }
   }
 }
