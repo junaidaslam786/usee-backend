@@ -97,6 +97,9 @@ export const updateUserById = async (reqBody, req) => {
       where: { id: reqBody.id },
     });
 
+    const isActiveChanged = reqBody.active !== user.active;
+    const hasEmail = !!user.email;
+
     // Update only provided fields
     if (reqBody.firstName) user.firstName = reqBody.firstName;
     if (reqBody.lastName) user.lastName = reqBody.lastName;
@@ -109,7 +112,7 @@ export const updateUserById = async (reqBody, req) => {
     await user.save();
 
     // Check if active is set to true and user has an email
-    if (( reqBody.active !== user.active ) && reqBody.active === true && user.email) {
+    if (reqBody.active && isActiveChanged && hasEmail) {
       await sendEmailToTrader(user, req);
     }
 
@@ -173,7 +176,7 @@ export const sendEmailToTrader = async (user, req) => {
     const agentEmailHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_ACCOUNT_APPROVAL), agentEmailData);
     const agentEmailPayload = {
       to: user.email,
-      subject: EMAIL_SUBJECT.JOIN_APPOINTMENT,
+      subject: EMAIL_SUBJECT.AGENT_ACCOUNT_APPROVAL,
       html: agentEmailHtmlData,
     }
     mailHelper.sendMail(agentEmailPayload);

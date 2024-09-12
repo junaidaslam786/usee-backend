@@ -8,9 +8,9 @@
     <span>
       <a target="_blank" href="<%= login %>" style="border-radius:50px;text-decoration:none;font-size:14px;font-family:'Manrope', sans-serif;background-color:#00CB04;padding:12px 50px;display:inline-block;color:#fff;">
           <b>Login</b>
-      </a>
+      </a><br><br>
   </span>
-    <span><b>If you have any questions or require assistance, please don't hesitate to contact our support team at {process.env.CONTACT_EMAIL}.</b><br><br></span>
+    <span><b>If you have any questions or require assistance, please don't hesitate to contact our support team at <a href="mailto:<%= process.env.CONTACT_EMAIL %>"><%= process.env.CONTACT_EMAIL %></a>.</b><br><br></span>
 
     <span><b>Best regards,</b><br></span>
     <span><b>The Usee-360 Team</b><br><br></span>

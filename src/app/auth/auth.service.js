@@ -472,13 +472,16 @@ export const registerAsAgent = async (req, reqBody, dbInstance) => {
       // Send email to superadmin
       const superadminEmail = process.env.SUPERADMIN_EMAIL; // replace with actual superadmin email
       const superadminEmailData = [];
-      // superadminEmailData.name = user.fullName;
-      // superadminEmailData.agentName = agent.companyName;
-      // superadminEmailData.agentEmail = user.email;
-      const superadminHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_ACCOUNT_APPROVAL_PENDING), superadminEmailData);
+      superadminEmailData.agentName = user.fullName;
+      superadminEmailData.agentEmail = user.email;
+      superadminEmailData.companyName = agent.companyName;
+      superadminEmailData.phoneNumber = user.phoneNumber;
+      superadminEmailData.cityName = user.cityName;
+      superadminEmailData.countryName = user.countryName;
+      const superadminHtmlData = await ejs.renderFile(path.join(process.env.FILE_STORAGE_PATH, EMAIL_TEMPLATE_PATH.AGENT_REGISTRATION_AWAITING_APPROVAL), superadminEmailData);
       const superadminPayload = {
         to: superadminEmail,
-        subject: EMAIL_SUBJECT.AGENT_ACCOUNT_APPROVAL_PENDING,
+        subject: EMAIL_SUBJECT.AGENT_REGISTRATION_AWAITING_APPROVAL,
         html: superadminHtmlData,
       }
       mailHelper.sendMail(superadminPayload);

@@ -1,0 +1,23 @@
+<%- include('layout/header.ejs', { subject: "New Trader Registration Awaiting Approval" }) %>
+
+<tr>
+  <td valign="top" style="color:#92778a;text-align:left;font-size:16px;font-family:'Manrope', sans-serif;font-weight:500;background-color:#fff;padding:0 20px;">
+    <p>Dear Admin,</p>
+    <p>A new trader has registered and is awaiting your approval.</p>
+    <ul>
+      <li><strong>Trader Name:</strong> <%- agentName %></li>
+      <li><strong>Trader Email:</strong> <%- agentEmail %></li>
+      <li><strong>Company Name:</strong> <%- companyName %></li>
+      <li><strong>Phone Number:</strong> <%- phoneNumber %></li>
+      <li><strong>City:</strong> <%- cityName %></li>
+      <li><strong>Country:</strong> <%- countryName %></li>
+    </ul>
+    <p>Kindly log in to the superadmin panel to review and approve the request at your earliest convenience.</p>
+    <p>This is an automated notification.</p>
+    <br>
+    <span><b>Best regards,</b><br></span>
+    <span><b>The Usee-360 Team</b><br><br></span>
+  </td>
+</tr>
+
+<%- include('layout/footer.ejs') %>
