@@ -13,7 +13,7 @@ module.exports = {
       'Snag List': 3,
       'Video Call Recording': 4,
       'Carbon Footprint': 5,
-      'Analytics & Reporting': 6,
+      'Analytics And Reporting': 6,
       'API Subscription': 7,
     };
 

@@ -12,7 +12,7 @@ export default async function (req, res, next) {
     where: { name: 'USEE360 Basic' },
   });
   const feature = await db.models.feature.findOne({
-    where: { name: 'Analytics & Reporting' },
+    where: { name: 'Analytics And Reporting' },
   });
 
   try {

@@ -39,7 +39,7 @@ module.exports = {
     },
     {
       id: '02d5274e-0739-4032-87fa-620211a31700',
-      name: 'Analytics & Reporting',
+      name: 'Analytics And Reporting',
       description: 'Provide access to Analytics & Reports with a subscription model.',
       tokens_per_unit: 5.0,
       total_units: 50,

@@ -28,15 +28,31 @@ export default async function (req, res, next) {
       });
     }
 
-    if (userSubscription.freeRemainingUnits > 0) {
-      userSubscription.freeRemainingUnits -= 1;
-    } else if (userSubscription.paidRemainingUnits > 0) {
-      userSubscription.paidRemainingUnits -= 1;
-    } else {
-      return res.status(403).json({ error: true, message: 'Not enough units to access property listing feature.' });
+    // Check if the user has any remaining units (free or paid)
+    if (userSubscription.freeRemainingUnits <= 0 && userSubscription.paidRemainingUnits <= 0) {
+      return res.status(403).json({
+        error: true,
+        message: 'Not enough units to access Property Listing feature.',
+      });
     }
 
-    await userSubscription.save();
+    // Attach an event listener to capture the final response status
+    res.on('finish', async () => {
+      // Only deduct units when the response status is 201 (success)
+      if (res.statusCode === 201) {
+        // Deduct free units if available
+        if (userSubscription.freeRemainingUnits > 0) {
+          userSubscription.freeRemainingUnits -= 1;
+        }
+
+        // If no free units are available, deduct paid units if available
+        if (userSubscription.freeRemainingUnits <= 0 && userSubscription.paidRemainingUnits > 0) {
+          userSubscription.paidRemainingUnits -= 1;
+        }
+
+        await userSubscription.save();
+      }
+    });
 
     return next();
   } catch (error) {
