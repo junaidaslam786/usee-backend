@@ -46,12 +46,12 @@ router.post('/requests-sent', isAuthenticated, analyticsController.getRequestsSe
 router.post('/property-offers', isAuthenticated, analyticsController.getPropertyOffers); // DONE
 
 // 6a. Carbon footprint savings per property
-router.post('/property-carbon-footprint',
-  isAuthenticated, analyticsController.getPropertyCarbonFootprintAnalytics);
+router.post('/property-carbon-footprint', isAuthenticated,
+  analyticsController.getPropertyCarbonFootprintAnalytics);
 
 // 6b. Carbon footprint savings per property
-router.post('/appointment-carbon-footprint',
-  isAuthenticated, analyticsController.getAppointmentCarbonFootprintAnalytics);
+router.post('/appointment-carbon-footprint', isAuthenticated,
+  analyticsController.getAppointmentCarbonFootprintAnalytics);
 
 // 7. Number of properties sold or rented each month
 router.post('/properties-sold-rented', isAuthenticated, analyticsController.getPropertiesSoldRented);

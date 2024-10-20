@@ -1026,6 +1026,7 @@ export const getUserTokenTransactions = async (userId, dbInstance) => {
         "userId",
         "featureId",
         "quantity",
+        "amount",
         "description",
         "createdAt",
         "updatedAt",

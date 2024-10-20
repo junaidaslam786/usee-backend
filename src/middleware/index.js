@@ -3,7 +3,7 @@ import propertySubscription from './_propertySubscription';
 import videoCallSubscription from './_videoCallSubscription';
 import videoCallRecordingSubscription from './_videoCallRecordingSubscription';
 import analyticsSubscription from './_analyticsSubscription';
-// import apiSubscription from './_apiSubscription';
+import apiSubscriptionMiddleware from './_apiSubscription';
 import isAuthenticated from './isAuthenticated';
 import sentryMiddleware from './sentry';
 import validate from './validate';
@@ -16,7 +16,7 @@ export {
   videoCallSubscription,
   videoCallRecordingSubscription,
   analyticsSubscription,
-  // apiSubscription,
+  apiSubscriptionMiddleware,
   isAuthenticated,
   sentryMiddleware,
   validate,

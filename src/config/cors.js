@@ -6,6 +6,7 @@ export default {
   ],
   credentials: true,
   optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization', 'RefreshToken'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'RefreshToken', 'Apicode'],
   exposedHeaders: ['Content-Length', 'Content-Type', 'RefreshToken', 'Token'],
+  maxAge: 86400, // Cache preflight response for 24 hours
 };

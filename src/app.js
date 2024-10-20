@@ -12,7 +12,7 @@ import Stripe from 'stripe';
 import db from "@/database";
 
 import * as configs from "@/config";
-import { authenticationMiddleware, sentryMiddleware } from "@/middleware";
+import { authenticationMiddleware, apiSubscriptionMiddleware, sentryMiddleware } from "@/middleware";
 import { utilsHelper, mailHelper } from '@/helpers';
 import { createTokenTransactionMultiple2 } from '@/app/agent/user/user.service';
 
@@ -245,6 +245,7 @@ app.set("view engine", "ejs");
 
 // Custom middleware list
 app.use(authenticationMiddleware);
+app.use(apiSubscriptionMiddleware);
 if (NODE_ENV !== "development") {
   app.use(sentryMiddleware); // This should be loaded after authentication middleware.
 }

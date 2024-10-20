@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swagger UI</title>
+  <link rel="stylesheet" type="text/css" href="./swagger-ui.css" />
+  <script src="./swagger-ui-bundle.js"></script>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <!-- <script src="./swagger-ui-bundle.js"></script> -->
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: "/docs/swagger.json",
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis],
+        layout: "BaseLayout",
+        requestInterceptor: function(req) {
+          // req.headers.Authorization = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjlmZDM5NDIwLWQzZWEtNDNhZi1hNDIwLWViMzE2MzkzYzZkNCIsIm5hbWUiOiJUZXN0IEFnZW50IiwicGhvbmVOdW1iZXIiOiIrOTIzMzM0NDQ0NTA2IiwicHJvZmlsZUltYWdlIjoiL2R1bW15LnBuZyIsImVtYWlsIjoiYS5oYWlkZXJfNSsxQGhvdG1haWwuY29tIiwiYWdlbnQiOnsiam9iVGl0bGUiOiJyZWFsX2VzdGF0ZV9hZ2VudCIsImFnZW50VHlwZSI6ImFnZW50In0sImFnZW50QWNjZXNzTGV2ZWxzIjpbXSwiaWF0IjoxNzI5Mjg0MjM5LCJleHAiOjE3MjkyOTg2Mzl9.N0m2qSemyUMhVNyiu84hjoSj6tNheyA4Di4qQKOkFpQ";  // Add your Authorization token here
+          // req.headers.Apicode = "T8WG6KKJCC";                     // Add your Apicode here
+          return req;
+        }
+      });
+    };
+  </script>
+</body>
+</html>

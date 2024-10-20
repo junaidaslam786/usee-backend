@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import * as availabilityController from './availability.controller';
 import { isAuthenticated } from '@/middleware';
+import * as availabilityController from './availability.controller';
 
 const router = Router();
 

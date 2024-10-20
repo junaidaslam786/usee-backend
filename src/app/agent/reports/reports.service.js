@@ -10,6 +10,7 @@ import {
 import db from '@/database';
 import { Sequelize } from 'sequelize';
 import * as userService from '../user/user.service';
+import { getCarbonFootprint } from '../analytics/analytics.service';
 // import appointmentProducts from '@/database/models/appointment-products';
 // import appointment from '@/database/models/appointment';
 
@@ -20,6 +21,10 @@ const { Op } = Sequelize;
 const {
   appointment, appointmentLog, agent, feature, product, productLog, productOffer, productSnagList, productSnagListItem, productAllocation, agentAccessLevel, tokenTransaction, user, userSubscription,
 } = db.models;
+
+function toCapitalCase(str) {
+  return str.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, str => str.toUpperCase());
+}
 
 async function getSubAgentIds(userId) {
   try {
@@ -545,7 +550,7 @@ export async function getServicesData(req, res, userInstance) {
 
     let agentIds = await getSubAgentIds(userInstance.id);
     agentIds.push(req.user.id);
-    console.log('agentIds', agentIds);
+    // console.log('agentIds', agentIds);
 
     // eslint-disable-next-line no-restricted-syntax
     for (const serviceCategory of serviceCategories) {
@@ -613,7 +618,7 @@ export async function getServicesData(req, res, userInstance) {
         serviceData.apiSubscription = categoryData;
       }
 
-      if (serviceCategory === 'analytics') {
+      if (serviceCategory === 'analyticsAndReporting') {
         let whereClause = {};
         whereClause.featureId = '02d5274e-0739-4032-87fa-620211a31700';
 
@@ -627,7 +632,7 @@ export async function getServicesData(req, res, userInstance) {
           where: whereClause,
         });
 
-        serviceData.analytics = categoryData;
+        serviceData.analyticsAndReporting = categoryData;
       }
     }
 
@@ -636,8 +641,15 @@ export async function getServicesData(req, res, userInstance) {
       videoCall: 'Video Call',
       propertyListing: 'Property Listing',
       apiSubscription: 'API Subscription',
-      analytics: 'Analytics & Reporting',
+      analyticsAndReporting: 'Analytics And Reporting',
+      carbonFootprint: 'Carbon Footprint',
+      videoCallRecording: 'Video Call Recording',
+      snagList: 'Snag List',
     };
+
+    function getKeyByValue(value) {
+      return Object.keys(nameMap).find(key => nameMap[key] === value);
+    }
 
     const serviceFeatureIds = await Promise.all(
       serviceCategories.map(async (category) => {
@@ -659,14 +671,15 @@ export async function getServicesData(req, res, userInstance) {
     });
 
     // console.log('featureUsage: ', featureUsage);
-    // console.log('tt: ', tokenTransactions);
+    // console.log('serviceData: ', serviceData);
 
     tokenTransactions.forEach(async (transaction) => {
       const { featureId } = transaction;
-      const featureName = await feature.findByPk(featureId).name;
-
-      if (!featureUsage[featureName]) {
-        featureUsage[''.featureName] = {
+      const featureName = await feature.findByPk(featureId);
+      // console.log('featureId: ', featureId);
+      // console.log('featureUsage[featureName.name]: ', featureUsage[featureName.name]);
+      if (!featureUsage[getKeyByValue(featureName.name)]) {
+        featureUsage[getKeyByValue(featureName.name)] = {
           totalUnitsUsed: 0,
           totalCoinsSpent: 0,
           amountSpentToBuyAllCoins: 0,
@@ -674,10 +687,9 @@ export async function getServicesData(req, res, userInstance) {
           autoRenewUnits: null,
         };
       }
-      console.log('featureUsage1: ', featureUsage);
 
-      featureUsage[featureName].totalUnitsUsed += transaction.quantity;
-      featureUsage[featureName].totalCoinsSpent += transaction.amount;
+      featureUsage[getKeyByValue(featureName.name)].totalUnitsUsed += transaction.quantity;
+      featureUsage[getKeyByValue(featureName.name)].totalCoinsSpent += transaction.amount;
 
       // Calculate amountSpentToBuyAllCoins based on your token pricing logic
       // ...
@@ -691,10 +703,10 @@ export async function getServicesData(req, res, userInstance) {
       });
 
       if (userSubs) {
-        featureUsage[featureName].autoRenew = userSubs.autoRenew;
-        featureUsage[featureName].autoRenewUnits = userSubs.autoRenewUnits;
+        featureUsage[getKeyByValue(featureName.name)].autoRenew = userSubs.autoRenew;
+        featureUsage[getKeyByValue(featureName.name)].autoRenewUnits = userSubs.autoRenewUnits;
       }
-      console.log('featureUsage2: ', featureUsage);
+      // console.log('featureUsage2: ', featureUsage);
     });
 
     // Add featureUsage data to serviceData
@@ -702,23 +714,29 @@ export async function getServicesData(req, res, userInstance) {
     for (const serviceCategory of serviceCategories) {
       // eslint-disable-next-line no-await-in-loop
       const feat = await feature.findOne({
-        where: { name: serviceCategory },
+        where: { name: toCapitalCase(serviceCategory) },
       });
 
       // console.log('serviceData: ', serviceData);
       // console.log('serviceCategory: ', serviceCategory);
-      console.log('serviceData[serviceCategory]: ', serviceData[serviceCategory]);
+      // console.log('serviceData[serviceCategory]: ', serviceData[serviceCategory]);
 
-      serviceData[serviceCategory].forEach((subscription) => {
-        console.log('subscription: ', subscription);
-        console.log('featureUsage: ', featureUsage);
-        console.log('featureUsage[feat.name]: ', featureUsage[feat.name]);
-        subscription.featureName = feat.name;
-        subscription.totalUnitsUsed = featureUsage[feat.name].totalUnitsUsed;
-        subscription.totalCoinsSpent = featureUsage[feat.name].totalCoinsSpent;
-        subscription.amountSpentToBuyAllCoins = featureUsage[feat.name].amountSpentToBuyAllCoins;
-        subscription.autoRenew = featureUsage[feat.name].autoRenew;
-        subscription.autoRenewUnits = featureUsage[feat.name].autoRenewUnits;
+      serviceData[serviceCategory] = serviceData[serviceCategory].map((subscription) => {
+        const userSubscriptionObj = subscription.toJSON();
+
+        // Check if featureUsage has the calculated data for this feature
+        const featureUsageData = featureUsage[getKeyByValue(feat.name)];
+        if (featureUsageData) {
+          return {
+            ...userSubscriptionObj,
+            totalUnitsUsed: featureUsageData.totalUnitsUsed || 0,
+            totalCoinsSpent: featureUsageData.totalCoinsSpent || 0,
+            amountSpentToBuyAllCoins: featureUsageData.amountSpentToBuyAllCoins || 0,
+            autoRenew: featureUsageData.autoRenew || false,
+            autoRenewUnits: featureUsageData.autoRenewUnits || 0,
+          };
+        }
+        return userSubscriptionObj;
       });
     }
 
