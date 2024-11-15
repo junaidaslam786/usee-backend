@@ -11,8 +11,9 @@ export default async function apiSubscription(req, res, next) {
   // eslint-disable-next-line camelcase
   const { apicode } = req.headers;
 
-  // Bypass the api_code check for the auth/login route
-  if (req.path === '/' || req.path === '/auth/login' || swaggerDocsPaths.test(req.path)) {
+  // Bypass the api_code check for the auth/login route, and other additional routes
+  if (req.path === '/' || req.path === '/auth/login' || req.path.startsWith('/admin/')
+      || req.path.startsWith('/superadmin/') || swaggerDocsPaths.test(req.path)) {
     return next();
   }
 
